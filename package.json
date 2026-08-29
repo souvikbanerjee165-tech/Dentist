@@ -2,6 +2,9 @@
   "name": "whatsapp-ai-sales-assistant-api",
   "version": "1.0.0",
   "description": "Production AI WhatsApp Sales Assistant Backend",
+  "workspaces": [
+    "client"
+  ],
   "main": "dist/server.js",
   "scripts": {
     "dev:backend": "tsx watch src/server.ts",
@@ -50,6 +53,8 @@
     "@types/multer": "^2.2.0",
     "@types/node": "^22.13.9",
     "@types/pdf-parse": "^1.1.5",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   }
