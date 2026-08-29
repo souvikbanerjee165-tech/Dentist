@@ -1,0 +1,56 @@
+{
+  "name": "whatsapp-ai-sales-assistant-api",
+  "version": "1.0.0",
+  "description": "Production AI WhatsApp Sales Assistant Backend",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev:backend": "tsx watch src/server.ts",
+    "dev:client": "npm --prefix client run dev",
+    "build:backend": "tsc",
+    "build:client": "npm --prefix client run build",
+    "build": "npm run build:backend && npm run build:client",
+    "test:ai": "tsx scripts/test-ai-engine.ts",
+    "test:rag": "tsx scripts/test-rag-pipeline.ts",
+    "test:calendar": "tsx scripts/test-calendar-engine.ts",
+    "test:crm": "tsx scripts/test-crm-engine.ts",
+    "test:whatsapp": "tsx scripts/test-whatsapp-webhook.ts",
+    "test": "tsx scripts/test-all.ts",
+    "start": "node dist/server.js"
+  },
+  "keywords": [
+    "whatsapp",
+    "ai",
+    "sales-assistant",
+    "express",
+    "supabase",
+    "openai"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "cheerio": "^1.2.0",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^8.6.2",
+    "googleapis": "^176.0.0",
+    "helmet": "^8.0.0",
+    "mammoth": "^1.12.2",
+    "multer": "^2.3.0",
+    "openai": "^4.86.1",
+    "pdf-parse": "^2.4.5",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/compression": "^1.8.1",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/multer": "^2.2.0",
+    "@types/node": "^22.13.9",
+    "@types/pdf-parse": "^1.1.5",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}
