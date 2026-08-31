@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { Navbar } from './components/layout/Navbar';
 import { Sidebar } from './components/layout/Sidebar';
+import { LandingPage } from './pages/LandingPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ConversationsPage } from './pages/ConversationsPage';
 import { LeadsPage } from './pages/LeadsPage';
@@ -19,9 +20,10 @@ import {
   initialFAQs,
   initialBusinessProfile
 } from './data/mockData';
-import { Bell, CheckCircle2, Bot, MessageSquare } from 'lucide-react';
+import { Bell, CheckCircle2, Globe, LayoutDashboard } from 'lucide-react';
 
 export const AppContent: React.FC = () => {
+  const [currentView, setCurrentView] = useState<'landing' | 'admin'>('landing');
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
   const [stats, setStats] = useState<KPIStats>(initialKPIs);
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
@@ -32,57 +34,41 @@ export const AppContent: React.FC = () => {
   const [isTestChatOpen, setIsTestChatOpen] = useState(false);
   const [liveToast, setLiveToast] = useState<{ title: string; message: string; type: 'info' | 'success' | 'alert' } | null>(null);
 
-  // Takeovers needed count
   const takeoversNeeded = conversations.filter(c => c.status === 'human_takeover').length;
   const unreadMessages = conversations.reduce((acc, c) => acc + c.unreadCount, 0);
 
-  // Show toast helper
   const showToast = (title: string, message: string, type: 'info' | 'success' | 'alert' = 'info') => {
     setLiveToast({ title, message, type });
     setTimeout(() => setLiveToast(null), 4500);
   };
 
-  // Toggle Global AI Autopilot
   const handleToggleGlobalAI = () => {
     const nextState = !businessProfile.aiAutopilotEnabled;
     setBusinessProfile(prev => ({ ...prev, aiAutopilotEnabled: nextState }));
     showToast(
-      nextState ? '🤖 AI Autopilot Enabled' : '⏸️ AI Autopilot Paused',
+      nextState ? '🤖 Gemini Autopilot Live' : '⏸️ AI Autopilot Paused',
       nextState 
-        ? 'The AI assistant is now auto-replying to WhatsApp inquiries.'
-        : 'AI is paused. All incoming messages will wait for manual owner replies.',
+        ? 'The Gemini assistant is now auto-replying to patient inquiries.'
+        : 'AI is paused. All messages will wait for manual staff reply.',
       nextState ? 'success' : 'alert'
     );
   };
 
-  // Toggle Human Takeover on specific conversation
   const handleToggleTakeover = (conversationId: string) => {
     setConversations(prev =>
       prev.map(c => {
         if (c.id === conversationId) {
           const nextStatus = c.status === 'human_takeover' ? 'ai_active' : 'human_takeover';
           showToast(
-            nextStatus === 'human_takeover' ? '🔒 Human Takeover Active' : '🤖 AI Autopilot Resumed',
+            nextStatus === 'human_takeover' ? '🔒 Human Takeover Active' : '🤖 Gemini Autopilot Resumed',
             nextStatus === 'human_takeover'
-              ? `You have taken over the chat with ${c.lead.fullName}. AI is paused for this thread.`
+              ? `You have taken over the chat with ${c.lead.fullName}.`
               : `AI Autopilot has resumed for ${c.lead.fullName}.`,
             nextStatus === 'human_takeover' ? 'alert' : 'success'
           );
           return {
             ...c,
             status: nextStatus,
-            messages: [
-              ...c.messages,
-              {
-                id: `sys-${Date.now()}`,
-                conversationId: c.id,
-                senderType: 'system',
-                content: nextStatus === 'human_takeover' 
-                  ? '🔒 Human takeover activated. AI is now paused for this chat.' 
-                  : '🤖 AI autopilot resumed for this conversation.',
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              }
-            ]
           };
         }
         return c;
@@ -90,7 +76,6 @@ export const AppContent: React.FC = () => {
     );
   };
 
-  // Send Human Agent reply
   const handleSendMessage = (conversationId: string, text: string) => {
     setConversations(prev =>
       prev.map(c => {
@@ -114,62 +99,38 @@ export const AppContent: React.FC = () => {
         return c;
       })
     );
-    showToast('Sent to WhatsApp', `Delivered reply to customer via WhatsApp Cloud API.`, 'success');
+    showToast('Delivered to WhatsApp', text.slice(0, 45) + '...', 'success');
   };
 
-  // Document upload handler
-  const handleUploadDocument = (name: string, type: DocumentItem['type'], size: string) => {
-    const newDoc: DocumentItem = {
-      id: `doc-${Date.now()}`,
-      name,
-      type,
-      chunksCount: Math.floor(Math.random() * 15) + 6,
-      size,
-      uploadedAt: 'Just now',
-      status: 'indexed',
-    };
-    setDocuments(prev => [newDoc, ...prev]);
-    showToast('Document Indexed', `"${name}" processed into vector chunks for RAG.`, 'success');
-  };
-
-  const handleDeleteDocument = (id: string) => {
-    setDocuments(prev => prev.filter(d => d.id !== id));
-    showToast('Document Removed', 'Knowledge chunks removed from vector store.', 'info');
-  };
-
-  // FAQ Handlers
-  const handleAddFAQ = (newFaq: Omit<FAQItem, 'id' | 'updatedAt'>) => {
-    const item: FAQItem = {
-      id: `faq-${Date.now()}`,
-      ...newFaq,
-      updatedAt: 'Just now',
-    };
-    setFaqs(prev => [item, ...prev]);
-    showToast('FAQ Added', `Question "${newFaq.question}" indexed for AI answers.`, 'success');
-  };
-
-  const handleUpdateFAQ = (id: string, question: string, answer: string, category: string) => {
-    setFaqs(prev =>
-      prev.map(f => (f.id === id ? { ...f, question, answer, category, updatedAt: 'Just now' } : f))
+  // If customer landing view is selected
+  if (currentView === 'landing') {
+    return (
+      <LandingPage
+        businessProfile={businessProfile}
+        onOpenAdmin={() => setCurrentView('admin')}
+      />
     );
-    showToast('FAQ Updated', 'Vector embeddings re-indexed with new answer.', 'success');
-  };
+  }
 
-  const handleDeleteFAQ = (id: string) => {
-    setFaqs(prev => prev.filter(f => f.id !== id));
-    showToast('FAQ Deleted', 'FAQ removed from knowledge base.', 'info');
-  };
-
-  // Business Profile handler
-  const handleUpdateProfile = (updated: BusinessProfile) => {
-    setBusinessProfile(updated);
-    showToast('Settings Saved', 'Business profile & AI system prompt updated.', 'success');
-  };
-
+  // Admin Portal Dashboard View
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
       
-      {/* Top Navbar */}
+      {/* Top Navbar with Public Landing View switcher */}
+      <div className="bg-slate-900 text-white px-6 py-2 border-b border-white/10 flex items-center justify-between text-xs">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="font-semibold text-slate-300">Admin Control Portal</span>
+        </div>
+        <button
+          onClick={() => setCurrentView('landing')}
+          className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-600/80 hover:bg-blue-600 font-semibold text-white transition-all shadow-sm"
+        >
+          <Globe className="w-3.5 h-3.5" />
+          <span>View Public Customer Landing Page</span>
+        </button>
+      </div>
+
       <Navbar
         businessName={businessProfile.name}
         isAIAutopilotEnabled={businessProfile.aiAutopilotEnabled}
@@ -177,10 +138,7 @@ export const AppContent: React.FC = () => {
         onOpenTestChat={() => setIsTestChatOpen(true)}
       />
 
-      {/* Main App Body */}
       <div className="max-w-7xl mx-auto flex">
-        
-        {/* Left Sidebar */}
         <Sidebar
           activeTab={activeTab}
           onSelectTab={setActiveTab}
@@ -188,8 +146,7 @@ export const AppContent: React.FC = () => {
           takeoversNeededCount={takeoversNeeded}
         />
 
-        {/* Dynamic Center Page View */}
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto max-h-[calc(100vh-65px)]">
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto max-h-[calc(100vh-100px)]">
           {activeTab === 'dashboard' && (
             <DashboardPage
               stats={stats}
@@ -219,11 +176,27 @@ export const AppContent: React.FC = () => {
             <KnowledgeBasePage
               documents={documents}
               faqs={faqs}
-              onUploadDocument={handleUploadDocument}
-              onDeleteDocument={handleDeleteDocument}
-              onAddFAQ={handleAddFAQ}
-              onUpdateFAQ={handleUpdateFAQ}
-              onDeleteFAQ={handleDeleteFAQ}
+              onUploadDocument={(name, type, size) => {
+                setDocuments(prev => [{
+                  id: `doc-${Date.now()}`,
+                  name,
+                  type,
+                  chunksCount: 12,
+                  size,
+                  uploadedAt: 'Just now',
+                  status: 'indexed',
+                }, ...prev]);
+                showToast('Knowledge Chunked', `"${name}" indexed for Gemini RAG.`, 'success');
+              }}
+              onDeleteDocument={(id) => setDocuments(prev => prev.filter(d => d.id !== id))}
+              onAddFAQ={(newFaq) => {
+                setFaqs(prev => [{ id: `faq-${Date.now()}`, ...newFaq, updatedAt: 'Just now' }, ...prev]);
+                showToast('FAQ Indexed', `Added "${newFaq.question}"`, 'success');
+              }}
+              onUpdateFAQ={(id, question, answer, category) => {
+                setFaqs(prev => prev.map(f => f.id === id ? { ...f, question, answer, category, updatedAt: 'Just now' } : f));
+              }}
+              onDeleteFAQ={(id) => setFaqs(prev => prev.filter(f => f.id !== id))}
             />
           )}
 
@@ -234,21 +207,20 @@ export const AppContent: React.FC = () => {
           {activeTab === 'settings' && (
             <SettingsPage
               businessProfile={businessProfile}
-              onUpdateProfile={handleUpdateProfile}
+              onUpdateProfile={(u) => {
+                setBusinessProfile(u);
+                showToast('Saved', 'Profile synchronized across Gemini channels.', 'success');
+              }}
             />
           )}
         </main>
-
       </div>
 
       {/* Real-time Notification Toast */}
       {liveToast && (
-        <div className="fixed bottom-6 right-6 z-50 animate-bounce max-w-sm p-4 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-black/10 dark:border-white/10 shadow-2xl backdrop-blur-xl flex items-start gap-3">
-          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-            liveToast.type === 'success' ? 'bg-emerald-500/15 text-emerald-500' :
-            liveToast.type === 'alert' ? 'bg-rose-500/15 text-rose-500' : 'bg-blue-500/15 text-blue-500'
-          }`}>
-            {liveToast.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
+        <div className="fixed bottom-6 right-6 z-50 max-w-sm p-4 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-black/10 dark:border-white/10 shadow-2xl backdrop-blur-xl flex items-start gap-3 animate-fadeIn">
+          <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-4 h-4" />
           </div>
           <div className="space-y-0.5">
             <h4 className="text-xs font-bold text-slate-900 dark:text-white">{liveToast.title}</h4>
