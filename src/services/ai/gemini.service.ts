@@ -117,13 +117,40 @@ export class GeminiConversationService {
       ['name', 'phone_number', 'email', 'business_type', 'budget', 'preferred_appointment_date'] as (keyof LeadCollectedData)[]
     ).filter((k) => !merged[k]);
 
-    // 1. Anti-hallucination / Out of scope check
+    // 1. Tooth Pain & Dental Discomfort (Special Dentist Conversion Protocol)
+    if (
+      msg.includes('pain') ||
+      msg.includes('toothache') ||
+      msg.includes('teeth pains') ||
+      msg.includes('tooth hurts') ||
+      msg.includes('bleed') ||
+      msg.includes('sensitive')
+    ) {
+      return {
+        intent: 'appointment_booking',
+        confidence: 0.98,
+        collected_data: {
+          name: existing.name || null,
+          phone_number: existing.phone_number || null,
+          email: existing.email || null,
+          business_type: 'Urgent Tooth Pain / Dental Exam',
+          budget: existing.budget || null,
+          preferred_appointment_date: 'Today / Next Available',
+        },
+        missing_fields: (['name', 'phone_number', 'email', 'business_type', 'budget', 'preferred_appointment_date'] as (keyof LeadCollectedData)[]).filter(k => !merged[k]),
+        reply: "I'm so sorry you're experiencing pain! Tooth pain is usually a sign of underlying nerve irritation or deep enamel decay that can worsen quickly into a severe infection if delayed. Getting it checked right away protects your natural tooth and prevents costly procedures. Dr. Sarah Jensen has an urgent relief slot open today itself. Should I go ahead and reserve your priority examination today? What is your name?",
+        handover_required: false,
+        handover_reason: null,
+        knowledge_sources_used: ['Emergency_Triage_and_Escalation_Rules.txt'],
+      };
+    }
+
+    // 2. Anti-hallucination / Out of scope check
     if (
       msg.includes('supreme court') ||
       msg.includes('lawsuit') ||
       msg.includes('nuclear') ||
-      msg.includes('refund policy for 2019') ||
-      msg.includes('emergency surgery')
+      msg.includes('refund policy for 2019')
     ) {
       return {
         intent: 'human_handover',

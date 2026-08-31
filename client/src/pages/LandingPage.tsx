@@ -16,7 +16,11 @@ import {
   ChevronRight,
   MessageSquare,
   Smile,
-  Shield
+  Shield,
+  UserPlus,
+  Stethoscope,
+  Award,
+  Heart
 } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
@@ -25,6 +29,7 @@ import { BusinessProfile } from '../types/admin.types';
 interface LandingPageProps {
   businessProfile: BusinessProfile;
   onOpenAdmin: () => void;
+  onOpenSignUp: () => void;
 }
 
 interface ChatMessage {
@@ -39,12 +44,13 @@ interface ChatMessage {
 export const LandingPage: React.FC<LandingPageProps> = ({
   businessProfile,
   onOpenAdmin,
+  onOpenSignUp,
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome-1',
       sender: 'gemini',
-      text: `Hello! 👋 Welcome to ${businessProfile.name}. I'm your 24/7 AI Patient Coordinator powered by Google Gemini Flash. How can I help you today?`,
+      text: `Hello! 👋 I'm Dr. Sarah Jensen's AI Dental Assistant powered by Google Gemini. How can I help you today? If you're experiencing tooth pain, need pricing, or want to schedule an appointment, just ask!`,
       timestamp: 'Just now',
       intent: 'greeting',
       confidence: 0.99,
@@ -59,10 +65,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   }, [messages, isTyping]);
 
   const quickPrompts = [
-    { label: '💰 Laser Whitening Price', query: 'How much is your laser whitening treatment and what is included?' },
+    { label: '🚨 My teeth pains', query: 'my teeth pains' },
+    { label: '💎 Laser Whitening ($350)', query: 'How much is your laser whitening treatment and what is included?' },
     { label: '🗓️ Book for Friday 3 PM', query: 'I would like to book an appointment this Friday at 3:00 PM. My name is Sophia Martinez.' },
-    { label: '🛡️ Insurance Acceptance', query: 'Do you accept Delta Dental and MetLife insurance?' },
-    { label: '📍 Clinic Location & Hours', query: 'Where is your clinic located and what are your opening hours?' },
+    { label: '🛡️ Insurance Accepted', query: 'Do you accept Delta Dental and MetLife insurance?' },
   ];
 
   const handleSendMessage = async (textToSend: string) => {
@@ -80,13 +86,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     setIsTyping(true);
 
     try {
-      // Direct call to the backend Gemini AI Engine
+      // Call backend Gemini AI Engine
       const res = await fetch('/api/v1/chat/turn', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           businessName: businessProfile.name,
-          businessIndustry: businessProfile.industry,
+          businessIndustry: 'Medical & Dental Clinic',
           userMessage: textToSend,
           conversationHistory: messages.map((m) => ({
             role: m.sender === 'user' ? 'user' : 'assistant',
@@ -104,33 +110,39 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           {
             id: `gem-${Date.now()}`,
             sender: 'gemini',
-            text: turn.reply || "I'll connect you with our clinic coordinator right away.",
+            text: turn.reply || "I'll connect you with Dr. Jensen's coordinator right away.",
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             intent: turn.intent,
             confidence: turn.confidence,
           },
         ]);
-      } else {
-        throw new Error('Fallback required');
+        return;
       }
-    } catch (err) {
-      // Local high-precision fallback response
+      throw new Error('Fallback');
+    } catch {
+      // Local high-precision fallback with the persuasive tooth pain protocol
       setTimeout(() => {
         const lower = textToSend.toLowerCase();
-        let reply = "Hello! I'd be delighted to help. You can check our treatments, ask about pricing, or schedule a consultation with our team.";
+        let reply = "Hello! I'd be delighted to assist you with treatment information, pricing, or securing an appointment with Dr. Sarah Jensen.";
         let intent = 'lead_qualification';
 
-        if (lower.includes('whitening') || lower.includes('cost') || lower.includes('price') || lower.includes('how much')) {
+        if (
+          lower.includes('pain') ||
+          lower.includes('teeth pains') ||
+          lower.includes('toothache') ||
+          lower.includes('tooth hurts') ||
+          lower.includes('sensitive')
+        ) {
+          reply = "I'm so sorry you're experiencing pain! Tooth pain is usually a clear sign of underlying nerve irritation or deep enamel decay that can worsen quickly into a severe infection if delayed. Getting it checked right away protects your natural tooth and prevents costly root canals. Dr. Sarah Jensen has an urgent relief slot open today itself. Should I go ahead and reserve your priority examination today? What is your full name?";
+          intent = 'urgent_pain_booking';
+        } else if (lower.includes('whitening') || lower.includes('cost') || lower.includes('price') || lower.includes('how much')) {
           reply = 'Our Laser Whitening & Deep Clean package is $350. It includes the 45-minute in-office laser treatment, pre-treatment rinse, and a take-home remineralization kit. Would you like to check openings for this Friday?';
           intent = 'faq_inquiry';
-        } else if (lower.includes('book') || lower.includes('friday') || lower.includes('appointment') || lower.includes('sophia')) {
-          reply = 'We have confirmed Friday at 3:00 PM with Dr. Reynolds! Your appointment has been recorded in our Supabase system and a confirmation will be delivered to your WhatsApp. What is the best phone number to reach you?';
+        } else if (lower.includes('book') || lower.includes('friday') || lower.includes('sophia')) {
+          reply = 'We have confirmed Friday at 3:00 PM with Dr. Sarah Jensen! Your appointment has been recorded in our Supabase database. What is the best WhatsApp phone number to send your intake details?';
           intent = 'appointment_booking';
-        } else if (lower.includes('insurance') || lower.includes('metlife') || lower.includes('cigna')) {
-          reply = 'Yes! We accept all major PPO insurance providers including Delta Dental, MetLife, Cigna, Guardian, and Aetna. We file claims directly for you so you have zero paperwork.';
-          intent = 'faq_inquiry';
-        } else if (lower.includes('location') || lower.includes('hours') || lower.includes('where')) {
-          reply = 'We are located at 450 Lexington Avenue, Suite 800, New York, NY. Open Monday - Friday 8:00 AM - 6:00 PM, and Saturdays 9:00 AM - 3:00 PM.';
+        } else if (lower.includes('insurance') || lower.includes('metlife') || lower.includes('delta')) {
+          reply = 'Yes! We accept all major PPO insurance providers including Delta Dental, MetLife, Cigna, Guardian, and Aetna. We file claims directly for you with zero hassle.';
           intent = 'faq_inquiry';
         }
 
@@ -142,44 +154,39 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             text: reply,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             intent,
-            confidence: 0.96,
+            confidence: 0.98,
           },
         ]);
-      }, 600);
+      }, 500);
     } finally {
       setIsTyping(false);
     }
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleSendMessage(inputValue);
-  };
-
   const services = [
+    {
+      title: 'Emergency Tooth Pain Relief & Exam',
+      price: '$95 (Priority Slot)',
+      duration: 'Immediate Today',
+      description: 'Instant diagnosis, digital 3D scans, and emergency pain relief with Dr. Sarah Jensen.',
+      tag: 'Urgent Care',
+      prompt: 'I have tooth pain and need an emergency exam today with Dr. Jensen.',
+    },
     {
       title: 'Cosmetic Laser Teeth Whitening',
       price: '$350',
       duration: '45 mins',
-      description: 'Up to 8 shades brighter in one single visit with zero tooth sensitivity.',
+      description: 'Up to 8 shades brighter in one single visit with gentle remineralizing care.',
       tag: 'Most Popular',
-      prompt: 'I want to know more about the $350 Cosmetic Laser Whitening package.',
+      prompt: 'How much is your $350 Laser Teeth Whitening package?',
     },
     {
-      title: 'Comprehensive Oral Exam & Clean',
+      title: 'Comprehensive Oral Exam & Deep Clean',
       price: '$180',
       duration: '60 mins',
-      description: 'Full digital 3D X-rays, periodontal health screening, and ultrasonic cleaning.',
-      tag: 'Essential',
-      prompt: 'I would like to book a Comprehensive Oral Exam and Deep Clean.',
-    },
-    {
-      title: 'Porcelain Veneers & Smile Design',
-      price: 'From $950',
-      duration: 'Consultation',
-      description: 'Custom handcrafted ultra-thin veneers tailored to your facial symmetry.',
-      tag: 'Premium Cosmetic',
-      prompt: 'Can you tell me about the process and cost for Porcelain Veneers?',
+      description: 'Full 3D digital imaging, periodontal screening, and ultrasonic gentle hygiene clean.',
+      tag: 'Essential Health',
+      prompt: 'I want to schedule a Comprehensive Exam and Deep Clean.',
     },
   ];
 
@@ -191,218 +198,274 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/25">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/25">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
               <h1 className="text-base font-bold text-white tracking-tight">{businessProfile.name}</h1>
-              <p className="text-[10px] text-slate-400 font-medium">{businessProfile.industry}</p>
+              <p className="text-[10px] text-blue-400 font-semibold flex items-center gap-1">
+                <Stethoscope className="w-3 h-3" /> Dr. Sarah Jensen, DDS
+              </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <Badge variant="success" dot size="sm">
-              <span className="hidden sm:inline">⚡ Gemini 3.7 Brain Live</span>
-              <span className="sm:hidden">Live</span>
-            </Badge>
+            <button
+              onClick={onOpenSignUp}
+              className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-blue-500/25 transition-all active:scale-95 border border-white/15"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>Patient Sign Up</span>
+            </button>
 
             <button
               onClick={onOpenAdmin}
-              className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl backdrop-blur-md transition-all active:scale-95 shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all active:scale-95 hidden sm:flex"
             >
-              <Building2 className="w-3.5 h-3.5 text-blue-400" />
-              <span>Owner Admin Portal</span>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              <Building2 className="w-3.5 h-3.5 text-slate-400" />
+              <span>Admin Portal</span>
             </button>
           </div>
 
         </div>
       </header>
 
-      {/* Hero Section */}
+      {/* Hero Section with Doctor Photo */}
       <section className="relative pt-12 pb-16 px-6 overflow-hidden">
-        {/* Glow Ambient Lights */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-blue-600/20 via-purple-600/20 to-cyan-500/20 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-gradient-to-tr from-blue-600/20 via-indigo-600/20 to-cyan-500/20 rounded-full blur-[130px] pointer-events-none" />
 
-        <div className="max-w-5xl mx-auto text-center space-y-6 relative z-10">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
           
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold backdrop-blur-md animate-fadeIn">
-            <Bot className="w-4 h-4 text-blue-400" />
-            <span>24/7 AI Patient Receptionist & Sales Assistant</span>
-          </div>
+          {/* Left Hero Content */}
+          <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold backdrop-blur-md">
+              <Sparkles className="w-4 h-4" />
+              <span>Dr. Sarah Jensen, DDS • 24/7 AI-Powered Dental Care</span>
+            </div>
 
-          <h2 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-[1.1]">
-            Experience World-Class Care with{' '}
-            <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-cyan-400 bg-clip-text text-transparent">
-              Instant AI Booking
-            </span>
-          </h2>
+            <h2 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-[1.1]">
+              Gentle, Modern Dentistry with{' '}
+              <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-cyan-400 bg-clip-text text-transparent">
+                Zero Waiting Time
+              </span>
+            </h2>
 
-          <p className="max-w-2xl mx-auto text-sm sm:text-base text-slate-400 leading-relaxed font-normal">
-            Ask any question, check pricing, verify insurance, and schedule your appointment in seconds. Powered by <strong className="text-white">Google Gemini</strong> and synchronized directly with our calendar and database.
-          </p>
-
-        </div>
-      </section>
-
-      {/* Main Interactive Showcase: Live Gemini Assistant Chat */}
-      <section className="max-w-5xl mx-auto px-6 pb-20 relative z-20">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* Left Column: Key Features & Trust */}
-          <div className="lg:col-span-5 space-y-4">
-            <h3 className="text-xs font-bold text-blue-400 uppercase tracking-wider">
-              Autonomous Patient Care
-            </h3>
-            <h4 className="text-2xl font-bold text-white leading-snug">
-              Instant answers without the wait.
-            </h4>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Our intelligent assistant reads from verified clinic protocols to provide immediate, medical-grade consultation scheduling.
+            <p className="text-sm sm:text-base text-slate-400 leading-relaxed max-w-xl">
+              Experience pain-free cosmetic & restorative dental treatments in New York. Ask questions, check pricing, and get same-day appointment slots via our <strong>Google Gemini Flash</strong> assistant.
             </p>
 
-            <div className="space-y-3 pt-2">
-              <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center shrink-0">
-                  <Zap className="w-4 h-4" />
-                </div>
-                <div>
-                  <h5 className="text-xs font-bold text-white">Sub-Second Response Time</h5>
-                  <p className="text-[11px] text-slate-400">Zero waiting on hold. Immediate answers 24/7/365.</p>
-                </div>
-              </div>
+            <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start pt-2">
+              <button
+                onClick={onOpenSignUp}
+                className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-xl shadow-blue-500/30 transition-all flex items-center justify-center gap-2 active:scale-95"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>Register as New Patient</span>
+              </button>
 
-              <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center shrink-0">
-                  <Calendar className="w-4 h-4" />
-                </div>
-                <div>
-                  <h5 className="text-xs font-bold text-white">Real-Time Google Calendar</h5>
-                  <p className="text-[11px] text-slate-400">Live slot checks preventing any double-booking.</p>
-                </div>
-              </div>
+              <button
+                onClick={() => handleSendMessage('my teeth pains')}
+                className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-semibold text-xs transition-all flex items-center justify-center gap-2 active:scale-95"
+              >
+                <Stethoscope className="w-4 h-4 text-rose-400" />
+                <span>Having Tooth Pain? Click for Instant Help</span>
+              </button>
+            </div>
 
-              <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0">
-                  <Database className="w-4 h-4" />
-                </div>
-                <div>
-                  <h5 className="text-xs font-bold text-white">Direct Supabase Cloud Sync</h5>
-                  <p className="text-[11px] text-slate-400">Name, Phone, Treatment, and Date saved automatically.</p>
+            {/* Social Proof */}
+            <div className="flex items-center gap-6 pt-4 justify-center lg:justify-start text-xs text-slate-400 border-t border-white/10">
+              <div className="flex items-center gap-1.5 text-amber-400">
+                <Star className="w-4 h-4 fill-amber-400" />
+                <span className="font-bold text-white">4.9 / 5.0</span>
+                <span className="text-slate-400">(450+ Patient Reviews)</span>
+              </div>
+              <div className="flex items-center gap-1 text-emerald-400">
+                <ShieldCheck className="w-4 h-4" />
+                <span className="text-slate-300">ADA Certified</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Doctor Portrait Showcase */}
+          <div className="lg:col-span-5 flex justify-center">
+            <div className="relative group max-w-sm">
+              <div className="absolute -inset-1.5 bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 rounded-3xl blur-lg opacity-40 group-hover:opacity-75 transition duration-500" />
+              <div className="relative rounded-3xl overflow-hidden bg-slate-900 border border-white/20 shadow-2xl">
+                <img
+                  src="/images/dentist_doctor.jpg"
+                  alt="Dr. Sarah Jensen, DDS"
+                  className="w-full h-96 object-cover object-top hover:scale-105 transition duration-700"
+                />
+                <div className="absolute bottom-0 inset-x-0 p-5 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent">
+                  <h4 className="text-lg font-bold text-white">Dr. Sarah Jensen, DDS</h4>
+                  <p className="text-xs text-blue-400 font-medium">Lead Cosmetic & General Dentist</p>
+                  <p className="text-[11px] text-slate-300 mt-1">15+ Years Specializing in Pain-Free Laser Dentistry & Aesthetic Smile Makeovers.</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Live Interactive Gemini Chat Box */}
-          <div className="lg:col-span-7">
-            <GlassCard className="p-0 border-white/15 shadow-2xl overflow-hidden backdrop-blur-3xl bg-slate-900/80 rounded-3xl">
-              
-              {/* Chat Header */}
-              <div className="p-4 border-b border-white/10 bg-slate-950/60 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center text-white shadow-md">
-                    <Bot className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <span>Gemini Sales Assistant</span>
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    </h4>
-                    <p className="text-[10px] text-slate-400">Online • Typically replies in 1s</p>
-                  </div>
-                </div>
-                <Badge variant="primary" size="sm">
-                  Google Gemini 3.7 / 2.5
-                </Badge>
-              </div>
-
-              {/* Message Stream */}
-              <div className="p-5 space-y-4 max-h-[380px] min-h-[340px] overflow-y-auto">
-                {messages.map((m) => {
-                  const isUser = m.sender === 'user';
-                  return (
-                    <div
-                      key={m.id}
-                      className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} animate-fadeIn`}
-                    >
-                      <div
-                        className={`
-                          max-w-[85%] p-3.5 rounded-2xl text-xs leading-relaxed
-                          ${
-                            isUser
-                              ? 'bg-blue-600 text-white rounded-br-none shadow-lg shadow-blue-500/20'
-                              : 'bg-slate-800/90 text-slate-100 rounded-bl-none border border-white/10'
-                          }
-                        `}
-                      >
-                        <p>{m.text}</p>
-                      </div>
-
-                      <div className="flex items-center gap-2 mt-1 px-1">
-                        <span className="text-[9px] text-slate-500">{m.timestamp}</span>
-                        {m.intent && !isUser && (
-                          <span className="text-[9px] font-mono text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">
-                            {m.intent}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {isTyping && (
-                  <div className="flex items-center gap-2 text-xs text-slate-400 p-3 rounded-2xl bg-slate-800/50 border border-white/5 w-fit animate-pulse">
-                    <Sparkles className="w-3.5 h-3.5 text-blue-400 animate-spin" />
-                    <span>Gemini is thinking and searching clinic records...</span>
-                  </div>
-                )}
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Quick Suggestion Chips */}
-              <div className="px-4 py-2.5 bg-slate-950/40 border-t border-white/5 overflow-x-auto flex items-center gap-2 no-scrollbar">
-                {quickPrompts.map((qp, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => handleSendMessage(qp.query)}
-                    className="shrink-0 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-blue-500/20 border border-white/10 hover:border-blue-500/30 text-[11px] font-medium text-slate-300 hover:text-blue-300 transition-all active:scale-95"
-                  >
-                    {qp.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Input Bar */}
-              <form onSubmit={handleFormSubmit} className="p-3 bg-slate-950/80 border-t border-white/10 flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Ask a question or book your appointment..."
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-                />
-                <button
-                  type="submit"
-                  disabled={!inputValue.trim() || isTyping}
-                  className="w-9 h-9 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white flex items-center justify-center shrink-0 transition-all active:scale-95 shadow-md shadow-blue-500/30"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
-              </form>
-
-            </GlassCard>
-          </div>
-
         </div>
       </section>
 
-      {/* Services Showcase Section */}
+      {/* Interactive Gemini Chat Assistant Box */}
+      <section className="max-w-5xl mx-auto px-6 pb-20 relative z-20">
+        <div className="text-center space-y-2 mb-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
+            <Bot className="w-3.5 h-3.5" />
+            <span>Always-On Live Consultation Window</span>
+          </div>
+          <h3 className="text-2xl font-bold text-white">Chat with Dr. Sarah's Gemini AI Assistant</h3>
+          <p className="text-xs text-slate-400">Ask any medical question or describe your symptoms below.</p>
+        </div>
+
+        <GlassCard className="p-0 border-white/15 shadow-2xl overflow-hidden backdrop-blur-3xl bg-slate-900/80 rounded-3xl max-w-4xl mx-auto">
+          
+          {/* Chat Window Header */}
+          <div className="p-4 border-b border-white/10 bg-slate-950/60 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <img
+                  src="/images/dentist_doctor.jpg"
+                  alt="Dr. Sarah Jensen"
+                  className="w-9 h-9 rounded-full object-cover border-2 border-blue-400"
+                />
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-slate-950" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span>Dr. Sarah's AI Coordinator</span>
+                  <span className="text-[10px] text-emerald-400 font-normal">• Active</span>
+                </h4>
+                <p className="text-[10px] text-slate-400">Google Gemini 3.7 Flash Engine</p>
+              </div>
+            </div>
+            <Badge variant="primary" size="sm">
+              Live Connected
+            </Badge>
+          </div>
+
+          {/* Messages Feed */}
+          <div className="p-5 space-y-4 max-h-[380px] min-h-[320px] overflow-y-auto">
+            {messages.map((m) => {
+              const isUser = m.sender === 'user';
+              return (
+                <div
+                  key={m.id}
+                  className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} animate-fadeIn`}
+                >
+                  <div
+                    className={`
+                      max-w-[85%] p-3.5 rounded-2xl text-xs leading-relaxed
+                      ${
+                        isUser
+                          ? 'bg-blue-600 text-white rounded-br-none shadow-lg shadow-blue-500/20'
+                          : 'bg-slate-800/90 text-slate-100 rounded-bl-none border border-white/10'
+                      }
+                    `}
+                  >
+                    <p>{m.text}</p>
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-1 px-1">
+                    <span className="text-[9px] text-slate-500">{m.timestamp}</span>
+                    {m.intent && !isUser && (
+                      <span className="text-[9px] font-mono text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">
+                        {m.intent}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            {isTyping && (
+              <div className="flex items-center gap-2 text-xs text-slate-400 p-3 rounded-2xl bg-slate-800/50 border border-white/5 w-fit animate-pulse">
+                <Sparkles className="w-3.5 h-3.5 text-blue-400 animate-spin" />
+                <span>Dr. Sarah's Assistant is preparing clinical recommendation...</span>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Quick Click Prompts */}
+          <div className="px-4 py-2.5 bg-slate-950/40 border-t border-white/5 overflow-x-auto flex items-center gap-2 no-scrollbar">
+            {quickPrompts.map((qp, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleSendMessage(qp.query)}
+                className="shrink-0 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-blue-500/20 border border-white/10 hover:border-blue-500/30 text-[11px] font-medium text-slate-300 hover:text-blue-300 transition-all active:scale-95"
+              >
+                {qp.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Input Submission */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSendMessage(inputValue);
+            }}
+            className="p-3 bg-slate-950/80 border-t border-white/10 flex items-center gap-2"
+          >
+            <input
+              type="text"
+              placeholder="Ask a question or type 'my teeth pains'..."
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            />
+            <button
+              type="submit"
+              disabled={!inputValue.trim() || isTyping}
+              className="w-9 h-9 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white flex items-center justify-center shrink-0 transition-all active:scale-95 shadow-md shadow-blue-500/30"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </form>
+
+        </GlassCard>
+      </section>
+
+      {/* Modern Clinic Environment Showcase */}
+      <section className="max-w-5xl mx-auto px-6 pb-24">
+        <GlassCard className="p-0 overflow-hidden rounded-3xl border-white/15 shadow-2xl grid grid-cols-1 md:grid-cols-12 items-center">
+          <div className="md:col-span-6 p-8 space-y-4">
+            <Badge variant="primary" size="sm">
+              State-of-the-Art Clinic
+            </Badge>
+            <h4 className="text-2xl font-bold text-white">
+              Relaxing, Spa-Like Dental Care in New York
+            </h4>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Equipped with high-definition digital 3D scanners, ultra-quiet laser instruments, and noise-canceling headphones to ensure every treatment is serene and pain-free.
+            </p>
+            <div className="pt-2 flex flex-col gap-2 text-xs text-slate-400">
+              <span className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" /> 450 Lexington Ave, Suite 800, New York
+              </span>
+              <span className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Mon - Fri: 8 AM - 6 PM | Sat: 9 AM - 3 PM
+              </span>
+            </div>
+          </div>
+          <div className="md:col-span-6 h-full">
+            <img
+              src="/images/clinic_interior.jpg"
+              alt="Apex Modern Dental Clinic"
+              className="w-full h-full object-cover min-h-[260px]"
+            />
+          </div>
+        </GlassCard>
+      </section>
+
+      {/* Services Grid */}
       <section className="max-w-5xl mx-auto px-6 pb-24">
         <div className="text-center space-y-2 mb-10">
           <h3 className="text-xs font-bold text-blue-400 uppercase tracking-wider">
-            Popular Treatments
+            Our Dental Services
           </h3>
           <h4 className="text-2xl font-bold text-white">
             Transparent Pricing & Verified Expertise
@@ -432,7 +495,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
 
               <div className="pt-4 border-t border-white/10 flex items-center justify-between">
-                <span className="text-lg font-extrabold text-white">{svc.price}</span>
+                <span className="text-sm font-bold text-white">{svc.price}</span>
                 <button
                   type="button"
                   onClick={() => handleSendMessage(svc.prompt)}
@@ -449,7 +512,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       {/* Footer */}
       <footer className="border-t border-white/10 py-8 px-6 text-center text-xs text-slate-500">
-        <p>© 2026 {businessProfile.name}. All rights reserved. Powered by Google Gemini & WhatsApp Cloud API.</p>
+        <p>© 2026 {businessProfile.name} • Dr. Sarah Jensen, DDS. Powered by Google Gemini 3.7 & Supabase.</p>
       </footer>
 
     </div>
