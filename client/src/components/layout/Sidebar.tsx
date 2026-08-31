@@ -10,7 +10,9 @@ import {
   Zap,
   ShieldAlert,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  Flame,
+  BrainCircuit
 } from 'lucide-react';
 import { NavigationTab } from '../../types';
 
@@ -36,6 +38,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badge: unreadMessagesCount,
       alert: takeoversNeededCount > 0 
     },
+    { id: 'missed-revenue', label: 'Missed Revenue', icon: Flame },
+    { id: 'training', label: 'AI Training', icon: BrainCircuit },
     { id: 'playground', label: 'AI Playground', icon: Sparkles },
     { id: 'knowledge', label: 'Knowledge', icon: BookOpen },
     { id: 'performance', label: 'Performance', icon: BarChart3 },

@@ -4,27 +4,33 @@ import {
   Moon, 
   Sparkles, 
   Bell, 
-  Smartphone, 
-  ChevronDown,
+  Mail,
   Building2
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { Badge } from '../ui/Badge';
+import { LocationSwitcher, ClinicLocation } from './LocationSwitcher';
 
 interface NavbarProps {
   businessName: string;
   isAIAutopilotEnabled: boolean;
+  currentLocation: ClinicLocation;
+  onSelectLocation: (loc: ClinicLocation) => void;
   onToggleAI: () => void;
   onOpenTestChat: () => void;
   onOpenOnboarding: () => void;
+  onOpenDailyBriefing: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   businessName,
   isAIAutopilotEnabled,
+  currentLocation,
+  onSelectLocation,
   onToggleAI,
   onOpenTestChat,
   onOpenOnboarding,
+  onOpenDailyBriefing,
 }) => {
   const { theme, toggleTheme } = useTheme();
 
@@ -32,16 +38,12 @@ export const Navbar: React.FC<NavbarProps> = ({
     <header className="sticky top-0 z-30 w-full px-6 py-3.5 backdrop-blur-xl bg-white/70 dark:bg-slate-950/70 border-b border-black/5 dark:border-white/10 transition-colors duration-300">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         
-        {/* Left: Active Business Badge */}
+        {/* Left: Multi-Location Switcher & Autopilot Badge */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800">
-            <div className="w-6 h-6 rounded-lg bg-blue-500/10 dark:bg-blue-500/20 text-blue-500 flex items-center justify-center">
-              <Building2 className="w-3.5 h-3.5" />
-            </div>
-            <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-              {businessName}
-            </span>
-          </div>
+          <LocationSwitcher
+            currentLocation={currentLocation}
+            onSelectLocation={onSelectLocation}
+          />
 
           <Badge
             variant={isAIAutopilotEnabled ? 'success' : 'warning'}
@@ -51,7 +53,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={onToggleAI}
           >
             <span className="hidden sm:inline">
-              {isAIAutopilotEnabled ? 'AI Autopilot Live' : 'AI Paused (Manual Mode)'}
+              {isAIAutopilotEnabled ? 'AI Front Desk Live' : 'AI Paused (Manual Mode)'}
             </span>
             <span className="sm:hidden">{isAIAutopilotEnabled ? 'AI Live' : 'Paused'}</span>
           </Badge>
@@ -60,6 +62,15 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Right: Actions */}
         <div className="flex items-center gap-2.5">
           
+          {/* Daily 8:00 AM Executive Briefing */}
+          <button
+            onClick={onOpenDailyBriefing}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-xl transition-all duration-200 active:scale-95 shadow-sm"
+          >
+            <Mail className="w-3.5 h-3.5 text-amber-500" />
+            <span className="hidden md:inline">Executive Briefing</span>
+          </button>
+
           {/* Setup Wizard Button */}
           <button
             onClick={onOpenOnboarding}
@@ -90,18 +101,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Moon className="w-4 h-4 text-slate-700 transition-transform duration-300 -rotate-12 hover:rotate-0" />
             )}
           </button>
-
-          {/* Notifications */}
-          <div className="relative">
-            <button
-              className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 transition-all duration-200 active:scale-95"
-              title="Notifications"
-            >
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-blue-500 animate-ping" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-blue-500" />
-            </button>
-          </div>
 
           {/* User Profile Avatar */}
           <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
