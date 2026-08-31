@@ -42,9 +42,9 @@ export class DocumentExtractorService {
   }
 
   /**
-   * Scrapes clean readable text from a website URL
+   * Scrapes clean readable text and page title from a website URL
    */
-  static async extractFromUrl(url: string): Promise<string> {
+  static async extractFromUrl(url: string): Promise<{ title: string; text: string }> {
     try {
       const response = await fetch(url, {
         headers: {
@@ -59,12 +59,14 @@ export class DocumentExtractorService {
       const html = await response.text();
       const $ = cheerio.load(html);
 
+      const title = $('title').text().trim() || url;
+
       // Remove script tags, stylesheets, and navigation clutter
       $('script, style, noscript, nav, footer, header, svg').remove();
 
       // Extract main text content
-      const text = $('body').text();
-      return text.replace(/\s+/g, ' ').trim();
+      const text = $('body').text().replace(/\s+/g, ' ').trim();
+      return { title, text };
     } catch (error: any) {
       console.error(`Failed to scrape URL "${url}":`, error.message);
       throw new Error(`Failed to crawl web URL: ${error.message}`);
