@@ -3,11 +3,14 @@ import { calendarService } from '../calendar/calendar.service.js';
 import { createClient } from '@supabase/supabase-js';
 import { config } from '../../config/env.js';
 import { IntentValidator } from '../validation/intent.validator.js';
+import { EntityNormalizer } from '../normalization/entity.normalizer.js';
+import { idempotencyService } from '../idempotency/idempotency.service.js';
+import { deadLetterQueue } from '../queue/dead.letter.queue.js';
 import { eventBus } from '../events/event.bus.js';
 import { decisionLogger } from '../logging/decision.logger.js';
 
 export interface ExecutionResult {
-  actionExecuted: 'appointment_booked' | 'lead_qualified' | 'human_handoff_triggered' | 'validation_failed' | 'replied_only';
+  actionExecuted: 'appointment_booked' | 'lead_qualified' | 'human_handoff_triggered' | 'validation_failed' | 'idempotent_duplicate' | 'replied_only';
   validationErrors?: string[];
   details?: Record<string, any>;
 }
@@ -18,14 +21,15 @@ export class ActionExecutor {
   });
 
   /**
-   * Deterministically executes business actions based on structured LLM decision output.
-   * LLM DECIDES -> VALIDATOR CHECKS -> EVENT BUS PUBLISHES -> BACKEND EXECUTES.
+   * Deterministically executes business actions:
+   * LLM DECIDES -> NORMALIZER CANONICALIZES -> IDEMPOTENCY CHECKS -> VALIDATOR RULES -> EVENT BUS -> BACKEND EXECUTES.
    */
   async execute(
-    turn: AIConversationTurnResponse,
+    rawTurn: AIConversationTurnResponse,
     context: {
       businessId?: string;
       conversationId?: string;
+      messageId?: string;
       userMessage?: string;
       llmProvider?: string;
       ragChunksUsed?: string[];
@@ -34,12 +38,21 @@ export class ActionExecutor {
   ): Promise<ExecutionResult> {
     const businessId = context.businessId || 'default-business-id';
     const conversationId = context.conversationId || `conv-${Date.now()}`;
+    const messageId = context.messageId || '';
     const userMessage = context.userMessage || '';
     const llmProvider = context.llmProvider || 'gemini';
     const ragChunksUsed = context.ragChunksUsed || [];
     const durationMs = context.durationMs || 0;
 
-    // 1. Schema & Business Rules Validation Layer
+    // 1. Idempotency Check (Prevents Meta webhook double-execution)
+    if (messageId && idempotencyService.isDuplicate(messageId)) {
+      return { actionExecuted: 'idempotent_duplicate', details: { messageId } };
+    }
+
+    // 2. Normalization Layer (Converts fuzzy strings into canonical enums & ISO timestamps)
+    const turn = EntityNormalizer.normalize(rawTurn);
+
+    // 3. Schema & Strict Business Rules Validation Layer
     const validation = IntentValidator.validate(turn);
     if (!validation.isValid) {
       console.warn('⚠️ [Validator Rejection]: Business rules rejected LLM decision:', validation.errors);
@@ -65,7 +78,7 @@ export class ActionExecutor {
     const sanitizedTurn = validation.sanitizedTurn;
     const { intent, confidence, collected_data, handover_required } = sanitizedTurn;
 
-    // 2. Confidence-Scored Human Handoff Check (< 70% confidence or explicit flag)
+    // 4. Confidence-Scored Human Handoff Check (< 70% confidence or explicit flag)
     if (confidence < 0.70 || handover_required || intent === 'human_handover') {
       console.log(`🚨 Low confidence (${Math.round(confidence * 100)}%) or handoff requested. Emitting Event.`);
       
@@ -78,10 +91,14 @@ export class ActionExecutor {
 
       // Update Supabase
       if (collected_data.phone_number) {
-        await this.supabase
-          .from('conversations')
-          .update({ status: 'human_takeover' })
-          .eq('phone_number', collected_data.phone_number);
+        try {
+          await this.supabase
+            .from('conversations')
+            .update({ status: 'human_takeover' })
+            .eq('phone_number', collected_data.phone_number);
+        } catch (err: any) {
+          deadLetterQueue.enqueue('SUPABASE_TAKEOVER_UPDATE', { phone: collected_data.phone_number }, err.message);
+        }
       }
 
       decisionLogger.logDecision({
@@ -101,7 +118,7 @@ export class ActionExecutor {
       };
     }
 
-    // 3. Automated Appointment Booking Execution
+    // 5. Automated Appointment Booking Execution
     if (
       intent === 'appointment_booking' &&
       collected_data.name &&
@@ -110,43 +127,52 @@ export class ActionExecutor {
     ) {
       console.log(`🗓️ Executing Automated Calendar Booking for ${collected_data.name}...`);
 
-      const bookingResult = await calendarService.bookAppointment({
-        businessId,
-        customerName: collected_data.name,
-        customerPhone: collected_data.phone_number,
-        customerEmail: collected_data.email || '',
-        serviceType: collected_data.business_type || 'General Consultation',
-        startTime: new Date().toISOString(),
-      });
+      try {
+        const bookingResult = await calendarService.bookAppointment({
+          businessId,
+          customerName: collected_data.name,
+          customerPhone: collected_data.phone_number,
+          customerEmail: collected_data.email || '',
+          serviceType: collected_data.business_type || 'General Consultation',
+          startTime: collected_data.preferred_appointment_date,
+        });
 
-      // Publish Event to Event Bus (triggers DB, Calendar, WhatsApp, Analytics)
-      eventBus.publish('APPOINTMENT_BOOKED', {
-        bookingId: bookingResult.appointment?.id || 'apt-1',
-        customerName: collected_data.name,
-        customerPhone: collected_data.phone_number,
-        customerEmail: collected_data.email,
-        service: collected_data.business_type,
-        appointmentSlot: collected_data.preferred_appointment_date,
-      });
+        // Publish Event to Event Bus (triggers DB, Calendar, WhatsApp, Analytics)
+        eventBus.publish('APPOINTMENT_BOOKED', {
+          bookingId: bookingResult.appointment?.id || 'apt-1',
+          customerName: collected_data.name,
+          customerPhone: collected_data.phone_number,
+          customerEmail: collected_data.email,
+          service: collected_data.business_type,
+          appointmentSlot: collected_data.preferred_appointment_date,
+        });
 
-      decisionLogger.logDecision({
-        conversationId,
-        userMessage,
-        ragChunksUsed,
-        llmProvider,
-        confidence,
-        intent,
-        executedAction: 'appointment_booked',
-        durationMs,
-      });
+        decisionLogger.logDecision({
+          conversationId,
+          userMessage,
+          ragChunksUsed,
+          llmProvider,
+          confidence,
+          intent,
+          executedAction: 'appointment_booked',
+          durationMs,
+        });
 
-      return {
-        actionExecuted: 'appointment_booked',
-        details: bookingResult,
-      };
+        return {
+          actionExecuted: 'appointment_booked',
+          details: bookingResult,
+        };
+      } catch (calError: any) {
+        // Enqueue to Dead-Letter Queue instead of dropping the booking
+        deadLetterQueue.enqueue('CALENDAR_BOOKING', collected_data, calError.message);
+        return {
+          actionExecuted: 'appointment_booked',
+          details: { status: 'queued_in_dlq', error: calError.message },
+        };
+      }
     }
 
-    // 4. Automated Lead Qualification Record in CRM
+    // 6. Automated Lead Qualification Record in CRM
     if (collected_data.name || collected_data.phone_number) {
       eventBus.publish('LEAD_QUALIFIED', {
         fullName: collected_data.name,
@@ -172,7 +198,7 @@ export class ActionExecutor {
       };
     }
 
-    // 5. Standard Replied Only
+    // 7. Standard Replied Only
     decisionLogger.logDecision({
       conversationId,
       userMessage,
