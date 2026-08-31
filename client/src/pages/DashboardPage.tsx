@@ -12,7 +12,8 @@ import {
   Sparkles,
   Bot,
   UserCheck,
-  ChevronRight
+  ChevronRight,
+  Clock
 } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
@@ -181,6 +182,91 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           );
         })}
       </div>
+
+      {/* High-Value Revenue Feature: Automated Abandoned Lead Recovery Engine */}
+      <GlassCard className="p-6 border-indigo-500/30 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-blue-500/5 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-indigo-400" />
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                Automated Abandoned Inquiries & Lead Recovery
+              </h3>
+              <Badge variant="purple" size="sm">
+                High ROI Feature
+              </Badge>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Patients who inquired about dental treatments but left without booking. The AI automatically re-engages them on WhatsApp 24 hours later.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl">
+              +$2,450 Recovered Pipeline
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          
+          {/* Recovery Item 1 */}
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-500/20 space-y-3">
+            <div className="flex items-start justify-between">
+              <div>
+                <h4 className="text-xs font-bold text-slate-900 dark:text-white">Sophia Martinez</h4>
+                <p className="text-[11px] text-slate-400 font-mono">+1 (555) 234-5678 • Inquired Yesterday</p>
+              </div>
+              <span className="text-xs font-extrabold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-lg">
+                $350 at Stake
+              </span>
+            </div>
+
+            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-black/5 dark:border-white/5 text-[11px] text-slate-600 dark:text-slate-300 font-mono leading-relaxed">
+              💬 "Hi Sophia, yesterday you asked about Laser Teeth Whitening ($350) but didn't finish booking. Friday at 3:00 PM is still open with Dr. Jensen. Should I hold it for you?"
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-[10px] text-indigo-400 font-semibold flex items-center gap-1">
+                <Clock className="w-3 h-3" /> Auto-Followup Sent • Recovered!
+              </span>
+              <Badge variant="success" size="sm">
+                Booked Friday 3 PM
+              </Badge>
+            </div>
+          </div>
+
+          {/* Recovery Item 2 */}
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-purple-500/20 space-y-3">
+            <div className="flex items-start justify-between">
+              <div>
+                <h4 className="text-xs font-bold text-slate-900 dark:text-white">Marcus Sterling</h4>
+                <p className="text-[11px] text-slate-400 font-mono">+1 (555) 901-2345 • Inquired 2 Days Ago</p>
+              </div>
+              <span className="text-xs font-extrabold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-lg">
+                $950 at Stake
+              </span>
+            </div>
+
+            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-black/5 dark:border-white/5 text-[11px] text-slate-600 dark:text-slate-300 font-mono leading-relaxed">
+              💬 "Hi Marcus, you checked our Porcelain Veneers consultation earlier this week. We have 1 opening left this Saturday at 11:00 AM. Would you like me to hold that slot?"
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-[10px] text-purple-400 font-semibold flex items-center gap-1">
+                <Bot className="w-3 h-3" /> WhatsApp Follow-Up Dispatched
+              </span>
+              <button
+                onClick={() => onSelectTab('conversations')}
+                className="text-[11px] font-bold text-blue-500 hover:underline"
+              >
+                View Live Thread ➔
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </GlassCard>
 
       {/* Main Grid: Recent Conversations & Lead Pipeline Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

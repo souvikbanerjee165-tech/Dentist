@@ -52,7 +52,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     {
       id: 'welcome-1',
       sender: 'gemini',
-      text: `Hello and welcome to Apex Dental & Aesthetics! 😊 I'm Dr. Sarah Jensen's Senior AI Patient Coordinator powered by Google Gemini. How can I assist you today? If you're experiencing tooth pain, need pricing, or want to schedule an appointment, just ask!`,
+      text: `Hello and welcome to ${businessProfile.name}! 😊 I'm Dr. Sarah Jensen's 24/7 AI Patient Receptionist. How can I help you today? If you're experiencing tooth pain, need pricing, or want to schedule an appointment, just ask!`,
       timestamp: 'Just now',
       intent: 'greeting',
       confidence: 0.99,
@@ -68,9 +68,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   const quickPrompts = [
     { label: '🚨 My teeth pains', query: 'my teeth pains' },
-    { label: '💊 Can I take Azithromycin / Medicine?', query: 'can i take azithromycin or any medicine on my own?' },
-    { label: '💎 Laser Whitening ($350)', query: 'How much is your laser whitening treatment and what is included?' },
-    { label: '🗓️ Book for Friday 3 PM', query: 'I would like to book an appointment this Friday at 3:00 PM. My name is Sophia Martinez.' },
+    { label: '💊 Can I take Azithromycin?', query: 'can i take azithromycin on my own?' },
+    { label: '💎 Laser Whitening ($350)', query: 'How much is your laser whitening package?' },
+    { label: '🗓️ Book Friday 3 PM', query: 'I would like to book an appointment this Friday at 3:00 PM. My name is Sophia Martinez.' },
   ];
 
   const streamReply = (fullReply: string, intent: string, confidence: number) => {
@@ -276,15 +276,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
-      {/* Interactive Gemini Chat Assistant Box */}
+      {/* Interactive 24/7 AI Patient Receptionist Chat Box */}
       <section className="max-w-5xl mx-auto px-6 pb-20 relative z-20">
         <div className="text-center space-y-2 mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold">
             <Bot className="w-3.5 h-3.5" />
-            <span>Always-On Live Consultation Window</span>
+            <span>24/7 AI Patient Receptionist</span>
           </div>
-          <h3 className="text-2xl font-bold text-white">Chat with Dr. Sarah's Gemini AI Assistant</h3>
-          <p className="text-xs text-slate-400">Ask any medical question or describe your symptoms below.</p>
+          <h3 className="text-2xl sm:text-3xl font-extrabold text-white">Book Appointments & Get Immediate Dental Answers</h3>
+          <p className="text-xs text-slate-400">Ask any question about treatment, pricing, or emergency pain relief below.</p>
         </div>
 
         <GlassCard className="p-0 border-white/15 shadow-2xl overflow-hidden backdrop-blur-3xl bg-slate-900/80 rounded-3xl max-w-4xl mx-auto">
@@ -302,14 +302,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
               <div>
                 <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <span>Dr. Sarah's AI Coordinator</span>
-                  <span className="text-[10px] text-emerald-400 font-normal">• Active</span>
+                  <span>Dr. Sarah's Clinic Receptionist</span>
+                  <span className="text-[10px] text-emerald-400 font-normal">• Online Now</span>
                 </h4>
-                <p className="text-[10px] text-slate-400">Google Gemini 3.7 Flash Engine</p>
+                <p className="text-[10px] text-slate-400">Instant Appointment Booking & Triage</p>
               </div>
             </div>
-            <Badge variant="primary" size="sm">
-              Live Connected
+            <Badge variant="success" dot size="sm">
+              Instant Replies
             </Badge>
           </div>
 
