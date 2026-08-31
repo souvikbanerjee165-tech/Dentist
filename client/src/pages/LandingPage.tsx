@@ -66,9 +66,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   const quickPrompts = [
     { label: '🚨 My teeth pains', query: 'my teeth pains' },
+    { label: '💊 Can I take Azithromycin / Medicine?', query: 'can i take azithromycin or any medicine on my own?' },
     { label: '💎 Laser Whitening ($350)', query: 'How much is your laser whitening treatment and what is included?' },
     { label: '🗓️ Book for Friday 3 PM', query: 'I would like to book an appointment this Friday at 3:00 PM. My name is Sophia Martinez.' },
-    { label: '🛡️ Insurance Accepted', query: 'Do you accept Delta Dental and MetLife insurance?' },
   ];
 
   const handleSendMessage = async (textToSend: string) => {
@@ -127,11 +127,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         let intent = 'lead_qualification';
 
         if (
+          lower.includes('medicine') ||
+          lower.includes('azithromycin') ||
+          lower.includes('amoxicillin') ||
+          lower.includes('antibiotic') ||
+          lower.includes('painkiller') ||
+          lower.includes('pain killer') ||
+          lower.includes('ibuprofen') ||
+          lower.includes('paracetamol') ||
+          lower.includes('take on my own') ||
+          lower.includes('pill')
+        ) {
+          reply = "Please avoid taking prescription antibiotics like Azithromycin or unverified medicines on your own without a clinical dental exam! Antibiotics and painkillers do not cure tooth infections or nerve decay—they only temporarily mask symptoms while the infection continues spreading to your roots and jawbone. Taking improper antibiotics can also cause dangerous drug resistance and health complications. Dr. Sarah Jensen needs to examine your tooth with a 3D digital scan and prescribe the exact, safe medication tailored to you. We have an urgent evaluation slot available today itself. Should I go ahead and reserve your priority examination today? What is your full name?";
+          intent = 'medication_safety_booking';
+        } else if (
           lower.includes('pain') ||
           lower.includes('teeth pains') ||
           lower.includes('toothache') ||
           lower.includes('tooth hurts') ||
-          lower.includes('sensitive')
+          lower.includes('sensitive') ||
+          lower.includes('swollen')
         ) {
           reply = "I'm so sorry you're experiencing pain! Tooth pain is usually a clear sign of underlying nerve irritation or deep enamel decay that can worsen quickly into a severe infection if delayed. Getting it checked right away protects your natural tooth and prevents costly root canals. Dr. Sarah Jensen has an urgent relief slot open today itself. Should I go ahead and reserve your priority examination today? What is your full name?";
           intent = 'urgent_pain_booking';

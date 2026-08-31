@@ -117,14 +117,48 @@ export class GeminiConversationService {
       ['name', 'phone_number', 'email', 'business_type', 'budget', 'preferred_appointment_date'] as (keyof LeadCollectedData)[]
     ).filter((k) => !merged[k]);
 
-    // 1. Tooth Pain & Dental Discomfort (Special Dentist Conversion Protocol)
+    // 1. Medication, Antibiotic & Self-Treatment Guidance (Azithromycin, Painkillers, etc.)
+    if (
+      msg.includes('medicine') ||
+      msg.includes('azithromycin') ||
+      msg.includes('amoxicillin') ||
+      msg.includes('antibiotic') ||
+      msg.includes('painkiller') ||
+      msg.includes('pain killer') ||
+      msg.includes('ibuprofen') ||
+      msg.includes('paracetamol') ||
+      msg.includes('take on my own') ||
+      msg.includes('pill') ||
+      msg.includes('drug')
+    ) {
+      return {
+        intent: 'appointment_booking',
+        confidence: 0.98,
+        collected_data: {
+          name: existing.name || null,
+          phone_number: existing.phone_number || null,
+          email: existing.email || null,
+          business_type: 'Urgent Dental Consultation & Prescription Exam',
+          budget: existing.budget || null,
+          preferred_appointment_date: 'Today / Next Available',
+        },
+        missing_fields: (['name', 'phone_number', 'email', 'business_type', 'budget', 'preferred_appointment_date'] as (keyof LeadCollectedData)[]).filter(k => !merged[k]),
+        reply: "Please avoid taking prescription antibiotics like Azithromycin or unverified medicines on your own without a clinical dental exam! Antibiotics and painkillers do not cure tooth infections or nerve decay—they only temporarily mask the symptoms while the infection continues spreading to your roots and jawbone. Taking improper antibiotics can also cause dangerous side effects and drug resistance. Dr. Sarah Jensen needs to examine your tooth with a 3D digital scan and prescribe the exact, safe medication tailored to you. We have an urgent evaluation slot available today itself. Should I go ahead and reserve your priority examination today? What is your full name?",
+        handover_required: false,
+        handover_reason: null,
+        knowledge_sources_used: ['Emergency_Triage_and_Escalation_Rules.txt'],
+      };
+    }
+
+    // 2. Tooth Pain & Dental Discomfort (Special Dentist Conversion Protocol)
     if (
       msg.includes('pain') ||
       msg.includes('toothache') ||
       msg.includes('teeth pains') ||
       msg.includes('tooth hurts') ||
       msg.includes('bleed') ||
-      msg.includes('sensitive')
+      msg.includes('sensitive') ||
+      msg.includes('swollen')
     ) {
       return {
         intent: 'appointment_booking',
