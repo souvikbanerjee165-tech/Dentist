@@ -40,7 +40,7 @@ export class SystemEventBus {
   /**
    * Subscribe a listener to an event
    */
-  subscribe<T>(type: SystemEventType, listener: (event: SystemEvent<T>) => Promise<void> | void): void {
+  subscribe<T = any>(type: SystemEventType, listener: (event: SystemEvent<T>) => Promise<void> | void): void {
     this.emitter.on(type, listener);
   }
 
@@ -49,22 +49,22 @@ export class SystemEventBus {
    */
   private registerDefaultListeners(): void {
     // 1. Appointment Booked Listener
-    this.subscribe('APPOINTMENT_BOOKED', async (event) => {
-      console.log(`  └─ 🗓️ [Listener: Calendar & CRM] Synced booking for ${event.payload.customerName}`);
+    this.subscribe<any>('APPOINTMENT_BOOKED', async (event) => {
+      console.log(`  └─ 🗓️ [Listener: Calendar & CRM] Synced booking for ${event.payload?.customerName}`);
     });
 
     // 2. WhatsApp Notification Dispatch Listener
-    this.subscribe('APPOINTMENT_BOOKED', async (event) => {
-      console.log(`  └─ 💬 [Listener: WhatsApp Dispatch] Confirmation queued for ${event.payload.customerPhone}`);
+    this.subscribe<any>('APPOINTMENT_BOOKED', async (event) => {
+      console.log(`  └─ 💬 [Listener: WhatsApp Dispatch] Confirmation queued for ${event.payload?.customerPhone}`);
     });
 
     // 3. Human Takeover Alert Listener
-    this.subscribe('HUMAN_TAKEOVER_REQUIRED', async (event) => {
-      console.log(`  └─ 🚨 [Listener: Staff Alert] Notified clinic front desk for takeover: ${event.payload.reason}`);
+    this.subscribe<any>('HUMAN_TAKEOVER_REQUIRED', async (event) => {
+      console.log(`  └─ 🚨 [Listener: Staff Alert] Notified clinic front desk for takeover: ${event.payload?.reason}`);
     });
 
     // 4. Analytics & ROI Listener
-    this.subscribe('LEAD_QUALIFIED', async (event) => {
+    this.subscribe<any>('LEAD_QUALIFIED', async (event) => {
       console.log(`  └─ 📈 [Listener: Analytics] Logged lead acquisition to ROI dashboard.`);
     });
   }

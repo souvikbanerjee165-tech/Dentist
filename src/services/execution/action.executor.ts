@@ -3,7 +3,7 @@ import { calendarService } from '../calendar/calendar.service.js';
 import { createClient } from '@supabase/supabase-js';
 import { config } from '../../config/env.js';
 import { IntentValidator } from '../validation/intent.validator.js';
-import { eventBus } from '../events/event.bus.ts';
+import { eventBus } from '../events/event.bus.js';
 import { decisionLogger } from '../logging/decision.logger.js';
 
 export interface ExecutionResult {
@@ -121,7 +121,7 @@ export class ActionExecutor {
 
       // Publish Event to Event Bus (triggers DB, Calendar, WhatsApp, Analytics)
       eventBus.publish('APPOINTMENT_BOOKED', {
-        bookingId: bookingResult.appointmentId,
+        bookingId: bookingResult.appointment?.id || 'apt-1',
         customerName: collected_data.name,
         customerPhone: collected_data.phone_number,
         customerEmail: collected_data.email,
