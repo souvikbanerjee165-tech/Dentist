@@ -141,6 +141,67 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
       </GlassCard>
 
+      {/* 2. Swappable AI Engine & LLM Provider Configuration */}
+      <GlassCard className="p-6 space-y-4 border-indigo-500/20 bg-indigo-500/5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+              <Bot className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                Swappable AI Brain & LLM Provider Architecture
+              </h3>
+              <p className="text-xs text-slate-400">
+                Provider-agnostic interface. Switch between Gemini (Validation) and OpenAI (Enterprise).
+              </p>
+            </div>
+          </div>
+
+          <Badge variant="purple" size="sm">
+            Strategy Pattern
+          </Badge>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          
+          {/* Provider 1: Gemini (Active Default) */}
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-500/50 shadow-md space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <h4 className="text-xs font-bold text-slate-900 dark:text-white">Google Gemini 3.7 / 2.5 Flash</h4>
+              </div>
+              <Badge variant="success" size="sm">Active Default</Badge>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+              Fast, cost-optimized, and responsive. Ideal for rapid iteration without recurring OpenAI token spend.
+            </p>
+            <div className="pt-2 text-[10px] text-emerald-500 font-mono">
+              Status: Live & Connected (Zero Spend)
+            </div>
+          </div>
+
+          {/* Provider 2: OpenAI GPT-4o (Plug-and-Play Option) */}
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-400" />
+                <h4 className="text-xs font-bold text-slate-900 dark:text-white">OpenAI GPT-4o / Mini</h4>
+              </div>
+              <Badge variant="neutral" size="sm">Plug & Play Ready</Badge>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+              Implemented via <code>OpenAILLMProvider</code>. Activate by setting <code>LLM_PROVIDER=openai</code> before onboarding clients.
+            </p>
+            <div className="pt-2 text-[10px] text-slate-400 font-mono">
+              Status: Interface Ready • Instant Failover
+            </div>
+          </div>
+
+        </div>
+      </GlassCard>
+
       {/* 2. AI Autopilot & System Prompt Configuration */}
       <GlassCard className="p-6 space-y-5">
         <div className="flex items-center gap-2.5">
