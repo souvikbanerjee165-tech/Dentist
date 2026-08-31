@@ -46,11 +46,11 @@ export const FloatingGeminiChat: React.FC<FloatingGeminiChatProps> = ({
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
   }, [messages, isOpen, isTyping]);
 
@@ -154,7 +154,7 @@ export const FloatingGeminiChat: React.FC<FloatingGeminiChatProps> = ({
           </div>
 
           {/* Chat Messages */}
-          <div className="flex-1 p-4 space-y-3 overflow-y-auto">
+          <div ref={messagesContainerRef} className="flex-1 p-4 space-y-3 overflow-y-auto">
             {messages.map((m) => {
               const isUser = m.sender === 'user';
               return (
@@ -185,7 +185,6 @@ export const FloatingGeminiChat: React.FC<FloatingGeminiChatProps> = ({
                 <span>Dr. Sarah's Assistant is analyzing...</span>
               </div>
             )}
-            <div ref={messagesEndRef} />
           </div>
 
           {/* Quick Action Chips */}

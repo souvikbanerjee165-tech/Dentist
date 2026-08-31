@@ -60,10 +60,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, [messages, isTyping]);
 
   const quickPrompts = [
@@ -314,7 +316,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           {/* Messages Feed */}
-          <div className="p-5 space-y-4 max-h-[380px] min-h-[320px] overflow-y-auto">
+          <div ref={messagesContainerRef} className="p-5 space-y-4 max-h-[380px] min-h-[320px] overflow-y-auto">
             {messages.map((m) => {
               const isUser = m.sender === 'user';
               return (
@@ -353,7 +355,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <span>Dr. Sarah's Assistant is preparing clinical recommendation...</span>
               </div>
             )}
-            <div ref={messagesEndRef} />
           </div>
 
           {/* Quick Click Prompts */}
