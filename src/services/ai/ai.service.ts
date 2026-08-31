@@ -7,6 +7,7 @@ import {
 } from './ai.types.js';
 import { buildSystemPrompt } from './prompt.builder.js';
 import { ragService } from '../rag/rag.service.js';
+import { geminiConversationService } from './gemini.service.js';
 
 export class AIConversationService {
   private openai: OpenAI | null = null;
@@ -45,7 +46,20 @@ export class AIConversationService {
       knowledgeContext: effectiveKnowledge,
     };
 
-    // If OpenAI API key is not configured, use local intelligent simulator
+    // 2. Primary Brain: Google Gemini Flash Engine
+    if (config.gemini.apiKey && !config.gemini.apiKey.startsWith('your_gemini')) {
+      try {
+        const geminiTurn = await geminiConversationService.processTurn(enhancedInput);
+        if (knowledgeSources.length > 0) {
+          geminiTurn.knowledge_sources_used = knowledgeSources;
+        }
+        return geminiTurn;
+      } catch (geminiError: any) {
+        console.warn('⚠️ Gemini Engine notice, failing over to secondary handler:', geminiError.message);
+      }
+    }
+
+    // 3. Secondary Brain: OpenAI or Local Simulation
     if (!this.openai) {
       const simulated = this.simulateTurn(enhancedInput);
       if (knowledgeSources.length > 0) {

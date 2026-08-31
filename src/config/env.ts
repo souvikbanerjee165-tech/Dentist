@@ -14,6 +14,10 @@ export const config = {
   openai: {
     apiKey: process.env.OPENAI_API_KEY || '',
   },
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY || '',
+    model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+  },
   whatsapp: {
     apiToken: process.env.WHATSAPP_API_TOKEN || '',
     verifyToken: process.env.WHATSAPP_VERIFY_TOKEN || 'whatsapp_sales_assistant_verify_token',

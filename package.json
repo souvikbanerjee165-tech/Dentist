@@ -31,6 +31,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/genai": "^2.19.0",
     "@supabase/supabase-js": "^2.49.1",
     "cheerio": "^1.2.0",
     "compression": "^1.8.1",

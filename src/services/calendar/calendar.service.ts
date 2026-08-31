@@ -159,19 +159,16 @@ export class GoogleCalendarService {
     ) {
       try {
         await supabase.from('appointments').insert({
-          id: newAppointment.id,
-          business_id: newAppointment.businessId,
-          lead_id: newAppointment.leadId || null,
-          google_event_id: newAppointment.googleEventId,
-          title: newAppointment.title,
-          service_type: newAppointment.serviceType,
-          start_time: newAppointment.startTime,
-          end_time: newAppointment.endTime,
+          customer_name: newAppointment.customerName,
+          customer_phone: newAppointment.customerPhone,
+          customer_email: newAppointment.customerEmail,
+          treatment: newAppointment.serviceType,
+          appointment_time: newAppointment.startTime,
           status: newAppointment.status,
           notes: newAppointment.notes,
         });
-      } catch (err) {
-        // Fallback to local storage
+      } catch (err: any) {
+        console.warn('Notice: Supabase insert fallback:', err.message);
       }
     }
 
