@@ -192,7 +192,7 @@ export const LeadsPage: React.FC<LeadsPageProps> = ({ leads, onSelectTab }) => {
 
                     <td className="py-4 px-4 text-right">
                       <button
-                        onClick={() => onSelectTab('conversations')}
+                        onClick={() => onSelectTab('patients')}
                         className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-xl transition-all active:scale-95"
                       >
                         <MessageSquare className="w-3.5 h-3.5" />

@@ -28,15 +28,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navItems: { id: NavigationTab; label: string; icon: React.FC<{ className?: string }>; badge?: number; alert?: boolean }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { 
-      id: 'conversations', 
-      label: 'Conversations', 
-      icon: MessageSquare, 
+      id: 'patients', 
+      label: 'Patients', 
+      icon: Users, 
       badge: unreadMessagesCount,
       alert: takeoversNeededCount > 0 
     },
-    { id: 'leads', label: 'Leads CRM', icon: Users },
-    { id: 'knowledge', label: 'Knowledge Base', icon: BookOpen },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'knowledge', label: 'Knowledge', icon: BookOpen },
+    { id: 'performance', label: 'Performance', icon: BarChart3 },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
@@ -111,7 +110,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Human Takeover Alert Banner (when active) */}
       {takeoversNeededCount > 0 ? (
         <div 
-          onClick={() => onSelectTab('conversations')}
+          onClick={() => onSelectTab('patients')}
           className="p-3.5 rounded-2xl bg-gradient-to-br from-rose-500/10 to-amber-500/10 border border-rose-500/30 cursor-pointer hover:scale-[1.02] transition-transform duration-200 shadow-sm"
         >
           <div className="flex items-center gap-2 text-rose-500 dark:text-rose-400 text-xs font-bold mb-1">

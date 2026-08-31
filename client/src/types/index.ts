@@ -1,9 +1,8 @@
 export type NavigationTab = 
   | 'dashboard' 
-  | 'conversations' 
-  | 'leads' 
+  | 'patients' 
   | 'knowledge' 
-  | 'analytics' 
+  | 'performance' 
   | 'settings';
 
 export type LeadStatus = 'new' | 'qualified' | 'booked' | 'unresponsive' | 'lost';

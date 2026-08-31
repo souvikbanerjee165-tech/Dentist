@@ -5,8 +5,7 @@ import { Sidebar } from './components/layout/Sidebar';
 import { LandingPage } from './pages/LandingPage';
 import { SignUpPage } from './pages/SignUpPage';
 import { DashboardPage } from './pages/DashboardPage';
-import { ConversationsPage } from './pages/ConversationsPage';
-import { LeadsPage } from './pages/LeadsPage';
+import { PatientsPage } from './pages/PatientsPage';
 import { KnowledgeBasePage } from './pages/KnowledgeBasePage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -168,17 +167,12 @@ export const AppContent: React.FC = () => {
                 />
               )}
 
-              {activeTab === 'conversations' && (
-                <ConversationsPage
+              {activeTab === 'patients' && (
+                <PatientsPage
                   conversations={conversations}
+                  leads={leads}
                   onToggleTakeover={handleToggleTakeover}
                   onSendMessage={handleSendMessage}
-                />
-              )}
-
-              {activeTab === 'leads' && (
-                <LeadsPage
-                  leads={leads}
                   onSelectTab={setActiveTab}
                 />
               )}
@@ -211,7 +205,7 @@ export const AppContent: React.FC = () => {
                 />
               )}
 
-              {activeTab === 'analytics' && (
+              {activeTab === 'performance' && (
                 <AnalyticsPage onSelectTab={setActiveTab} />
               )}
 

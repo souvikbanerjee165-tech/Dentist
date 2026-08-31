@@ -210,18 +210,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold backdrop-blur-md">
               <Sparkles className="w-4 h-4" />
-              <span>Dr. Sarah Jensen, DDS • 24/7 AI-Powered Dental Care</span>
+              <span>Dr. Sarah Jensen, DDS • Practice Growth Automation</span>
             </div>
 
-            <h2 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-[1.1]">
-              Gentle, Modern Dentistry with{' '}
+            <h2 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-[1.15]">
+              AI Receptionist That Answers Every WhatsApp Message 24/7 and{' '}
               <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-cyan-400 bg-clip-text text-transparent">
-                Zero Waiting Time
+                Books More Patients Automatically.
               </span>
             </h2>
 
-            <p className="text-sm sm:text-base text-slate-400 leading-relaxed max-w-xl">
-              Experience pain-free cosmetic & restorative dental treatments in New York. Ask questions, check pricing, and get same-day appointment slots via our <strong>Google Gemini Flash</strong> assistant.
+            <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-xl">
+              Never miss another patient inquiry. Instant medical triage, transparent pricing, and automated calendar bookings with zero front-desk overhead.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start pt-2">
