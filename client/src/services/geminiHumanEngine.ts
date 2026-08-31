@@ -1,6 +1,7 @@
 /**
  * High-Conversion Patient Coordinator Brain
  * Short, punchy, conversational, and always ends with an actionable next step.
+ * Configured with exact verified clinical fees.
  */
 
 export interface ChatMessageContext {
@@ -39,11 +40,11 @@ export class GeminiHumanEngine {
       return {
         intent: 'medication_safety',
         confidence: 0.99,
-        reply: `It's best not to take antibiotics like Azithromycin without an examination. Antibiotics can temporarily reduce symptoms, but they won't treat the underlying tooth infection.
+        reply: `It's best not to take antibiotics like Azithromycin without an in-person examination. Antibiotics can temporarily mask symptoms, but they won't treat the underlying tooth infection.
 
-Dr. Sarah Jensen has an urgent relief slot open today.
+Dr. Sarah Jensen has an emergency tooth pain exam slot open today (£95).
 
-**Would you like me to reserve that slot for you?**`,
+**Would you like me to hold that slot for you?**`,
       };
     }
 
@@ -61,38 +62,35 @@ Dr. Sarah Jensen has an urgent relief slot open today.
         return {
           intent: 'urgent_pain_relief',
           confidence: 0.99,
-          reply: `I understand. Since the pain has been persisting, is it worse when drinking cold liquids or chewing?
+          reply: `I understand. Since the pain has been persisting, is it sharper with hot/cold liquids or when biting down?
 
-Leaving it unexamined can allow the nerve inflammation to escalate into a deeper infection. Dr. Sarah Jensen has an opening this afternoon to relieve the pain immediately.
+Leaving it unexamined can allow nerve inflammation to spread. Dr. Sarah Jensen has an emergency relief opening this afternoon (£95).
 
-**Should I secure this priority exam slot for you today?**`,
+**Should I secure this priority slot for you today?**`,
         };
       }
 
       return {
         intent: 'urgent_pain_relief',
         confidence: 0.99,
-        reply: `I'm sorry you're in pain! Tooth pain is usually a sign of nerve irritation or enamel decay that needs prompt attention before it worsens.
+        reply: `I'm sorry you're in pain! Tooth pain usually indicates nerve irritation or decay that needs prompt attention before it escalates.
 
-Dr. Sarah Jensen has a priority relief opening today.
+Dr. Sarah Jensen has an emergency relief opening today (£95 with 3D digital diagnosis).
 
 **Would you like me to hold that appointment for you? What is your full name?**`,
       };
     }
 
-    // 3. Whitening & Cosmetic Packages
+    // 3. Teeth Whitening (£395)
     if (
       msg.includes('whitening') ||
       msg.includes('brighten') ||
-      msg.includes('stain') ||
-      msg.includes('cost') ||
-      msg.includes('price') ||
-      msg.includes('package')
+      msg.includes('stain')
     ) {
       return {
         intent: 'cosmetic_whitening',
         confidence: 0.98,
-        reply: `Our Laser Whitening & Deep Clean package is **$350**. It brightens teeth up to 8 shades in 45 minutes with zero tooth sensitivity, and includes a take-home touch-up kit.
+        reply: `Our professional **Teeth Whitening** is **£395**. It delivers guaranteed long-lasting whitening results using clinical-grade products with zero tooth sensitivity.
 
 We have openings this **Friday at 3:00 PM** and **Saturday at 11:00 AM**.
 
@@ -100,7 +98,105 @@ We have openings this **Friday at 3:00 PM** and **Saturday at 11:00 AM**.
       };
     }
 
-    // 4. Booking & Scheduling Requests
+    // 4. Emax Veneers (£850/tooth) & Bespoke Bonding (£395/tooth)
+    if (
+      msg.includes('veneer') ||
+      msg.includes('emax') ||
+      msg.includes('bonding') ||
+      msg.includes('bespoke') ||
+      msg.includes('smile makeover')
+    ) {
+      return {
+        intent: 'cosmetic_veneers',
+        confidence: 0.98,
+        reply: `For smile aesthetics, we offer:
+• **Emax Veneers**: **£850 per tooth** (High quality E-max for long-lasting, high strength aesthetic results)
+• **Bespoke Bonding**: **£395 per tooth** (AI software-designed composite bonding for predictable results)
+
+Dr. Sarah Jensen can perform your digital 3D smile design consultation.
+
+**Would you like to book a consultation this week?**`,
+      };
+    }
+
+    // 5. Dental Implants (From £2,800/tooth)
+    if (
+      msg.includes('implant') ||
+      msg.includes('missing tooth') ||
+      msg.includes('missing teeth') ||
+      msg.includes('screw')
+    ) {
+      return {
+        intent: 'dental_implants',
+        confidence: 0.98,
+        reply: `Our **Dental Implants** start from **£2,800 per tooth**. It's a permanent, long-lasting solution to replace missing teeth and restore your smile and chewing function with confidence.
+
+Dr. Sarah Jensen provides a full 3D CT scan assessment.
+
+**Would you like to schedule an implant consultation?**`,
+      };
+    }
+
+    // 6. Clear Aligners (From £3,100)
+    if (
+      msg.includes('aligner') ||
+      msg.includes('invisalign') ||
+      msg.includes('straighten') ||
+      msg.includes('braces')
+    ) {
+      return {
+        intent: 'clear_aligners',
+        confidence: 0.98,
+        reply: `Our **Clear Aligners** start from **£3,100**. They offer a discrete, comfortable way to straighten your teeth without the high price tag of traditional Invisalign.
+
+We have consultation slots available this week including digital 3D smile simulations.
+
+**Would you like to reserve a consultation?**`,
+      };
+    }
+
+    // 7. Composite Fillings (From £225/tooth)
+    if (
+      msg.includes('filling') ||
+      msg.includes('composite') ||
+      msg.includes('cavity') ||
+      msg.includes('amalgam')
+    ) {
+      return {
+        intent: 'composite_fillings',
+        confidence: 0.97,
+        reply: `Our **Composite Fillings** start from **£225 per tooth**. We replace old amalgam metal fillings with natural tooth-colored white fillings that blend seamlessly into your smile.
+
+**Would you like to book an appointment to have your tooth treated?**`,
+      };
+    }
+
+    // 8. General Pricing Inquiry
+    if (
+      msg.includes('price') ||
+      msg.includes('pricing') ||
+      msg.includes('cost') ||
+      msg.includes('fee') ||
+      msg.includes('fees') ||
+      msg.includes('how much')
+    ) {
+      return {
+        intent: 'general_pricing',
+        confidence: 0.97,
+        reply: `Here is our transparent fee schedule:
+• **Teeth Whitening**: £395
+• **Composite Fillings**: from £225/tooth
+• **Bespoke Composite Bonding**: £395/tooth
+• **Emax Porcelain Veneers**: £850/tooth
+• **Dental Implants**: from £2,800/tooth
+• **Clear Aligners**: from £3,100
+• **Routine Exam & 3D Scan**: £95
+
+**Which treatment are you interested in booking?**`,
+      };
+    }
+
+    // 9. Booking & Scheduling Requests
     if (
       msg.includes('book') ||
       msg.includes('appointment') ||
@@ -120,48 +216,13 @@ We have openings this **Friday at 3:00 PM** and **Saturday at 11:00 AM**.
       };
     }
 
-    // 5. Insurance & Payments
-    if (
-      msg.includes('insurance') ||
-      msg.includes('metlife') ||
-      msg.includes('delta') ||
-      msg.includes('cigna') ||
-      msg.includes('aetna') ||
-      msg.includes('ppo')
-    ) {
-      return {
-        intent: 'insurance_pricing',
-        confidence: 0.97,
-        reply: `Yes! We accept and file claims directly with all major PPO insurances including Delta Dental, MetLife, Cigna, and Aetna for zero paperwork on your end.
-
-We also offer 0% interest monthly payment plans.
-
-**Would you like to book a consultation so we can verify your exact benefits?**`,
-      };
-    }
-
-    // 6. Sign-Up Assistance
-    if (msg.includes('sign up') || msg.includes('register') || msg.includes('form') || msg.includes('help')) {
-      return {
-        intent: 'signup_support',
-        confidence: 0.98,
-        reply: `I can help you sign up right here in 30 seconds! 
-
-All we need is your Full Name, Phone Number, and what treatment you need.
-
-**What is your full name and what dental concern can we help you with?**`,
-      };
-    }
-
-    // 7. General Greetings
+    // 10. Default Friendly Assistant
     return {
-      intent: 'greeting',
-      confidence: 0.95,
-      reply: `Hello and welcome to Dr. Sarah Jensen's clinic! 😊
+      intent: 'general_inquiry',
+      confidence: 0.92,
+      reply: `Welcome to our clinic! 😊 I can check live appointment availability, provide instant fee quotes (e.g. Teeth Whitening £395, Emax Veneers £850, Implants from £2,800), or help triage tooth pain.
 
-I can help you book same-day pain relief, check treatment pricing, or answer questions about insurance.
-
-**Are you looking to book an appointment or check a specific treatment today?**`,
+**How can I best assist you today?**`,
     };
   }
 }

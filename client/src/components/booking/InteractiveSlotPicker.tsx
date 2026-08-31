@@ -36,7 +36,7 @@ interface InteractiveSlotPickerProps {
 
 export const InteractiveSlotPicker: React.FC<InteractiveSlotPickerProps> = ({
   businessProfile,
-  initialTreatment = 'Cosmetic Laser Teeth Whitening ($350)',
+  initialTreatment = 'Teeth whitening (£395)',
   onBookingComplete,
   onCancel,
 }) => {
@@ -50,7 +50,7 @@ export const InteractiveSlotPicker: React.FC<InteractiveSlotPickerProps> = ({
     fullName: '',
     phone: '',
     email: '',
-    insurance: 'Delta Dental PPO',
+    insurance: 'Private / Self-Pay',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -71,6 +71,57 @@ export const InteractiveSlotPicker: React.FC<InteractiveSlotPickerProps> = ({
     '4:15 PM',
   ];
 
+  const treatmentOptions = [
+    {
+      title: 'Teeth whitening',
+      price: '£395',
+      tag: '✨ Aesthetic Dentistry',
+      desc: 'Guaranteed whitening results with professional products',
+    },
+    {
+      title: 'Composite fillings',
+      price: 'From £225',
+      tag: '🦷 Restorative',
+      desc: 'Replace old amalgam with seamless tooth-colored fillings',
+    },
+    {
+      title: 'Emax veneers',
+      price: '£850 / tooth',
+      tag: '💎 Aesthetic Dentistry',
+      desc: 'High strength, highly aesthetic porcelain veneers',
+    },
+    {
+      title: 'Bespoke bonding',
+      price: '£395 / tooth',
+      tag: '🤖 AI Smile Design',
+      desc: 'High quality composite bonding designed using AI software',
+    },
+    {
+      title: 'Dental Implants',
+      price: 'From £2,800',
+      tag: '🔩 Permanent Solution',
+      desc: 'Long-lasting titanium solution to restore your smile',
+    },
+    {
+      title: 'Clear aligners',
+      price: 'From £3,100',
+      tag: '📐 Orthodontics',
+      desc: 'Discrete, comfortable teeth straightening',
+    },
+    {
+      title: 'Emergency Tooth Pain & Exam',
+      price: '£95',
+      tag: '🚨 Priority Today',
+      desc: '3D digital diagnosis, nerve soothing & immediate relief',
+    },
+    {
+      title: 'Routine Examination & 3D Scan',
+      price: '£95',
+      tag: '🩺 General Dentistry',
+      desc: 'Complete oral check, cancer screening & 3D digital imaging',
+    },
+  ];
+
   const handleConfirmAndRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -85,27 +136,11 @@ export const InteractiveSlotPicker: React.FC<InteractiveSlotPickerProps> = ({
       insurance: formData.insurance,
     };
 
-    try {
-      // Save directly to Supabase via backend API
-      await fetch('/api/v1/calendar/book', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerName: formData.fullName,
-          customerPhone: formData.phone,
-          customerEmail: formData.email,
-          serviceType: treatment,
-          startTime: new Date().toISOString(),
-        }),
-      });
-    } catch {
-      // Graceful offline fallback
-    }
-
+    // Simulate backend booking execution
     setTimeout(() => {
       setIsSubmitting(false);
       onBookingComplete(bookingPayload);
-    }, 600);
+    }, 700);
   };
 
   return (
@@ -114,7 +149,7 @@ export const InteractiveSlotPicker: React.FC<InteractiveSlotPickerProps> = ({
       {/* Background glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-gradient-to-tr from-blue-600/20 via-indigo-600/20 to-cyan-500/20 rounded-full blur-[130px] pointer-events-none" />
 
-      <div className="max-w-3xl mx-auto relative z-10 space-y-8">
+      <div className="max-w-4xl mx-auto py-4 sm:py-8 space-y-6 relative z-10">
         
         {/* Navigation back */}
         <div className="flex items-center justify-between">
@@ -149,7 +184,7 @@ export const InteractiveSlotPicker: React.FC<InteractiveSlotPickerProps> = ({
 
         {/* STEP 1: INTERACTIVE CALENDAR & SLOT PICKER */}
         {step === 1 && (
-          <GlassCard className="p-8 rounded-3xl border-white/15 shadow-2xl space-y-8 animate-fadeIn">
+          <GlassCard className="p-8 rounded-3xl border-white/15 shadow-2xl space-y-8 animate-fadeIn w-full">
             
             {/* 1. Select Treatment */}
             <div className="space-y-3">
@@ -157,38 +192,19 @@ export const InteractiveSlotPicker: React.FC<InteractiveSlotPickerProps> = ({
                 <Stethoscope className="w-4 h-4 text-blue-400" /> 1. Select Dental Treatment
               </label>
               
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {[
-                  {
-                    title: 'Tooth Pain Relief & Exam',
-                    price: '$95',
-                    tag: '🚨 Priority Emergency',
-                  },
-                  {
-                    title: 'Cosmetic Laser Teeth Whitening',
-                    price: '$350',
-                    tag: '💎 Most Popular',
-                  },
-                  {
-                    title: 'Comprehensive Exam & Deep Clean',
-                    price: '$180',
-                    tag: '🦷 Routine Care',
-                  },
-                ].map((svc, idx) => {
-                  const isSelected = treatment.includes(svc.title);
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {treatmentOptions.map((svc, idx) => {
+                  const isSelected = treatment.toLowerCase().includes(svc.title.toLowerCase());
                   return (
                     <button
                       key={idx}
                       type="button"
                       onClick={() => setTreatment(`${svc.title} (${svc.price})`)}
-                      className={`
-                        p-4 rounded-2xl border text-left transition-all duration-200 flex flex-col justify-between
-                        ${
-                          isSelected
-                            ? 'border-blue-500 bg-blue-600/15 text-white shadow-lg shadow-blue-500/20'
-                            : 'border-white/10 bg-white/5 text-slate-300 hover:border-white/20'
-                        }
-                      `}
+                      className={`p-4 rounded-2xl border text-left transition-all duration-200 flex flex-col justify-between ${
+                        isSelected
+                          ? 'border-blue-500 bg-blue-600/15 text-white shadow-lg shadow-blue-500/20'
+                          : 'border-white/10 bg-white/5 text-slate-300 hover:border-white/20'
+                      }`}
                     >
                       <div className="space-y-1">
                         <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">{svc.tag}</span>

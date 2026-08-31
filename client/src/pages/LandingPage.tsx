@@ -63,6 +63,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [activeFeeTab, setActiveFeeTab] = useState<'aesthetic' | 'general'>('aesthetic');
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -72,9 +73,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   }, [messages, isTyping]);
 
   const quickPrompts = [
-    { label: '🚨 My teeth pains', query: 'my teeth pains' },
-    { label: '💊 Can I take Azithromycin?', query: 'can i take azithromycin on my own?' },
-    { label: '💎 Laser Whitening ($350)', query: 'How much is your laser whitening package?' },
+    { label: '🚨 Tooth pain relief (£95)', query: 'my teeth pains' },
+    { label: '💎 Teeth Whitening (£395)', query: 'How much is your professional teeth whitening package?' },
+    { label: '✨ Emax Veneers (£850)', query: 'How much are Emax veneers per tooth?' },
+    { label: '🦷 Implants (From £2,800)', query: 'How much are dental implants per tooth?' },
     { label: '🗓️ Book Friday 3 PM', query: 'I would like to book an appointment this Friday at 3:00 PM. My name is Sophia Martinez.' },
   ];
 
@@ -419,52 +421,263 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </GlassCard>
       </section>
 
-      {/* Services Grid with 1-Click Book Slot */}
-      <section className="max-w-5xl mx-auto px-6 pb-24">
-        <div className="text-center space-y-2 mb-10">
-          <h3 className="text-xs font-bold text-blue-400 uppercase tracking-wider">
-            Featured Dental Treatments
-          </h3>
-          <h4 className="text-2xl sm:text-3xl font-extrabold text-white">
-            Transparent Pricing & Guaranteed Gentle Care
-          </h4>
-        </div>
+      {/* Exact Match: DENTAL FEES Section from Screenshot */}
+      <section className="max-w-6xl mx-auto px-6 pb-24">
+        <div className="relative p-8 md:p-12 rounded-3xl bg-[#b8b3a7]/20 dark:bg-slate-900/60 border border-white/10 overflow-hidden">
+          
+          {/* Background Watermark FEES text */}
+          <div className="absolute -bottom-8 -left-4 text-[120px] sm:text-[180px] font-black text-white/[0.04] dark:text-white/[0.02] select-none pointer-events-none tracking-tighter uppercase font-sans">
+            FEES
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {services.map((svc, i) => (
-            <GlassCard key={i} className="p-6 space-y-4 border-white/10 hover:border-blue-500/40 transition-all flex flex-col justify-between group">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md">
-                    {svc.tag}
-                  </span>
-                  <span className="text-xs text-slate-400 flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> {svc.duration}
-                  </span>
-                </div>
-
-                <h5 className="text-base font-bold text-white group-hover:text-blue-300 transition-colors">
-                  {svc.title}
-                </h5>
-
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  {svc.description}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative z-10">
+            
+            {/* Left Column: Heading, Subtitle & Get in Touch Button */}
+            <div className="lg:col-span-4 space-y-6">
+              <div className="space-y-2">
+                <h3 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight uppercase">
+                  DENTAL FEES
+                </h3>
+                <p className="text-sm text-slate-300 dark:text-slate-400">
+                  Have more questions? Don't hesitate to get in touch.
                 </p>
               </div>
 
-              <div className="pt-4 border-t border-white/10 flex items-center justify-between">
-                <span className="text-sm font-bold text-white">{svc.price}</span>
+              <button
+                type="button"
+                onClick={() => onOpenSlotPicker()}
+                className="px-6 py-3 rounded-md bg-[#2b2824] hover:bg-[#3d3934] text-white font-semibold text-xs tracking-wider transition-all shadow-md active:scale-95 border border-white/10"
+              >
+                Get in Touch
+              </button>
+            </div>
+
+            {/* Right Column: High-End White Accordion Card */}
+            <div className="lg:col-span-8 space-y-4">
+              
+              {/* Accordion 01: Aesthetic dentistry */}
+              <div className="bg-white dark:bg-slate-950 rounded-2xl p-6 sm:p-8 shadow-xl border border-black/5 dark:border-white/10 space-y-6">
+                
+                {/* Accordion Header */}
                 <button
                   type="button"
-                  onClick={() => onOpenSlotPicker(svc.title)}
-                  className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-blue-500/20 active:scale-95 transition-all"
+                  onClick={() => setActiveFeeTab(activeFeeTab === 'aesthetic' ? 'general' : 'aesthetic')}
+                  className="w-full flex items-center justify-between text-left group"
                 >
-                  <span>Book Slot Now</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-mono text-slate-400">01</span>
+                    <h4 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      Aesthetic dentistry
+                    </h4>
+                  </div>
+                  <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${activeFeeTab === 'aesthetic' ? 'rotate-90' : ''}`} />
                 </button>
+
+                {/* Table Header & Rows */}
+                {activeFeeTab === 'aesthetic' && (
+                  <div className="pt-2 divide-y divide-slate-100 dark:divide-slate-800 animate-fadeIn">
+                    
+                    {/* Header Row */}
+                    <div className="flex items-center justify-between pb-3 text-[11px] font-semibold uppercase text-slate-400 tracking-wider">
+                      <span>Treatment</span>
+                      <span>Price</span>
+                    </div>
+
+                    {/* Row 1: Teeth whitening */}
+                    <div 
+                      className="py-4 flex items-start justify-between gap-4 group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 px-2 rounded-xl transition-colors"
+                      onClick={() => onOpenSlotPicker('Teeth whitening (£395)')}
+                    >
+                      <div className="space-y-1 max-w-md">
+                        <h5 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white underline decoration-slate-300 underline-offset-4 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                          Teeth whitening
+                        </h5>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                          Guaranteed whitening results with professional products which last long term
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white font-mono">£395</span>
+                      </div>
+                    </div>
+
+                    {/* Row 2: Composite fillings */}
+                    <div 
+                      className="py-4 flex items-start justify-between gap-4 group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 px-2 rounded-xl transition-colors"
+                      onClick={() => onOpenSlotPicker('Composite fillings (From £225 per tooth)')}
+                    >
+                      <div className="space-y-1 max-w-md">
+                        <h5 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white underline decoration-slate-300 underline-offset-4 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                          Composite fillings
+                        </h5>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                          Replace old amalgam fillings with white fillings which blend seamlessly into your smile
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-[10px] uppercase font-semibold text-slate-400 block">FROM</span>
+                        <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white font-mono">£225</span>
+                        <span className="text-[10px] text-slate-400 block">per tooth</span>
+                      </div>
+                    </div>
+
+                    {/* Row 3: Emax veneers */}
+                    <div 
+                      className="py-4 flex items-start justify-between gap-4 group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 px-2 rounded-xl transition-colors"
+                      onClick={() => onOpenSlotPicker('Emax veneers (£850 per tooth)')}
+                    >
+                      <div className="space-y-1 max-w-md">
+                        <h5 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white underline decoration-slate-300 underline-offset-4 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                          Emax veneers
+                        </h5>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                          High quality E-max veneers for long lasting, high strength, highly aesthetic results
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white font-mono">£850</span>
+                        <span className="text-[10px] text-slate-400 block">per tooth</span>
+                      </div>
+                    </div>
+
+                    {/* Row 4: Bespoke bonding */}
+                    <div 
+                      className="py-4 flex items-start justify-between gap-4 group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 px-2 rounded-xl transition-colors"
+                      onClick={() => onOpenSlotPicker('Bespoke bonding (£395 per tooth)')}
+                    >
+                      <div className="space-y-1 max-w-md">
+                        <h5 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white underline decoration-slate-300 underline-offset-4 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                          Bespoke bonding
+                        </h5>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                          High quality composite bonding designed using AI software to deliver predictable results
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white font-mono">£395</span>
+                        <span className="text-[10px] text-slate-400 block">per tooth</span>
+                      </div>
+                    </div>
+
+                    {/* Row 5: Implants */}
+                    <div 
+                      className="py-4 flex items-start justify-between gap-4 group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 px-2 rounded-xl transition-colors"
+                      onClick={() => onOpenSlotPicker('Implants (From £2800 per tooth)')}
+                    >
+                      <div className="space-y-1 max-w-md">
+                        <h5 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white underline decoration-slate-300 underline-offset-4 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                          Implants
+                        </h5>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                          A long-lasting solution to replace missing teeth and restore your smile with confidence
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-[10px] uppercase font-semibold text-slate-400 block">FROM</span>
+                        <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white font-mono">£2800</span>
+                        <span className="text-[10px] text-slate-400 block">per tooth</span>
+                      </div>
+                    </div>
+
+                    {/* Row 6: Clear aligners */}
+                    <div 
+                      className="py-4 flex items-start justify-between gap-4 group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 px-2 rounded-xl transition-colors"
+                      onClick={() => onOpenSlotPicker('Clear aligners (From £3100)')}
+                    >
+                      <div className="space-y-1 max-w-md">
+                        <h5 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white underline decoration-slate-300 underline-offset-4 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                          Clear aligners
+                        </h5>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                          A discrete, comfortable way to straighten your teeth without the price tag of Invisalign
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-[10px] uppercase font-semibold text-slate-400 block">FROM</span>
+                        <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white font-mono">£3100</span>
+                      </div>
+                    </div>
+
+                  </div>
+                )}
+
               </div>
-            </GlassCard>
-          ))}
+
+              {/* Accordion 02: General dentistry */}
+              <div className="bg-white dark:bg-slate-950 rounded-2xl p-6 sm:p-8 shadow-xl border border-black/5 dark:border-white/10 space-y-4">
+                <button
+                  type="button"
+                  onClick={() => setActiveFeeTab(activeFeeTab === 'general' ? 'aesthetic' : 'general')}
+                  className="w-full flex items-center justify-between text-left group"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-mono text-slate-400">02</span>
+                    <h4 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      General dentistry
+                    </h4>
+                  </div>
+                  <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${activeFeeTab === 'general' ? 'rotate-90' : ''}`} />
+                </button>
+
+                {activeFeeTab === 'general' && (
+                  <div className="pt-2 divide-y divide-slate-100 dark:divide-slate-800 animate-fadeIn">
+                    <div className="flex items-center justify-between pb-3 text-[11px] font-semibold uppercase text-slate-400 tracking-wider">
+                      <span>Treatment</span>
+                      <span>Price</span>
+                    </div>
+
+                    <div 
+                      className="py-4 flex items-start justify-between gap-4 group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 px-2 rounded-xl transition-colors"
+                      onClick={() => onOpenSlotPicker('Routine Dental Examination & 3D Scan (£95)')}
+                    >
+                      <div className="space-y-1 max-w-md">
+                        <h5 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white underline decoration-slate-300 underline-offset-4 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                          Routine Dental Examination & 3D Scan
+                        </h5>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          Full oral check, digital imaging, and clinical assessment
+                        </p>
+                      </div>
+                      <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white font-mono">£95</span>
+                    </div>
+
+                    <div 
+                      className="py-4 flex items-start justify-between gap-4 group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 px-2 rounded-xl transition-colors"
+                      onClick={() => onOpenSlotPicker('Hygiene & Airflow Deep Clean (£120)')}
+                    >
+                      <div className="space-y-1 max-w-md">
+                        <h5 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white underline decoration-slate-300 underline-offset-4 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                          Hygiene & Airflow Deep Clean
+                        </h5>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          Gentle ultrasonic stain removal and deep plaque polish
+                        </p>
+                      </div>
+                      <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white font-mono">£120</span>
+                    </div>
+
+                    <div 
+                      className="py-4 flex items-start justify-between gap-4 group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 px-2 rounded-xl transition-colors"
+                      onClick={() => onOpenSlotPicker('Emergency Same-Day Pain Relief (£95)')}
+                    >
+                      <div className="space-y-1 max-w-md">
+                        <h5 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white underline decoration-slate-300 underline-offset-4 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                          Emergency Same-Day Pain Relief
+                        </h5>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          Priority diagnosis, nerve soothing, and acute pain treatment
+                        </p>
+                      </div>
+                      <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white font-mono">£95</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+            </div>
+
+          </div>
+
         </div>
       </section>
 
