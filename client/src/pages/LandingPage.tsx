@@ -3,7 +3,7 @@ import {
   Bot, 
   Send, 
   Sparkles, 
-  Calendar, 
+  Calendar as CalendarIcon, 
   ShieldCheck, 
   Clock, 
   CheckCircle2, 
@@ -20,18 +20,20 @@ import {
   UserPlus,
   Stethoscope,
   Award,
-  Heart
+  Heart,
+  CalendarCheck,
+  Check
 } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { BusinessProfile } from '../types/admin.types';
-
 import { GeminiHumanEngine } from '../services/geminiHumanEngine';
 
 interface LandingPageProps {
   businessProfile: BusinessProfile;
   onOpenAdmin: () => void;
   onOpenSignUp: () => void;
+  onOpenSlotPicker: (initialService?: string) => void;
 }
 
 interface ChatMessage {
@@ -47,12 +49,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   businessProfile,
   onOpenAdmin,
   onOpenSignUp,
+  onOpenSlotPicker,
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome-1',
       sender: 'gemini',
-      text: `Hello and welcome to ${businessProfile.name}! 😊 I'm Dr. Sarah Jensen's 24/7 AI Patient Receptionist. How can I help you today? If you're experiencing tooth pain, need pricing, or want to schedule an appointment, just ask!`,
+      text: `Hello and welcome to ${businessProfile.name}! 😊 I'm Dr. Sarah Jensen's 24/7 AI Patient Receptionist. How can I help you today? If you're experiencing tooth pain, need pricing, or want to reserve an appointment slot, just ask!`,
       timestamp: 'Just now',
       intent: 'greeting',
       confidence: 0.99,
@@ -81,7 +84,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     let currentText = '';
     let wordIndex = 0;
 
-    // Add empty message placeholder
     setMessages((prev) => [
       ...prev,
       {
@@ -105,7 +107,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         clearInterval(interval);
         setIsTyping(false);
       }
-    }, 28); // 28ms word streaming speed for human typing feel
+    }, 28);
   };
 
   const handleSendMessage = async (textToSend: string) => {
@@ -122,7 +124,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     setInputValue('');
     setIsTyping(true);
 
-    // Generate rich Human-Grade Gemini Response
     setTimeout(() => {
       const humanResponse = GeminiHumanEngine.generateResponse(
         textToSend,
@@ -138,33 +139,30 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       title: 'Emergency Tooth Pain Relief & Exam',
       price: '$95 (Priority Slot)',
       duration: 'Immediate Today',
-      description: 'Instant diagnosis, digital 3D scans, and emergency pain relief with Dr. Sarah Jensen.',
+      description: 'Gentle 3D digital diagnosis, nerve soothing, and emergency pain relief with Dr. Sarah Jensen.',
       tag: 'Urgent Care',
-      prompt: 'I have tooth pain and need an emergency exam today with Dr. Jensen.',
     },
     {
       title: 'Cosmetic Laser Teeth Whitening',
       price: '$350',
       duration: '45 mins',
-      description: 'Up to 8 shades brighter in one single visit with gentle remineralizing care.',
+      description: 'Up to 8 shades brighter in one single visit with zero tooth sensitivity and take-home remineralizing kit.',
       tag: 'Most Popular',
-      prompt: 'How much is your $350 Laser Teeth Whitening package?',
     },
     {
       title: 'Comprehensive Oral Exam & Deep Clean',
       price: '$180',
       duration: '60 mins',
-      description: 'Full 3D digital imaging, periodontal screening, and ultrasonic gentle hygiene clean.',
+      description: 'Complete 3D digital imaging, periodontal screening, and ultrasonic gentle hygiene clean.',
       tag: 'Essential Health',
-      prompt: 'I want to schedule a Comprehensive Exam and Deep Clean.',
     },
   ];
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-blue-500/30 selection:text-blue-200">
       
-      {/* Top Floating Glass Navigation */}
-      <header className="sticky top-0 z-40 w-full px-6 py-4 backdrop-blur-2xl bg-slate-950/70 border-b border-white/10 transition-all">
+      {/* Top Floating Header */}
+      <header className="sticky top-0 z-40 w-full px-6 py-4 backdrop-blur-2xl bg-slate-950/75 border-b border-white/10 transition-all">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
           <div className="flex items-center gap-3">
@@ -174,18 +172,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div>
               <h1 className="text-base font-bold text-white tracking-tight">{businessProfile.name}</h1>
               <p className="text-[10px] text-blue-400 font-semibold flex items-center gap-1">
-                <Stethoscope className="w-3 h-3" /> Dr. Sarah Jensen, DDS
+                <Stethoscope className="w-3 h-3" /> Dr. Sarah Jensen, DDS • Harvard Dental Alum
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <button
-              onClick={onOpenSignUp}
-              className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-blue-500/25 transition-all active:scale-95 border border-white/15"
+              onClick={() => onOpenSlotPicker()}
+              className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-95 border border-white/15"
             >
-              <UserPlus className="w-3.5 h-3.5" />
-              <span>Patient Sign Up</span>
+              <CalendarCheck className="w-4 h-4 text-cyan-300" />
+              <span>Book Slot Now</span>
             </button>
 
             <button
@@ -193,14 +191,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all active:scale-95 hidden sm:flex"
             >
               <Building2 className="w-3.5 h-3.5 text-slate-400" />
-              <span>Admin Portal</span>
+              <span>Doctor Portal</span>
             </button>
           </div>
 
         </div>
       </header>
 
-      {/* Hero Section with Doctor Photo */}
+      {/* Hero Section */}
       <section className="relative pt-12 pb-16 px-6 overflow-hidden">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-gradient-to-tr from-blue-600/20 via-indigo-600/20 to-cyan-500/20 rounded-full blur-[130px] pointer-events-none" />
 
@@ -210,83 +208,107 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold backdrop-blur-md">
               <Sparkles className="w-4 h-4" />
-              <span>Dr. Sarah Jensen, DDS • Practice Growth Automation</span>
+              <span>Dr. Sarah Jensen, DDS • Harvard Trained • 15+ Yrs Experience</span>
             </div>
 
-            <h2 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-[1.15]">
-              AI Receptionist That Answers Every WhatsApp Message 24/7 and{' '}
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.15]">
+              Gentle, Modern Dentistry with{' '}
               <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-cyan-400 bg-clip-text text-transparent">
-                Books More Patients Automatically.
+                Instant Online Booking
               </span>
             </h2>
 
             <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-xl">
-              Never miss another patient inquiry. Instant medical triage, transparent pricing, and automated calendar bookings with zero front-desk overhead.
+              Experience pain-free cosmetic & restorative dental treatments in Manhattan. Check live openings, get immediate triage, and reserve your priority appointment slot online 24/7.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start pt-2">
               <button
-                onClick={onOpenSignUp}
-                className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-xl shadow-blue-500/30 transition-all flex items-center justify-center gap-2 active:scale-95"
+                onClick={() => onOpenSlotPicker()}
+                className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:opacity-90 text-white font-extrabold text-xs shadow-xl shadow-blue-500/35 transition-all flex items-center justify-center gap-2 active:scale-95"
               >
-                <UserPlus className="w-4 h-4" />
-                <span>Register as New Patient</span>
+                <CalendarCheck className="w-4 h-4 text-cyan-200" />
+                <span>Book Slot Now (Select Date & Time)</span>
               </button>
 
               <button
                 onClick={() => handleSendMessage('my teeth pains')}
-                className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-semibold text-xs transition-all flex items-center justify-center gap-2 active:scale-95"
+                className="w-full sm:w-auto px-5 py-4 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-semibold text-xs transition-all flex items-center justify-center gap-2 active:scale-95"
               >
                 <Stethoscope className="w-4 h-4 text-rose-400" />
-                <span>Having Tooth Pain? Click for Instant Help</span>
+                <span>Having Tooth Pain? Instant Triage</span>
               </button>
             </div>
 
-            {/* Social Proof */}
+            {/* Credibility & Reviews */}
             <div className="flex items-center gap-6 pt-4 justify-center lg:justify-start text-xs text-slate-400 border-t border-white/10">
               <div className="flex items-center gap-1.5 text-amber-400">
                 <Star className="w-4 h-4 fill-amber-400" />
                 <span className="font-bold text-white">4.9 / 5.0</span>
-                <span className="text-slate-400">(450+ Patient Reviews)</span>
+                <span className="text-slate-400">(450+ Verified Reviews)</span>
               </div>
               <div className="flex items-center gap-1 text-emerald-400">
                 <ShieldCheck className="w-4 h-4" />
-                <span className="text-slate-300">ADA Certified</span>
+                <span className="text-slate-300">ADA & AACD Certified</span>
               </div>
             </div>
           </div>
 
-          {/* Right Doctor Portrait Showcase */}
-          <div className="lg:col-span-5 flex justify-center">
-            <div className="relative group max-w-sm">
-              <div className="absolute -inset-1.5 bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 rounded-3xl blur-lg opacity-40 group-hover:opacity-75 transition duration-500" />
-              <div className="relative rounded-3xl overflow-hidden bg-slate-900 border border-white/20 shadow-2xl">
-                <img
-                  src="/images/dentist_doctor.jpg"
-                  alt="Dr. Sarah Jensen, DDS"
-                  className="w-full h-96 object-cover object-top hover:scale-105 transition duration-700"
-                />
-                <div className="absolute bottom-0 inset-x-0 p-5 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent">
-                  <h4 className="text-lg font-bold text-white">Dr. Sarah Jensen, DDS</h4>
-                  <p className="text-xs text-blue-400 font-medium">Lead Cosmetic & General Dentist</p>
-                  <p className="text-[11px] text-slate-300 mt-1">15+ Years Specializing in Pain-Free Laser Dentistry & Aesthetic Smile Makeovers.</p>
+          {/* Right Doctor Images Showcase */}
+          <div className="lg:col-span-5 flex flex-col gap-4">
+            
+            {/* Main Treatment Photo */}
+            <div className="relative group rounded-3xl overflow-hidden bg-slate-900 border border-white/20 shadow-2xl">
+              <img
+                src="/images/dentist_procedure.jpg"
+                alt="Dr. Sarah Jensen treating patient"
+                className="w-full h-56 sm:h-64 object-cover object-center group-hover:scale-105 transition duration-700"
+              />
+              <div className="p-4 bg-slate-900/90 border-t border-white/10 flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span>Gentle 3D Laser Care</span>
+                    <Badge variant="success" size="sm">Pain-Free</Badge>
+                  </h4>
+                  <p className="text-[10px] text-slate-400">Digital scans with micro-anesthesia</p>
                 </div>
+                <button
+                  onClick={() => onOpenSlotPicker()}
+                  className="text-xs font-bold text-blue-400 hover:underline"
+                >
+                  Book Slot ➔
+                </button>
               </div>
             </div>
+
+            {/* Doctor Portrait Bar */}
+            <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-3">
+              <img
+                src="/images/dentist_doctor.jpg"
+                alt="Dr. Sarah Jensen"
+                className="w-12 h-12 rounded-full object-cover border-2 border-blue-400"
+              />
+              <div className="flex-1">
+                <h5 className="text-xs font-bold text-white">Dr. Sarah Jensen, DDS</h5>
+                <p className="text-[10px] text-blue-300">Harvard Dental • 15+ Years Clinical Practice</p>
+              </div>
+              <Badge variant="primary" size="sm">Accepting Patients</Badge>
+            </div>
+
           </div>
 
         </div>
       </section>
 
-      {/* Interactive 24/7 AI Patient Receptionist Chat Box */}
+      {/* Interactive 24/7 AI Receptionist Box */}
       <section className="max-w-5xl mx-auto px-6 pb-20 relative z-20">
         <div className="text-center space-y-2 mb-8">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold">
             <Bot className="w-3.5 h-3.5" />
             <span>24/7 AI Patient Receptionist</span>
           </div>
-          <h3 className="text-2xl sm:text-3xl font-extrabold text-white">Book Appointments & Get Immediate Dental Answers</h3>
-          <p className="text-xs text-slate-400">Ask any question about treatment, pricing, or emergency pain relief below.</p>
+          <h3 className="text-2xl sm:text-3xl font-extrabold text-white">Ask Questions or Triage Symptoms Instantly</h3>
+          <p className="text-xs text-slate-400">Have tooth pain, need pricing, or want appointment recommendations? Chat below.</p>
         </div>
 
         <GlassCard className="p-0 border-white/15 shadow-2xl overflow-hidden backdrop-blur-3xl bg-slate-900/80 rounded-3xl max-w-4xl mx-auto">
@@ -307,16 +329,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <span>Dr. Sarah's Clinic Receptionist</span>
                   <span className="text-[10px] text-emerald-400 font-normal">• Online Now</span>
                 </h4>
-                <p className="text-[10px] text-slate-400">Instant Appointment Booking & Triage</p>
+                <p className="text-[10px] text-slate-400">Instant Dental Triage & Booking</p>
               </div>
             </div>
-            <Badge variant="success" dot size="sm">
-              Instant Replies
-            </Badge>
+
+            <button
+              onClick={() => onOpenSlotPicker()}
+              className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            >
+              Book Slot
+            </button>
           </div>
 
           {/* Messages Feed */}
-          <div ref={messagesContainerRef} className="p-5 space-y-4 max-h-[380px] min-h-[320px] overflow-y-auto">
+          <div ref={messagesContainerRef} className="p-5 space-y-4 max-h-[360px] min-h-[300px] overflow-y-auto">
             {messages.map((m) => {
               const isUser = m.sender === 'user';
               return (
@@ -334,16 +360,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       }
                     `}
                   >
-                    <p>{m.text}</p>
+                    <p className="whitespace-pre-line">{m.text}</p>
                   </div>
 
                   <div className="flex items-center gap-2 mt-1 px-1">
                     <span className="text-[9px] text-slate-500">{m.timestamp}</span>
-                    {m.intent && !isUser && (
-                      <span className="text-[9px] font-mono text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">
-                        {m.intent}
-                      </span>
-                    )}
                   </div>
                 </div>
               );
@@ -352,7 +373,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             {isTyping && (
               <div className="flex items-center gap-2 text-xs text-slate-400 p-3 rounded-2xl bg-slate-800/50 border border-white/5 w-fit animate-pulse">
                 <Sparkles className="w-3.5 h-3.5 text-blue-400 animate-spin" />
-                <span>Dr. Sarah's Assistant is preparing clinical recommendation...</span>
+                <span>Dr. Sarah's Assistant is typing recommendation...</span>
               </div>
             )}
           </div>
@@ -381,7 +402,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           >
             <input
               type="text"
-              placeholder="Ask a question or type 'my teeth pains'..."
+              placeholder="Ask anything or describe symptoms..."
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
@@ -398,46 +419,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </GlassCard>
       </section>
 
-      {/* Modern Clinic Environment Showcase */}
-      <section className="max-w-5xl mx-auto px-6 pb-24">
-        <GlassCard className="p-0 overflow-hidden rounded-3xl border-white/15 shadow-2xl grid grid-cols-1 md:grid-cols-12 items-center">
-          <div className="md:col-span-6 p-8 space-y-4">
-            <Badge variant="primary" size="sm">
-              State-of-the-Art Clinic
-            </Badge>
-            <h4 className="text-2xl font-bold text-white">
-              Relaxing, Spa-Like Dental Care in New York
-            </h4>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Equipped with high-definition digital 3D scanners, ultra-quiet laser instruments, and noise-canceling headphones to ensure every treatment is serene and pain-free.
-            </p>
-            <div className="pt-2 flex flex-col gap-2 text-xs text-slate-400">
-              <span className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" /> 450 Lexington Ave, Suite 800, New York
-              </span>
-              <span className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Mon - Fri: 8 AM - 6 PM | Sat: 9 AM - 3 PM
-              </span>
-            </div>
-          </div>
-          <div className="md:col-span-6 h-full">
-            <img
-              src="/images/clinic_interior.jpg"
-              alt="Apex Modern Dental Clinic"
-              className="w-full h-full object-cover min-h-[260px]"
-            />
-          </div>
-        </GlassCard>
-      </section>
-
-      {/* Services Grid */}
+      {/* Services Grid with 1-Click Book Slot */}
       <section className="max-w-5xl mx-auto px-6 pb-24">
         <div className="text-center space-y-2 mb-10">
           <h3 className="text-xs font-bold text-blue-400 uppercase tracking-wider">
-            Our Dental Services
+            Featured Dental Treatments
           </h3>
-          <h4 className="text-2xl font-bold text-white">
-            Transparent Pricing & Verified Expertise
+          <h4 className="text-2xl sm:text-3xl font-extrabold text-white">
+            Transparent Pricing & Guaranteed Gentle Care
           </h4>
         </div>
 
@@ -467,10 +456,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <span className="text-sm font-bold text-white">{svc.price}</span>
                 <button
                   type="button"
-                  onClick={() => handleSendMessage(svc.prompt)}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-blue-400 hover:text-blue-300 hover:underline"
+                  onClick={() => onOpenSlotPicker(svc.title)}
+                  className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-blue-500/20 active:scale-95 transition-all"
                 >
-                  <span>Book with AI</span>
+                  <span>Book Slot Now</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -479,9 +468,50 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
+      {/* Modern Clinic Environment Showcase */}
+      <section className="max-w-5xl mx-auto px-6 pb-24">
+        <GlassCard className="p-0 overflow-hidden rounded-3xl border-white/15 shadow-2xl grid grid-cols-1 md:grid-cols-12 items-center">
+          <div className="md:col-span-6 p-8 space-y-4">
+            <Badge variant="primary" size="sm">
+              State-of-the-Art Clinic
+            </Badge>
+            <h4 className="text-2xl font-bold text-white">
+              Relaxing, Spa-Like Dental Care in Manhattan
+            </h4>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Equipped with high-definition digital 3D scanners, ultra-quiet laser instruments, and noise-canceling headphones to ensure every treatment is serene and pain-free.
+            </p>
+            <div className="pt-2 flex flex-col gap-2 text-xs text-slate-400">
+              <span className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" /> 450 Lexington Ave, Suite 800, New York
+              </span>
+              <span className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Mon - Fri: 8 AM - 6 PM | Sat: 9 AM - 3 PM
+              </span>
+            </div>
+
+            <div className="pt-2">
+              <button
+                onClick={() => onOpenSlotPicker()}
+                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition-all"
+              >
+                Schedule Consultation
+              </button>
+            </div>
+          </div>
+          <div className="md:col-span-6 h-full">
+            <img
+              src="/images/clinic_interior.jpg"
+              alt="Apex Modern Dental Clinic"
+              className="w-full h-full object-cover min-h-[280px]"
+            />
+          </div>
+        </GlassCard>
+      </section>
+
       {/* Footer */}
       <footer className="border-t border-white/10 py-8 px-6 text-center text-xs text-slate-500">
-        <p>© 2026 {businessProfile.name} • Dr. Sarah Jensen, DDS. Powered by Google Gemini 3.7 & Supabase.</p>
+        <p>© 2026 {businessProfile.name} • Dr. Sarah Jensen, DDS. All rights reserved.</p>
       </footer>
 
     </div>

@@ -4,6 +4,8 @@ import { Navbar } from './components/layout/Navbar';
 import { Sidebar } from './components/layout/Sidebar';
 import { LandingPage } from './pages/LandingPage';
 import { SignUpPage } from './pages/SignUpPage';
+import { PatientPortalPage } from './pages/PatientPortalPage';
+import { InteractiveSlotPicker, BookingDetails } from './components/booking/InteractiveSlotPicker';
 import { DashboardPage } from './pages/DashboardPage';
 import { PatientsPage } from './pages/PatientsPage';
 import { KnowledgeBasePage } from './pages/KnowledgeBasePage';
@@ -24,7 +26,18 @@ import {
 import { Bell, CheckCircle2, Globe, LayoutDashboard } from 'lucide-react';
 
 export const AppContent: React.FC = () => {
-  const [currentView, setCurrentView] = useState<'landing' | 'signup' | 'admin'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'booking' | 'patient-portal' | 'signup' | 'admin'>('landing');
+  const [selectedInitialService, setSelectedInitialService] = useState<string>('Cosmetic Laser Teeth Whitening ($350)');
+  const [currentBooking, setCurrentBooking] = useState<BookingDetails | null>({
+    customerName: 'Sophia Martinez',
+    customerPhone: '+1 (555) 234-5678',
+    customerEmail: 'sophia@example.com',
+    treatment: 'Cosmetic Laser Teeth Whitening ($350)',
+    selectedDate: 'Friday, Sep 4',
+    selectedTime: '3:00 PM',
+    insurance: 'Delta Dental PPO',
+  });
+
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
   const [stats, setStats] = useState<KPIStats>(initialKPIs);
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
@@ -47,9 +60,9 @@ export const AppContent: React.FC = () => {
     const nextState = !businessProfile.aiAutopilotEnabled;
     setBusinessProfile(prev => ({ ...prev, aiAutopilotEnabled: nextState }));
     showToast(
-      nextState ? '🤖 Gemini Autopilot Live' : '⏸️ AI Autopilot Paused',
+      nextState ? '🤖 AI Receptionist Live' : '⏸️ AI Receptionist Paused',
       nextState 
-        ? 'The Gemini assistant is now auto-replying to patient inquiries.'
+        ? 'The AI receptionist is now auto-replying to patient inquiries.'
         : 'AI is paused. All messages will wait for manual staff reply.',
       nextState ? 'success' : 'alert'
     );
@@ -61,7 +74,7 @@ export const AppContent: React.FC = () => {
         if (c.id === conversationId) {
           const nextStatus = c.status === 'human_takeover' ? 'ai_active' : 'human_takeover';
           showToast(
-            nextStatus === 'human_takeover' ? '🔒 Human Takeover Active' : '🤖 Gemini Autopilot Resumed',
+            nextStatus === 'human_takeover' ? '🔒 Human Takeover Active' : '🤖 AI Autopilot Resumed',
             nextStatus === 'human_takeover'
               ? `You have taken over the chat with ${c.lead.fullName}.`
               : `AI Autopilot has resumed for ${c.lead.fullName}.`,
@@ -103,19 +116,66 @@ export const AppContent: React.FC = () => {
     showToast('Delivered to WhatsApp', text.slice(0, 45) + '...', 'success');
   };
 
+  const handleBookingCompleted = (details: BookingDetails) => {
+    setCurrentBooking(details);
+    // Add to live leads in CRM
+    const newLead: Lead = {
+      id: `lead-${Date.now()}`,
+      fullName: details.customerName,
+      phoneNumber: details.customerPhone,
+      email: details.customerEmail,
+      status: 'booked',
+      customData: {
+        'Treatment': details.treatment,
+        'Appointment Slot': `${details.selectedDate} at ${details.selectedTime}`,
+        'Insurance': details.insurance,
+      },
+      lastInteraction: 'Just now',
+      source: 'Online Calendar Booking',
+    };
+    setLeads(prev => [newLead, ...prev]);
+    setStats(prev => ({ ...prev, appointments: prev.appointments + 1 }));
+    setCurrentView('patient-portal');
+    showToast('Appointment Confirmed', `${details.customerName} booked for ${details.selectedDate}!`, 'success');
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-blue-500/30 selection:text-blue-200">
       
-      {/* 1. Customer Home Landing View */}
+      {/* 1. Doctor Clinic Landing Page (Customer Ad Destination) */}
       {currentView === 'landing' && (
         <LandingPage
           businessProfile={businessProfile}
           onOpenAdmin={() => setCurrentView('admin')}
-          onOpenSignUp={() => setCurrentView('signup')}
+          onOpenSignUp={() => setCurrentView('booking')}
+          onOpenSlotPicker={(svc) => {
+            if (svc) setSelectedInitialService(svc);
+            setCurrentView('booking');
+          }}
         />
       )}
 
-      {/* 2. Patient Sign-Up View */}
+      {/* 2. Interactive Calendar Slot Picker & Patient Intake */}
+      {currentView === 'booking' && (
+        <InteractiveSlotPicker
+          businessProfile={businessProfile}
+          initialTreatment={selectedInitialService}
+          onBookingComplete={handleBookingCompleted}
+          onCancel={() => setCurrentView('landing')}
+        />
+      )}
+
+      {/* 3. Confirmed Patient Portal View */}
+      {currentView === 'patient-portal' && currentBooking && (
+        <PatientPortalPage
+          booking={currentBooking}
+          businessProfile={businessProfile}
+          onNavigateHome={() => setCurrentView('landing')}
+          onBookAnother={() => setCurrentView('booking')}
+        />
+      )}
+
+      {/* 4. Standalone Sign-Up */}
       {currentView === 'signup' && (
         <SignUpPage
           businessProfile={businessProfile}
@@ -123,14 +183,14 @@ export const AppContent: React.FC = () => {
         />
       )}
 
-      {/* 3. Business Admin Portal Dashboard */}
+      {/* 5. Doctor Admin Portal Dashboard */}
       {currentView === 'admin' && (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
           
           <div className="bg-slate-900 text-white px-6 py-2 border-b border-white/10 flex items-center justify-between text-xs">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="font-semibold text-slate-300">Dr. Sarah Jensen • Admin Portal</span>
+              <span className="font-semibold text-slate-300">Dr. Sarah Jensen • Practice Admin Portal</span>
             </div>
             <button
               onClick={() => setCurrentView('landing')}
@@ -191,7 +251,7 @@ export const AppContent: React.FC = () => {
                       uploadedAt: 'Just now',
                       status: 'indexed',
                     }, ...prev]);
-                    showToast('Knowledge Chunked', `"${name}" indexed for Gemini RAG.`, 'success');
+                    showToast('Knowledge Chunked', `"${name}" indexed for AI knowledge base.`, 'success');
                   }}
                   onDeleteDocument={(id) => setDocuments(prev => prev.filter(d => d.id !== id))}
                   onAddFAQ={(newFaq) => {
@@ -214,7 +274,7 @@ export const AppContent: React.FC = () => {
                   businessProfile={businessProfile}
                   onUpdateProfile={(u) => {
                     setBusinessProfile(u);
-                    showToast('Saved', 'Profile synchronized across Gemini channels.', 'success');
+                    showToast('Saved', 'Profile synchronized across channels.', 'success');
                   }}
                 />
               )}
@@ -224,7 +284,7 @@ export const AppContent: React.FC = () => {
         </div>
       )}
 
-      {/* Persistent Floating Gemini Chat Widget Available Across Entire Website */}
+      {/* Floating 24/7 AI Receptionist Chat Widget */}
       <FloatingGeminiChat
         businessName={businessProfile.name}
         currentPage={currentView}
