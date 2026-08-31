@@ -15,6 +15,8 @@ import {
 import { GlassCard } from '../ui/GlassCard';
 import { Badge } from '../ui/Badge';
 
+import { GeminiHumanEngine } from '../../services/geminiHumanEngine';
+
 interface ChatMessage {
   id: string;
   sender: 'user' | 'gemini';
@@ -37,7 +39,7 @@ export const FloatingGeminiChat: React.FC<FloatingGeminiChatProps> = ({
     {
       id: 'init-1',
       sender: 'gemini',
-      text: `Hello! 👋 I'm Dr. Sarah Jensen's AI Dental Assistant powered by Google Gemini. How can I help you today? If you are having tooth pain, need pricing, or need help signing up, just ask me!`,
+      text: `Hello and welcome! 😊 I'm Dr. Sarah Jensen's AI Patient Care Coordinator powered by Google Gemini. How can I assist you today? If you're experiencing tooth pain, need pricing, or need help signing up, just ask me!`,
       timestamp: 'Just now',
       intent: 'greeting',
     },
@@ -59,6 +61,38 @@ export const FloatingGeminiChat: React.FC<FloatingGeminiChatProps> = ({
     { label: '📅 Book Today', text: 'Can I book an appointment with Dr. Jensen today?' },
   ];
 
+  const streamReply = (fullReply: string, intent: string) => {
+    const msgId = `gem-${Date.now()}`;
+    const words = fullReply.split(' ');
+    let currentText = '';
+    let wordIndex = 0;
+
+    // Add empty message placeholder
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: msgId,
+        sender: 'gemini',
+        text: '',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        intent,
+      },
+    ]);
+
+    const interval = setInterval(() => {
+      if (wordIndex < words.length) {
+        currentText += (wordIndex > 0 ? ' ' : '') + words[wordIndex];
+        setMessages((prev) =>
+          prev.map((m) => (m.id === msgId ? { ...m, text: currentText } : m))
+        );
+        wordIndex++;
+      } else {
+        clearInterval(interval);
+        setIsTyping(false);
+      }
+    }, 28);
+  };
+
   const handleSend = async (userText: string) => {
     if (!userText.trim()) return;
 
@@ -73,94 +107,14 @@ export const FloatingGeminiChat: React.FC<FloatingGeminiChatProps> = ({
     setInputValue('');
     setIsTyping(true);
 
-    try {
-      const res = await fetch('/api/v1/chat/turn', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          businessName,
-          businessIndustry: 'Medical & Dental Clinic',
-          userMessage: userText,
-          conversationHistory: messages.map((m) => ({
-            role: m.sender === 'user' ? 'user' : 'assistant',
-            content: m.text,
-          })),
-        }),
-      });
+    setTimeout(() => {
+      const humanResponse = GeminiHumanEngine.generateResponse(
+        userText,
+        messages.map((m) => ({ sender: m.sender, text: m.text }))
+      );
 
-      if (res.ok) {
-        const data = await res.json();
-        const turn = data.turn || data;
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `gem-${Date.now()}`,
-            sender: 'gemini',
-            text: turn.reply,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            intent: turn.intent,
-          },
-        ]);
-        return;
-      }
-      throw new Error('Fallback required');
-    } catch {
-      // Local high-precision dentist sales engine fallback
-      setTimeout(() => {
-        const lower = userText.toLowerCase();
-        let reply = "I'm here to help! Whether you need urgent pain relief, want to know treatment options, or need help signing up, I can assist you.";
-        let intent = 'lead_qualification';
-
-        if (
-          lower.includes('medicine') ||
-          lower.includes('azithromycin') ||
-          lower.includes('amoxicillin') ||
-          lower.includes('antibiotic') ||
-          lower.includes('painkiller') ||
-          lower.includes('pain killer') ||
-          lower.includes('ibuprofen') ||
-          lower.includes('paracetamol') ||
-          lower.includes('take on my own') ||
-          lower.includes('pill')
-        ) {
-          reply = "Please avoid taking prescription antibiotics like Azithromycin or unverified medicines on your own without a clinical dental exam! Antibiotics and painkillers do not cure tooth infections or nerve decay—they only temporarily mask the symptoms while the infection continues spreading to your roots and jawbone. Taking improper antibiotics can also cause dangerous drug resistance and health complications. Dr. Sarah Jensen needs to examine your tooth with a 3D digital scan and prescribe the exact, safe medication tailored to you. We have an urgent evaluation slot available today itself. Should I go ahead and reserve your priority examination today? What is your full name?";
-          intent = 'medication_safety_booking';
-        } else if (
-          lower.includes('pain') ||
-          lower.includes('teeth pains') ||
-          lower.includes('toothache') ||
-          lower.includes('tooth hurts') ||
-          lower.includes('sensitive') ||
-          lower.includes('swollen')
-        ) {
-          reply = "I'm so sorry you're in pain! Tooth pain is usually a clear signal of underlying nerve irritation or deep enamel decay that can worsen rapidly into a severe infection if delayed. Getting it checked immediately protects your natural tooth and avoids expensive root canals. Dr. Sarah Jensen has an urgent relief slot open today itself. Should I go ahead and reserve your priority examination today? What is your full name?";
-          intent = 'urgent_pain_booking';
-        } else if (lower.includes('sign up') || lower.includes('signup') || lower.includes('register') || lower.includes('form') || lower.includes('help')) {
-          reply = "I'd be happy to guide you through the sign-up process! All you need is your Full Name, WhatsApp Phone Number, Email, and your primary dental goal (e.g. Checkup, Whitening, or Pain Relief). If you like, just tell me your details right here and I'll record your appointment in Supabase!";
-          intent = 'signup_assistance';
-        } else if (lower.includes('whitening') || lower.includes('price') || lower.includes('cost') || lower.includes('how much')) {
-          reply = "Our Laser Whitening & Deep Clean package is $350. It includes the 45-minute treatment, remineralization kit, and pre-treatment rinse. Would you like to check openings for this Friday or Saturday?";
-          intent = 'faq_inquiry';
-        } else if (lower.includes('book') || lower.includes('today') || lower.includes('friday') || lower.includes('appointment')) {
-          reply = "Dr. Sarah Jensen has priority consultation openings today at 3:30 PM and tomorrow at 10:00 AM. May I have your full name and phone number so I can secure your slot in our calendar and Supabase system?";
-          intent = 'appointment_booking';
-        }
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `gem-${Date.now()}`,
-            sender: 'gemini',
-            text: reply,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            intent,
-          },
-        ]);
-      }, 500);
-    } finally {
-      setIsTyping(false);
-    }
+      streamReply(humanResponse.reply, humanResponse.intent);
+    }, 400);
   };
 
   return (
