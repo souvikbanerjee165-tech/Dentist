@@ -18,6 +18,7 @@ import {
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { Conversation, KPIStats, Lead, NavigationTab } from '../types';
+import { OwnerROICalculator } from '../components/dashboard/OwnerROICalculator';
 
 interface DashboardPageProps {
   stats: KPIStats;
@@ -225,6 +226,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           );
         })}
       </div>
+ 
+      {/* Practice Owner ROI & Economic Value Calculator */}
+      <OwnerROICalculator />
 
       {/* High-Value Revenue Feature: Automated Abandoned Lead Recovery Engine */}
       <GlassCard className="p-6 border-indigo-500/30 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-blue-500/5 space-y-4">

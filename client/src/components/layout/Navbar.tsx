@@ -16,6 +16,7 @@ interface NavbarProps {
   isAIAutopilotEnabled: boolean;
   onToggleAI: () => void;
   onOpenTestChat: () => void;
+  onOpenOnboarding: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -23,6 +24,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   isAIAutopilotEnabled,
   onToggleAI,
   onOpenTestChat,
+  onOpenOnboarding,
 }) => {
   const { theme, toggleTheme } = useTheme();
 
@@ -58,6 +60,15 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Right: Actions */}
         <div className="flex items-center gap-2.5">
           
+          {/* Setup Wizard Button */}
+          <button
+            onClick={onOpenOnboarding}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl transition-all duration-200 active:scale-95 shadow-sm"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+            <span className="hidden sm:inline">Setup Wizard</span>
+          </button>
+
           {/* Live Simulator Button */}
           <button
             onClick={onOpenTestChat}

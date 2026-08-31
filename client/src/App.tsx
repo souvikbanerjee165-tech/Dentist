@@ -8,9 +8,12 @@ import { PatientPortalPage } from './pages/PatientPortalPage';
 import { InteractiveSlotPicker, BookingDetails } from './components/booking/InteractiveSlotPicker';
 import { DashboardPage } from './pages/DashboardPage';
 import { PatientsPage } from './pages/PatientsPage';
+import { AIPlaygroundPage } from './pages/AIPlaygroundPage';
 import { KnowledgeBasePage } from './pages/KnowledgeBasePage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
+import { SecurityCenterPage } from './pages/SecurityCenterPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { OnboardingWizardModal } from './components/onboarding/OnboardingWizardModal';
 import { FloatingGeminiChat } from './components/chat/FloatingGeminiChat';
 import { TestChatModal } from './components/chat/TestChatModal';
 import { NavigationTab, Conversation, Lead, DocumentItem, KPIStats } from './types';
@@ -46,6 +49,7 @@ export const AppContent: React.FC = () => {
   const [faqs, setFaqs] = useState<FAQItem[]>(initialFAQs);
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile>(initialBusinessProfile);
   const [isTestChatOpen, setIsTestChatOpen] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [liveToast, setLiveToast] = useState<{ title: string; message: string; type: 'info' | 'success' | 'alert' } | null>(null);
 
   const takeoversNeeded = conversations.filter(c => c.status === 'human_takeover').length;
@@ -206,6 +210,7 @@ export const AppContent: React.FC = () => {
             isAIAutopilotEnabled={businessProfile.aiAutopilotEnabled}
             onToggleAI={handleToggleGlobalAI}
             onOpenTestChat={() => setIsTestChatOpen(true)}
+            onOpenOnboarding={() => setIsOnboardingOpen(true)}
           />
 
           <div className="max-w-7xl mx-auto flex">
@@ -235,6 +240,10 @@ export const AppContent: React.FC = () => {
                   onSendMessage={handleSendMessage}
                   onSelectTab={setActiveTab}
                 />
+              )}
+
+              {activeTab === 'playground' && (
+                <AIPlaygroundPage />
               )}
 
               {activeTab === 'knowledge' && (
@@ -267,6 +276,10 @@ export const AppContent: React.FC = () => {
 
               {activeTab === 'performance' && (
                 <AnalyticsPage onSelectTab={setActiveTab} />
+              )}
+
+              {activeTab === 'security' && (
+                <SecurityCenterPage />
               )}
 
               {activeTab === 'settings' && (
@@ -307,6 +320,17 @@ export const AppContent: React.FC = () => {
       <TestChatModal
         isOpen={isTestChatOpen}
         onClose={() => setIsTestChatOpen(false)}
+      />
+
+      {/* Enterprise Clinic Onboarding Wizard Modal */}
+      <OnboardingWizardModal
+        isOpen={isOnboardingOpen}
+        onClose={() => setIsOnboardingOpen(false)}
+        businessProfile={businessProfile}
+        onSaveProfile={(p) => {
+          setBusinessProfile(p);
+          showToast('Setup Complete! 🎉', 'Your AI receptionist is live and synchronized.', 'success');
+        }}
       />
 
     </div>

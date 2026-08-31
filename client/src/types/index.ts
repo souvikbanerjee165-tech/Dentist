@@ -1,8 +1,10 @@
 export type NavigationTab = 
   | 'dashboard' 
   | 'patients' 
+  | 'playground'
   | 'knowledge' 
   | 'performance' 
+  | 'security'
   | 'settings';
 
 export type LeadStatus = 'new' | 'qualified' | 'booked' | 'unresponsive' | 'lost';

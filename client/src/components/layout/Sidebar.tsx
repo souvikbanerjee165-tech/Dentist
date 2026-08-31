@@ -8,7 +8,9 @@ import {
   Settings, 
   Bot,
   Zap,
-  ShieldAlert
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
 import { NavigationTab } from '../../types';
 
@@ -34,8 +36,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badge: unreadMessagesCount,
       alert: takeoversNeededCount > 0 
     },
+    { id: 'playground', label: 'AI Playground', icon: Sparkles },
     { id: 'knowledge', label: 'Knowledge', icon: BookOpen },
     { id: 'performance', label: 'Performance', icon: BarChart3 },
+    { id: 'security', label: 'Security & Trust', icon: ShieldCheck },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
