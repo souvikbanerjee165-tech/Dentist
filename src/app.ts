@@ -57,6 +57,7 @@ export const createApp = (): Express => {
   app.use('/api/v1/calendar', calendarRoutes);
   app.use('/api/v1/crm', crmRoutes);
   app.use('/api/v1/webhook', validateWhatsAppSignature, webhookRoutes);
+  app.use('/api/v1/whatsapp/webhook', validateWhatsAppSignature, webhookRoutes);
 
   // 6. 404 Handler
   app.use((req: Request, res: Response) => {

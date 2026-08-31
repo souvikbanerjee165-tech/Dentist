@@ -41,6 +41,11 @@ export const validateWhatsAppSignature = (
   res: Response,
   next: NextFunction
 ): void => {
+  // GET requests are Meta webhook subscription verification challenges
+  if (req.method === 'GET') {
+    return next();
+  }
+
   const signature = req.headers['x-hub-signature-256'] as string;
   const appSecret = config.whatsapp.appSecret;
 
