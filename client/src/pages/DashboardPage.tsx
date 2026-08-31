@@ -89,12 +89,65 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   return (
     <div className="space-y-8 animate-fadeIn">
       
+      {/* Executive Practice Activity & ROI Panel */}
+      <GlassCard className="p-6 border-blue-500/30 bg-gradient-to-r from-blue-950/40 via-indigo-950/40 to-slate-900/60 shadow-xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-white">Today's Clinic Activity & Practice ROI</h3>
+              <p className="text-xs text-slate-400">Real-time automation impact for Dr. Sarah Jensen, DDS</p>
+            </div>
+          </div>
+
+          <Badge variant="success" dot size="sm">
+            Live Automated Practice
+          </Badge>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 pt-1">
+          
+          <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+            <span className="text-[11px] font-medium text-slate-400">Today's Patients</span>
+            <div className="text-2xl font-extrabold text-white">12</div>
+            <span className="text-[10px] text-blue-400 font-semibold">4 New Inquiries</span>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+            <span className="text-[11px] font-medium text-slate-400">Booked by AI</span>
+            <div className="text-2xl font-extrabold text-emerald-400">8</div>
+            <span className="text-[10px] text-emerald-400 font-semibold">67% Booking Rate</span>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+            <span className="text-[11px] font-medium text-slate-400">Calls Avoided</span>
+            <div className="text-2xl font-extrabold text-indigo-400">17</div>
+            <span className="text-[10px] text-slate-400">Front-desk hours saved</span>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+            <span className="text-[11px] font-medium text-slate-400">Estimated Revenue</span>
+            <div className="text-2xl font-extrabold text-amber-400">$4,850</div>
+            <span className="text-[10px] text-amber-400/90 font-semibold">Pipeline value</span>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1 col-span-2 sm:col-span-1">
+            <span className="text-[11px] font-medium text-slate-400">Avg AI Response</span>
+            <div className="text-2xl font-extrabold text-cyan-400">1.2s</div>
+            <span className="text-[10px] text-cyan-400 font-semibold">Sub-second Triage</span>
+          </div>
+
+        </div>
+      </GlassCard>
+
       {/* Top Banner: Greeting & Quick AI Action */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-blue-600/15 via-indigo-600/10 to-cyan-500/10 border border-blue-500/20 backdrop-blur-xl shadow-lg shadow-blue-500/5">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Sales Assistant Live & Converting
+              AI Receptionist Live & Converting
             </h2>
             <span className="flex h-2.5 w-2.5 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -102,7 +155,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             </span>
           </div>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            Auto-answering questions from your uploaded knowledge base and scheduling consultations 24/7.
+            Auto-answering questions, qualifying dental patients, and scheduling consultations 24/7.
           </p>
         </div>
 
@@ -118,65 +171,55 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 active:scale-95 rounded-xl shadow-lg shadow-blue-600/25 transition-all duration-200"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Simulate Customer Chat</span>
+            <span>Simulate Patient Chat</span>
           </button>
         </div>
       </div>
 
       {/* 6 Required Glassmorphic Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {cards.map((card, idx) => {
           const Icon = card.icon;
-          const isPositive = card.delta >= 0;
+          const isPositive = typeof card.delta === 'number' ? card.delta >= 0 : String(card.delta).startsWith('+');
 
           return (
-            <GlassCard
-              key={idx}
-              hoverEffect
-              className="p-5 relative overflow-hidden group"
-            >
-              {/* Subtle gradient corner glow */}
-              <div className="absolute -right-6 -top-6 w-24 h-24 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all duration-500" />
-
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-700 dark:text-slate-200 group-hover:scale-105 transition-transform duration-200">
-                  <Icon className="w-5 h-5" />
+            <GlassCard key={idx} hoverEffect className="p-6 relative overflow-hidden group">
+              <div className="flex items-start justify-between">
+                <div className="space-y-2">
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    {card.title}
+                  </span>
+                  <div className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                    {card.value}
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-1 text-xs font-semibold">
-                  {card.title === 'Human Takeovers' ? (
-                    <span className="text-emerald-500 flex items-center">
-                      <TrendingDown className="w-3.5 h-3.5 mr-0.5" /> -33%
-                    </span>
-                  ) : (
-                    <span
-                      className={`flex items-center ${
-                        isPositive ? 'text-emerald-500' : 'text-rose-500'
-                      }`}
-                    >
-                      {isPositive ? (
-                        <TrendingUp className="w-3.5 h-3.5 mr-0.5" />
-                      ) : (
-                        <TrendingDown className="w-3.5 h-3.5 mr-0.5" />
-                      )}
-                      {card.delta}%
-                    </span>
-                  )}
+                <div className="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300">
+                  <Icon className="w-5 h-5" />
                 </div>
               </div>
 
-              <div>
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                  {card.title}
-                </p>
-                <div className="flex items-baseline gap-2 mt-1 mb-1">
-                  <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                    {card.value}
-                  </h3>
-                </div>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500">
+              <div className="mt-4 pt-4 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between">
+                <span className="text-xs text-slate-500 dark:text-slate-400">
                   {card.description}
-                </p>
+                </span>
+
+                <div
+                  className={`flex items-center gap-1 text-xs font-bold ${
+                    card.isWarning
+                      ? 'text-rose-500'
+                      : isPositive
+                      ? 'text-emerald-500'
+                      : 'text-slate-400'
+                  }`}
+                >
+                  {isPositive ? (
+                    <TrendingUp className="w-3.5 h-3.5" />
+                  ) : (
+                    <TrendingDown className="w-3.5 h-3.5" />
+                  )}
+                  <span>{card.delta}</span>
+                </div>
               </div>
             </GlassCard>
           );
@@ -268,18 +311,18 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
       </GlassCard>
 
-      {/* Main Grid: Recent Conversations & Lead Pipeline Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* 2-Column Layout: Live Conversations & Captured CRM Leads */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
-        {/* Left 2 Cols: Live Conversations & Human Takeover Queue */}
-        <div className="lg:col-span-2 space-y-4">
+        {/* Left Col: Live Active Inbox */}
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                Live WhatsApp Dialogues
+                Live Conversations
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Recent conversations handled by AI with real-time confidence scores
+                Real-time patient chat sessions
               </p>
             </div>
             <button
@@ -350,10 +393,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                Recent Leads
+                Recent Captured Leads
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Captured contact info & preferences
+                Contact details & treatment preferences
               </p>
             </div>
             <button

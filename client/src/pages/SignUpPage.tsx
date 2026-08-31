@@ -131,12 +131,28 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
                 <span className="text-emerald-400 font-medium">{formData.treatment}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Phone:</span>
+                <span className="text-slate-400">WhatsApp Phone:</span>
                 <span className="text-white font-medium">{formData.phone}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Time:</span>
+                <span className="text-slate-400">Preferred Time:</span>
                 <span className="text-white font-medium">{formData.preferredTime}</span>
+              </div>
+            </div>
+
+            {/* Instant Delivery Status Badges */}
+            <div className="space-y-2 text-left bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl text-xs text-emerald-300">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>Confirmation email sent to <strong>{formData.email}</strong>.</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>WhatsApp confirmation sent to <strong>{formData.phone}</strong>.</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>Added to Dr. Sarah Jensen's priority clinic calendar.</span>
               </div>
             </div>
 
