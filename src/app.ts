@@ -15,6 +15,8 @@ import knowledgeRoutes from './routes/knowledge.routes.js';
 import calendarRoutes from './routes/calendar.routes.js';
 import crmRoutes from './routes/crm.routes.js';
 import webhookRoutes from './routes/webhook.routes.js';
+import trainingRoutes from './routes/training.routes.js';
+import revenueRoutes from './routes/revenue.routes.js';
 
 export const createApp = (): Express => {
   const app = express();
@@ -53,6 +55,8 @@ export const createApp = (): Express => {
   // 5. API Routes
   app.use('/health', healthRoutes);
   app.use('/api/v1/chat', chatRateLimiter, aiRoutes);
+  app.use('/api/v1/training', trainingRoutes);
+  app.use('/api/v1/revenue', revenueRoutes);
   app.use('/api/v1/knowledge', knowledgeRoutes);
   app.use('/api/v1/calendar', calendarRoutes);
   app.use('/api/v1/crm', crmRoutes);
