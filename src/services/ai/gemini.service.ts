@@ -198,14 +198,53 @@ export class GeminiConversationService {
       };
     }
 
-    // 2. Pricing & FAQs
-    if (msg.includes('cost') || msg.includes('price') || msg.includes('how much') || msg.includes('package') || msg.includes('whitening')) {
+    // 2. Specific Treatment & Fee Inquiries
+    if (msg.includes('implant') || msg.includes('missing tooth') || msg.includes('missing teeth')) {
+      return {
+        intent: 'faq_inquiry',
+        confidence: 0.98,
+        collected_data: { ...merged, business_type: 'Dental Implants' },
+        missing_fields: missingFields,
+        reply: 'Dental Implants start from £2,800 per tooth with premium titanium fixtures. We also offer 0% interest monthly payment plans. Would you like to check our available times for an implant consultation with Dr. Sarah Jensen?',
+        handover_required: false,
+        handover_reason: null,
+        knowledge_sources_used: ['2026_Treatment_Pricing_and_Services.pdf'],
+      };
+    }
+
+    if (msg.includes('veneer') || msg.includes('bonding') || msg.includes('smile makeover')) {
+      return {
+        intent: 'faq_inquiry',
+        confidence: 0.98,
+        collected_data: { ...merged, business_type: 'Cosmetic Veneers' },
+        missing_fields: missingFields,
+        reply: 'Handcrafted Emax Porcelain Veneers are £850 per tooth, and bespoke composite bonding starts from £395 per tooth. Would you like to schedule a cosmetic smile consultation this week?',
+        handover_required: false,
+        handover_reason: null,
+        knowledge_sources_used: ['2026_Treatment_Pricing_and_Services.pdf'],
+      };
+    }
+
+    if (msg.includes('whitening') || msg.includes('bleach') || msg.includes('brighten')) {
+      return {
+        intent: 'faq_inquiry',
+        confidence: 0.98,
+        collected_data: { ...merged, business_type: 'Teeth Whitening' },
+        missing_fields: missingFields,
+        reply: 'Our Clinical Laser Teeth Whitening package is £395. It includes the 45-minute treatment, shade assessment, and active remineralizing desensitizer. Would you like to check our available times this week?',
+        handover_required: false,
+        handover_reason: null,
+        knowledge_sources_used: ['2026_Treatment_Pricing_and_Services.pdf'],
+      };
+    }
+
+    if (msg.includes('cost') || msg.includes('price') || msg.includes('how much') || msg.includes('package') || msg.includes('fee')) {
       return {
         intent: 'faq_inquiry',
         confidence: 0.96,
         collected_data: merged,
         missing_fields: missingFields,
-        reply: 'Our Laser Whitening & Deep Clean package is $350. It includes the 45-minute treatment, remineralization kit, and pre-treatment rinse. Would you like to check our available times for a consultation?',
+        reply: 'Our routine exam & 3D scan is £95, laser whitening is £395, and dental implants start from £2,800 with 0% interest financing options. Which treatment can I check availability for?',
         handover_required: false,
         handover_reason: null,
         knowledge_sources_used: ['2026_Treatment_Pricing_and_Services.pdf'],
@@ -213,16 +252,16 @@ export class GeminiConversationService {
     }
 
     // 3. Appointment Booking & Slots
-    if (msg.includes('book') || msg.includes('appointment') || msg.includes('friday') || msg.includes('time') || msg.includes('schedule')) {
+    if (msg.includes('book') || msg.includes('appointment') || msg.includes('friday') || msg.includes('monday') || msg.includes('time') || msg.includes('schedule') || msg.includes('routine') || msg.includes('cleaning') || msg.includes('exam')) {
       if (msg.includes('sophia')) merged.name = 'Sophia Martinez';
-      merged.preferred_appointment_date = 'Friday, Sep 4 at 3:00 PM';
+      merged.preferred_appointment_date = 'Monday morning / Next Available';
 
       return {
         intent: 'appointment_booking',
-        confidence: 0.94,
+        confidence: 0.96,
         collected_data: merged,
         missing_fields: (['name', 'phone_number', 'email', 'business_type', 'budget', 'preferred_appointment_date'] as (keyof LeadCollectedData)[]).filter(k => !merged[k]),
-        reply: 'We have openings this Friday at 3:00 PM and Saturday at 11:00 AM. May I have your full name and phone number to secure your spot?',
+        reply: 'We have routine examination slots available next Monday at 10:30 AM and 2:00 PM. May I have your full name and contact number to hold your priority booking?',
         handover_required: false,
         handover_reason: null,
         knowledge_sources_used: [],
