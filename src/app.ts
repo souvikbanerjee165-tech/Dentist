@@ -18,6 +18,7 @@ import webhookRoutes from './routes/webhook.routes.js';
 import trainingRoutes from './routes/training.routes.js';
 import revenueRoutes from './routes/revenue.routes.js';
 import briefingRoutes from './routes/briefing.routes.js';
+import voiceRoutes from './routes/voice.routes.js';
 
 export const createApp = (): Express => {
   const app = express();
@@ -59,6 +60,7 @@ export const createApp = (): Express => {
   app.use('/api/v1/training', trainingRoutes);
   app.use('/api/v1/revenue', revenueRoutes);
   app.use('/api/v1/briefing', briefingRoutes);
+  app.use('/api/v1/voice', voiceRoutes);
   app.use('/api/v1/knowledge', knowledgeRoutes);
   app.use('/api/v1/calendar', calendarRoutes);
   app.use('/api/v1/crm', crmRoutes);
