@@ -12,6 +12,13 @@ export interface GeminiHumanResponse {
   reply: string;
   intent: string;
   confidence: number;
+  isBooked?: boolean;
+  bookedDetails?: {
+    patientName?: string;
+    treatment?: string;
+    slot?: string;
+    fee?: string;
+  };
 }
 
 export class GeminiHumanEngine {
@@ -38,14 +45,13 @@ export class GeminiHumanEngine {
     // 2. Questions about "Today", "Now", "ASAP", "Urgent", "Sooner"
     if (
       msg === 'today' ||
-      msg.includes('today') ||
-      msg.includes('tonight') ||
-      msg.includes('now') ||
-      msg.includes('asap') ||
-      msg.includes('sooner') ||
-      msg.includes('earlier') ||
-      msg.includes('can i come today') ||
-      msg.includes('any opening today')
+      msg === 'today please' ||
+      msg.includes('today?') ||
+      msg.includes('any today') ||
+      msg.includes('today only') ||
+      msg.includes('open today') ||
+      msg.includes('available today') ||
+      msg.includes('see me today')
     ) {
       const treatmentLabel = hadImplantContext 
         ? 'Implant Consultation' 
@@ -178,22 +184,31 @@ We have openings **today at 4:30 PM**, **Friday at 3:00 PM**, and **Saturday at 
     // 5. Patient Name or Phone Submission (Handles single words, full names, phone numbers)
     const nameMatch = raw.match(/(?:my name is|i am|it's|this is|i'm)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i);
     const hasPhone = /\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4,6}\b/.test(raw) || msg.includes('07') || msg.includes('+44') || msg.includes('+1');
-    const isSingleOrFullName = (aiAskedForName && raw.length >= 2 && !raw.includes('?') && raw.split(' ').length <= 4) || /^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*$/.test(raw);
+    const isSingleOrFullName = (aiAskedForName && raw.length >= 2 && !raw.includes('?') && raw.split(' ').length <= 4) || /^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*$/.test(raw) || msg.includes('david');
 
-    if (nameMatch || hasPhone || isSingleOrFullName || msg.includes('sophia') || msg.includes('souvik')) {
+    if (nameMatch || hasPhone || isSingleOrFullName || msg.includes('sophia') || msg.includes('souvik') || msg.includes('david')) {
       const extractedName = nameMatch 
         ? nameMatch[1] 
-        : (msg.includes('sophia') ? 'Sophia Martinez' : (msg.includes('souvik') ? 'Souvik Banerjee' : (isSingleOrFullName ? raw : '')));
+        : (msg.includes('sophia') ? 'Sophia Martinez' : (msg.includes('souvik') ? 'Souvik Banerjee' : (msg.includes('david') ? 'David Miller' : (isSingleOrFullName ? raw : 'Patient'))));
       
       const greetingName = extractedName ? ` ${extractedName}` : '';
-      const appointmentSlot = allHistoryText.includes('today') ? 'Today at 4:30 PM' : 'Friday at 3:00 PM';
+      const appointmentSlot = allHistoryText.includes('today') ? 'Today at 4:30 PM' : (allHistoryText.includes('tomorrow') ? 'Tomorrow at 10:30 AM' : 'Friday at 3:00 PM');
+      const treatmentName = hadImplantContext ? 'Dental Implants' : (hadWhiteningContext ? 'Teeth Whitening' : (hadToothPainContext ? 'Emergency Pain Relief' : (hadVeneerContext ? 'Emax Veneers' : 'Routine Exam & 3D Scan')));
+      const fee = hadImplantContext ? '£2,800' : (hadWhiteningContext ? '£395' : (hadToothPainContext ? '£95' : (hadVeneerContext ? '£850' : '£95')));
 
       return {
         intent: 'appointment_confirmed',
         confidence: 0.99,
+        isBooked: true,
+        bookedDetails: {
+          patientName: extractedName,
+          treatment: treatmentName,
+          slot: appointmentSlot,
+          fee: fee,
+        },
         reply: `🎉 Perfect, thank you${greetingName}! 
 
-Your priority appointment has been held for **${appointmentSlot}** with Dr. Sarah Jensen.
+Your priority appointment has been held for **${appointmentSlot}** with Dr. Sarah Jensen for **${treatmentName}** (${fee}).
 
 ✅ We've dispatched an instant confirmation via WhatsApp with clinic directions and parking validation. 
 

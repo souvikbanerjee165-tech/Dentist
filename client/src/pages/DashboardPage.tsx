@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   MessageSquare, 
   UserPlus, 
@@ -13,7 +13,9 @@ import {
   Bot,
   UserCheck,
   ChevronRight,
-  Clock
+  Clock,
+  Calendar,
+  Phone
 } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
@@ -35,6 +37,66 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   onSelectTab,
   onOpenTestChat,
 }) => {
+  const [liveAppointments, setLiveAppointments] = useState([
+    {
+      id: 'app-1',
+      patientName: 'Sophia Martinez',
+      treatment: 'Laser Teeth Whitening',
+      fee: '£395',
+      time: 'Today, 2:30 PM',
+      doctor: 'Dr. Sarah Jensen',
+      status: 'Confirmed (WhatsApp)',
+    },
+    {
+      id: 'app-2',
+      patientName: 'David Miller',
+      treatment: 'Routine Exam & 3D Scan',
+      fee: '£95',
+      time: 'Tomorrow, 10:30 AM',
+      doctor: 'Dr. Sarah Jensen',
+      status: 'Confirmed (Google Cal)',
+    },
+    {
+      id: 'app-3',
+      patientName: 'Elena Rostova',
+      treatment: 'Dental Implants Assessment',
+      fee: '£2,800',
+      time: 'Thursday, 3:15 PM',
+      doctor: 'Dr. Sarah Jensen',
+      status: 'Confirmed (WhatsApp)',
+    },
+  ]);
+
+  const [liveToast, setLiveToast] = useState<string | null>(null);
+  const [dynamicRevenue, setDynamicRevenue] = useState(4850);
+  const [dynamicAppointmentsCount, setDynamicAppointmentsCount] = useState(stats.appointments || 14);
+
+  useEffect(() => {
+    const handleNewBooking = (e: any) => {
+      const details = e.detail;
+      if (details) {
+        const newApp = {
+          id: `app-live-${Date.now()}`,
+          patientName: details.patientName || 'New Patient',
+          treatment: details.treatment || 'Emergency Pain Relief',
+          fee: details.fee || '£95',
+          time: details.slot || 'Tomorrow, 10:30 AM',
+          doctor: 'Dr. Sarah Jensen',
+          status: 'Confirmed (Live Golden Loop)',
+        };
+
+        setLiveAppointments(prev => [newApp, ...prev]);
+        setDynamicAppointmentsCount(prev => prev + 1);
+        setDynamicRevenue(prev => prev + (parseInt(details.fee?.replace(/[^0-9]/g, '') || '95', 10)));
+        setLiveToast(`🎉 New Booking Synced: ${newApp.patientName} for ${newApp.treatment} (${newApp.fee}) at ${newApp.time}!`);
+        setTimeout(() => setLiveToast(null), 5000);
+      }
+    };
+
+    window.addEventListener('new_appointment_booked', handleNewBooking);
+    return () => window.removeEventListener('new_appointment_booked', handleNewBooking);
+  }, []);
+
   const cards = [
     {
       title: "Today's Messages",
@@ -54,16 +116,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     },
     {
       title: 'Appointments',
-      value: stats.appointments.toLocaleString(),
-      delta: stats.appointmentsDelta,
+      value: dynamicAppointmentsCount.toLocaleString(),
+      delta: '+3 today',
       icon: CalendarCheck,
       color: 'purple',
       description: 'Booked in Google Calendar',
     },
     {
       title: 'Revenue Estimate',
-      value: `$${stats.revenueEstimate.toLocaleString()}`,
-      delta: stats.revenueEstimateDelta,
+      value: `£${dynamicRevenue.toLocaleString()}`,
+      delta: '+£490 today',
       icon: DollarSign,
       color: 'amber',
       description: 'Pipeline value generated',
@@ -314,6 +376,67 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
         </div>
       </GlassCard>
+
+      {/* Golden Loop Real-Time Scheduled Appointments Feed */}
+      <GlassCard className="p-6 border-black/5 dark:border-white/10 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center font-bold">
+              <Calendar className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Today's Live Scheduled Appointments (Google Calendar Sync)
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Bookings created autonomously by AI over WhatsApp, Voice Call, and Web Widget.
+              </p>
+            </div>
+          </div>
+
+          <Badge variant="purple" dot size="sm">
+            {liveAppointments.length} Confirmed Slots
+          </Badge>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+          {liveAppointments.map((app) => (
+            <div
+              key={app.id}
+              className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 space-y-2 hover:border-purple-500/40 transition-all shadow-xs"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">{app.patientName}</h4>
+                  <p className="text-[11px] text-purple-600 dark:text-purple-400 font-semibold">{app.treatment}</p>
+                </div>
+                <span className="text-xs font-black font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
+                  {app.fee}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-1 border-t border-black/5 dark:border-white/5 font-mono">
+                <span className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300">
+                  <Clock className="w-3 h-3 text-blue-400" /> {app.time}
+                </span>
+                <span className="text-emerald-500 font-sans font-bold flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> {app.status}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </GlassCard>
+
+      {/* Real-Time Booking Toast Alert */}
+      {liveToast && (
+        <div className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-purple-500/40 shadow-2xl flex items-center gap-3 animate-fadeIn">
+          <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center shrink-0">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <span className="text-xs font-bold text-slate-900 dark:text-white">{liveToast}</span>
+        </div>
+      )}
 
       {/* 2-Column Layout: Live Conversations & Captured CRM Leads */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
