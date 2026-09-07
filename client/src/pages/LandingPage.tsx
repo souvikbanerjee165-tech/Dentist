@@ -22,12 +22,14 @@ import {
   Award,
   Heart,
   CalendarCheck,
-  Check
+  Check,
+  Flame
 } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { BusinessProfile } from '../types/admin.types';
 import { GeminiHumanEngine } from '../services/geminiHumanEngine';
+import { ClinicAuditModal } from '../components/audit/ClinicAuditModal';
 
 interface LandingPageProps {
   businessProfile: BusinessProfile;
@@ -51,6 +53,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onOpenSignUp,
   onOpenSlotPicker,
 }) => {
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome-1',
@@ -180,6 +183,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsAuditModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 rounded-xl transition-all active:scale-95"
+              title="Generate a digital audit for any prospective dental clinic"
+            >
+              <Flame className="w-3.5 h-3.5" />
+              <span>Free Clinic Audit</span>
+            </button>
+
             <button
               onClick={() => onOpenSlotPicker()}
               className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-95 border border-white/15"
@@ -726,6 +738,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <footer className="border-t border-white/10 py-8 px-6 text-center text-xs text-slate-500">
         <p>© 2026 {businessProfile.name} • Dr. Sarah Jensen, DDS. All rights reserved.</p>
       </footer>
+
+      {/* Prospective Clinic Audit & Revenue Leak Scorecard Modal */}
+      <ClinicAuditModal
+        isOpen={isAuditModalOpen}
+        onClose={() => setIsAuditModalOpen(false)}
+      />
 
     </div>
   );
