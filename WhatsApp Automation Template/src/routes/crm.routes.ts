@@ -144,4 +144,41 @@ router.get('/export-csv', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * POST /api/v1/crm/recall/fill-chair
+ * High-Ticket Upsell: Instant broadcast to refill short-notice cancelled dental chair slots
+ */
+router.post('/recall/fill-chair', async (req: Request, res: Response) => {
+  try {
+    const {
+      slotTime = 'Tomorrow at 2:30 PM',
+      treatment = 'Laser Teeth Whitening (£395)',
+      clinicName = 'St. James Dental Practice',
+    } = req.body;
+
+    const targetedWaitlist = [
+      { name: 'Liam Vance', phone: '+44 7700 900551', interest: 'Teeth Whitening', status: 'VIP Waitlist' },
+      { name: 'Chloe Bennett', phone: '+44 7700 900882', interest: 'Cosmetic Consult', status: 'Flexible Patient' },
+      { name: 'James Taylor', phone: '+44 7700 900334', interest: 'Routine Exam', status: 'Overdue 6 Months' },
+      { name: 'Amelia Hughes', phone: '+44 7700 900445', interest: 'Invisalign / Aligners', status: 'Assessment Pending' },
+    ];
+
+    const broadcastMessage = `Hi {PatientName}, Dr. Sarah Jensen has just had a priority slot open up ${slotTime} for ${treatment} at ${clinicName}. Because you expressed interest, we are offering this opening directly to you before releasing it publicly. Would you like me to reserve this for you? Reply YES to confirm!`;
+
+    res.status(200).json({
+      success: true,
+      slotTime,
+      treatment,
+      broadcastMessage,
+      candidatesCount: targetedWaitlist.length,
+      targetedWaitlist,
+      estimatedValueGbp: 395,
+      status: 'dispatched_priority_queue',
+    });
+  } catch (error: any) {
+    console.error('Error filling empty chair:', error);
+    res.status(500).json({ error: 'RecallError', message: 'Failed to dispatch chair recall.' });
+  }
+});
+
 export default router;

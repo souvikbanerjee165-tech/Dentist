@@ -19,13 +19,19 @@ import {
   Globe,
   PhoneMissed,
   Star,
-  Send
+  Send,
+  Coffee,
+  Zap,
+  FileText
 } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { Conversation, KPIStats, Lead, NavigationTab } from '../types';
 import { OwnerROICalculator } from '../components/dashboard/OwnerROICalculator';
 import { WebsiteWidgetEmbedModal } from '../components/widget/WebsiteWidgetEmbedModal';
+import { MorningBriefingModal } from '../components/briefing/MorningBriefingModal';
+import { EmptyChairRecallModal } from '../components/recall/EmptyChairRecallModal';
+import { ClientProposalModal } from '../components/proposal/ClientProposalModal';
 
 interface DashboardPageProps {
   stats: KPIStats;
@@ -76,6 +82,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const [dynamicRevenue, setDynamicRevenue] = useState(4850);
   const [dynamicAppointmentsCount, setDynamicAppointmentsCount] = useState(stats.appointments || 14);
   const [showWidgetModal, setShowWidgetModal] = useState(false);
+  const [showBriefingModal, setShowBriefingModal] = useState(false);
+  const [showRecallModal, setShowRecallModal] = useState(false);
+  const [showProposalModal, setShowProposalModal] = useState(false);
   const [missedCallsRecovered, setMissedCallsRecovered] = useState(11);
   const [rescuedRevenue, setRescuedRevenue] = useState(4250);
   const [isTriggeringRecovery, setIsTriggeringRecovery] = useState(false);
@@ -257,26 +266,41 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={() => setShowWidgetModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-sky-700 dark:text-sky-300 bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 rounded-xl transition-all duration-200 shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-sky-700 dark:text-sky-300 bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 rounded-xl transition-all shadow-sm"
           >
             <Globe className="w-3.5 h-3.5 text-sky-500" />
-            <span>Website Chat Widget</span>
+            <span>Website Widget</span>
           </button>
           <button
-            onClick={() => onSelectTab('knowledge')}
-            className="px-4 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-800 border border-black/5 dark:border-white/10 rounded-xl transition-all duration-200 shadow-sm"
+            onClick={() => setShowBriefingModal(true)}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 rounded-xl transition-all shadow-sm"
           >
-            Upload Price Sheet
+            <Coffee className="w-3.5 h-3.5 text-amber-500" />
+            <span>8 AM Briefing</span>
+          </button>
+          <button
+            onClick={() => setShowRecallModal(true)}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-purple-700 dark:text-purple-300 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 rounded-xl transition-all shadow-sm"
+          >
+            <Zap className="w-3.5 h-3.5 text-purple-500" />
+            <span>Refill Chair</span>
+          </button>
+          <button
+            onClick={() => setShowProposalModal(true)}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 rounded-xl transition-all shadow-sm"
+          >
+            <FileText className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Client Proposal</span>
           </button>
           <button
             onClick={onOpenTestChat}
-            className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 active:scale-95 rounded-xl shadow-lg shadow-blue-600/25 transition-all duration-200"
+            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 active:scale-95 rounded-xl shadow-lg shadow-blue-600/25 transition-all"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Simulate Patient Chat</span>
+            <span>Simulate Chat</span>
           </button>
         </div>
       </div>
@@ -707,6 +731,27 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       <WebsiteWidgetEmbedModal
         isOpen={showWidgetModal}
         onClose={() => setShowWidgetModal(false)}
+        clinicName="St. James Dental Practice"
+      />
+
+      {/* 8:00 AM Morning Executive WhatsApp Briefing Modal (Retention Engine) */}
+      <MorningBriefingModal
+        isOpen={showBriefingModal}
+        onClose={() => setShowBriefingModal(false)}
+        clinicName="St. James Dental Practice"
+      />
+
+      {/* Empty Chair / Short-Notice Cancellation Recall Modal (High-Ticket Upsell) */}
+      <EmptyChairRecallModal
+        isOpen={showRecallModal}
+        onClose={() => setShowRecallModal(false)}
+        clinicName="St. James Dental Practice"
+      />
+
+      {/* Client Proposal & 3-Tier Agreement Generator (Sales Velocity) */}
+      <ClientProposalModal
+        isOpen={showProposalModal}
+        onClose={() => setShowProposalModal(false)}
         clinicName="St. James Dental Practice"
       />
 
