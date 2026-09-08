@@ -22,7 +22,8 @@ import {
   Send,
   Coffee,
   Zap,
-  FileText
+  FileText,
+  ShieldCheck
 } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
@@ -88,6 +89,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const [missedCallsRecovered, setMissedCallsRecovered] = useState(11);
   const [rescuedRevenue, setRescuedRevenue] = useState(4250);
   const [isTriggeringRecovery, setIsTriggeringRecovery] = useState(false);
+  const [viewMode, setViewMode] = useState<'clinic' | 'agency'>('clinic');
 
   useEffect(() => {
     const handleNewBooking = (e: any) => {
@@ -249,60 +251,124 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
       </GlassCard>
 
-      {/* Top Banner: Greeting & Quick AI Action */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-blue-600/15 via-indigo-600/10 to-cyan-500/10 border border-blue-500/20 backdrop-blur-xl shadow-lg shadow-blue-500/5">
-        <div className="space-y-1">
+      {/* Mode Switcher & Top Banner */}
+      <div className="space-y-3">
+        
+        {/* Mode Toggle Header */}
+        <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              AI Receptionist Live & Converting
-            </h2>
-            <span className="flex h-2.5 w-2.5 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-            </span>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Viewing as:</span>
+            <div className="p-1 rounded-xl bg-slate-200/60 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-800 flex items-center gap-1 text-xs">
+              <button
+                type="button"
+                onClick={() => setViewMode('clinic')}
+                className={`px-3 py-1 rounded-lg font-bold transition-all ${
+                  viewMode === 'clinic'
+                    ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                🏥 Clinic Staff View (Clean)
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('agency')}
+                className={`px-3 py-1 rounded-lg font-bold transition-all ${
+                  viewMode === 'agency'
+                    ? 'bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                ⚡ Agency / Admin View (All Tools)
+              </button>
+            </div>
           </div>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            Auto-answering questions, qualifying dental patients, and scheduling consultations 24/7.
-          </p>
+
+          <span className="text-[11px] text-slate-400 hidden sm:inline">
+            {viewMode === 'clinic' ? 'Staff Mode: Uncluttered daily reception view' : 'Agency Mode: Sales proposals & embed tools unlocked'}
+          </span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            onClick={() => setShowWidgetModal(true)}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-sky-700 dark:text-sky-300 bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 rounded-xl transition-all shadow-sm"
-          >
-            <Globe className="w-3.5 h-3.5 text-sky-500" />
-            <span>Website Widget</span>
-          </button>
-          <button
-            onClick={() => setShowBriefingModal(true)}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 rounded-xl transition-all shadow-sm"
-          >
-            <Coffee className="w-3.5 h-3.5 text-amber-500" />
-            <span>8 AM Briefing</span>
-          </button>
-          <button
-            onClick={() => setShowRecallModal(true)}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-purple-700 dark:text-purple-300 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 rounded-xl transition-all shadow-sm"
-          >
-            <Zap className="w-3.5 h-3.5 text-purple-500" />
-            <span>Refill Chair</span>
-          </button>
-          <button
-            onClick={() => setShowProposalModal(true)}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 rounded-xl transition-all shadow-sm"
-          >
-            <FileText className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Client Proposal</span>
-          </button>
-          <button
-            onClick={onOpenTestChat}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 active:scale-95 rounded-xl shadow-lg shadow-blue-600/25 transition-all"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Simulate Chat</span>
-          </button>
+        {/* Top Banner */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-blue-600/15 via-indigo-600/10 to-cyan-500/10 border border-blue-500/20 backdrop-blur-xl shadow-lg shadow-blue-500/5">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                {viewMode === 'clinic' ? 'AI Front Desk • Active & Assisting' : 'Revenue Operations & AI Reception Engine'}
+              </h2>
+              <span className="flex h-2.5 w-2.5 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              {viewMode === 'clinic' 
+                ? 'Answering patient inquiries, managing triage, and synchronizing Google Calendar 24/7.'
+                : 'Full agency suite: proposal generation, widget deployment, and empty chair recovery.'}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Agency-Only Actions (Hidden from Clinic Staff) */}
+            {viewMode === 'agency' && (
+              <>
+                <button
+                  onClick={() => setShowWidgetModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-sky-700 dark:text-sky-300 bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 rounded-xl transition-all shadow-sm"
+                >
+                  <Globe className="w-3.5 h-3.5 text-sky-500" />
+                  <span>Website Widget</span>
+                </button>
+                <button
+                  onClick={() => setShowRecallModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-purple-700 dark:text-purple-300 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 rounded-xl transition-all shadow-sm"
+                >
+                  <Zap className="w-3.5 h-3.5 text-purple-500" />
+                  <span>Refill Chair</span>
+                </button>
+                <button
+                  onClick={() => setShowProposalModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 rounded-xl transition-all shadow-sm"
+                >
+                  <FileText className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>Client Proposal</span>
+                </button>
+              </>
+            )}
+
+            {/* Core Actions (Visible in Both Modes) */}
+            <button
+              onClick={() => setShowBriefingModal(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 rounded-xl transition-all shadow-sm"
+            >
+              <Coffee className="w-3.5 h-3.5 text-amber-500" />
+              <span>8 AM Briefing</span>
+            </button>
+            <button
+              onClick={onOpenTestChat}
+              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 active:scale-95 rounded-xl shadow-lg shadow-blue-600/25 transition-all"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Simulate Chat</span>
+            </button>
+          </div>
         </div>
+
+        {/* Enterprise System Health Monitor Strip */}
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-white/70 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 text-xs shadow-sm">
+          <span className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 text-[11.5px]">
+            <ShieldCheck className="w-4 h-4 text-emerald-500" />
+            <span>Infrastructure Health:</span>
+          </span>
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[11px] text-slate-600 dark:text-slate-400">
+            <span className="flex items-center gap-1.5 font-medium"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> WhatsApp Connected</span>
+            <span className="flex items-center gap-1.5 font-medium"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Gemini Flash (1.1s)</span>
+            <span className="flex items-center gap-1.5 font-medium"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Google Calendar Synced</span>
+            <span className="flex items-center gap-1.5 font-medium"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Knowledge Base Indexed</span>
+            <span className="flex items-center gap-1.5 font-medium"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Missed Call Recovery Active</span>
+          </div>
+        </div>
+
       </div>
 
       {/* 6 Required Glassmorphic Metric Cards */}
