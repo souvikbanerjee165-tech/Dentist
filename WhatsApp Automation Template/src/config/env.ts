@@ -29,4 +29,11 @@ export const config = {
     email: process.env.OWNER_NOTIFICATION_EMAIL || '',
     phone: process.env.OWNER_NOTIFICATION_PHONE || '',
   },
+  telnyx: {
+    apiKey: process.env.TELNYX_API_KEY || '',
+    publicKey: process.env.TELNYX_PUBLIC_KEY || '',
+    sipConnectionId: process.env.TELNYX_SIP_CONNECTION_ID || '',
+    phoneNumber: process.env.TELNYX_PHONE_NUMBER || '+442079460912',
+    applicationId: process.env.TELNYX_APPLICATION_ID || '',
+  },
 };

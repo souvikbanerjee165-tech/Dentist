@@ -33,6 +33,7 @@ import { WebsiteWidgetEmbedModal } from '../components/widget/WebsiteWidgetEmbed
 import { MorningBriefingModal } from '../components/briefing/MorningBriefingModal';
 import { EmptyChairRecallModal } from '../components/recall/EmptyChairRecallModal';
 import { ClientProposalModal } from '../components/proposal/ClientProposalModal';
+import { TelnyxDialerModal } from '../components/voice/TelnyxDialerModal';
 
 interface DashboardPageProps {
   stats: KPIStats;
@@ -86,6 +87,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const [showBriefingModal, setShowBriefingModal] = useState(false);
   const [showRecallModal, setShowRecallModal] = useState(false);
   const [showProposalModal, setShowProposalModal] = useState(false);
+  const [showDialerModal, setShowDialerModal] = useState(false);
   const [missedCallsRecovered, setMissedCallsRecovered] = useState(11);
   const [rescuedRevenue, setRescuedRevenue] = useState(4250);
   const [isTriggeringRecovery, setIsTriggeringRecovery] = useState(false);
@@ -337,6 +339,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             )}
 
             {/* Core Actions (Visible in Both Modes) */}
+            <button
+              onClick={() => setShowDialerModal(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 rounded-xl transition-all shadow-sm"
+            >
+              <Phone className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Telnyx Voice Desk</span>
+            </button>
             <button
               onClick={() => setShowBriefingModal(true)}
               className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 rounded-xl transition-all shadow-sm"
@@ -818,6 +827,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       <ClientProposalModal
         isOpen={showProposalModal}
         onClose={() => setShowProposalModal(false)}
+        clinicName="St. James Dental Practice"
+      />
+
+      {/* Telnyx Wholesale Voice Desk & Smart Dialer */}
+      <TelnyxDialerModal
+        isOpen={showDialerModal}
+        onClose={() => setShowDialerModal(false)}
         clinicName="St. James Dental Practice"
       />
 
