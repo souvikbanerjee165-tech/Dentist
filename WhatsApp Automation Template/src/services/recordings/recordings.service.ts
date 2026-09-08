@@ -266,7 +266,7 @@ Output JSON with this exact schema:
 }`;
 
         const response = await ai.models.generateContent({
-          model: config.gemini.model || 'gemini-1.5-flash',
+          model: config.gemini.model || 'gemini-3.6-flash',
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
           config: {
             temperature: 0.2,
@@ -359,7 +359,7 @@ Output JSON with this exact schema:
         const ai = new GoogleGenAI({ apiKey: config.gemini.apiKey });
         const text = transcript.map(t => `${t.role}: ${t.text}`).join('\n');
         const res = await ai.models.generateContent({
-          model: config.gemini.model || 'gemini-1.5-flash',
+          model: config.gemini.model || 'gemini-3.6-flash',
           contents: [{ role: 'user', parts: [{ text: `Summarize this dental call in 2-3 short bullet points:\n\n${text}` }] }],
           config: { temperature: 0.2 }
         });

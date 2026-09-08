@@ -75,6 +75,51 @@ interface LearnedInsightsSummary {
 const BARS_COUNT = 15;
 const GAUSSIAN_WEIGHTS = [0.18, 0.35, 0.58, 0.78, 0.92, 1.0, 0.96, 0.88, 0.95, 1.0, 0.89, 0.72, 0.52, 0.32, 0.15];
 
+function encodeWAV(samples: Float32Array, sampleRate: number): Blob {
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+
+  function writeString(offset: number, str: string) {
+    for (let i = 0; i < str.length; i++) {
+      view.setUint8(offset + i, str.charCodeAt(i));
+    }
+  }
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + samples.length * 2, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM format
+  view.setUint16(22, 1, true); // Mono
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true); // 16-bit
+  writeString(36, 'data');
+  view.setUint32(40, samples.length * 2, true);
+
+  let offset = 44;
+  for (let i = 0; i < samples.length; i++, offset += 2) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+
+  return new Blob([view], { type: 'audio/wav' });
+}
+
+function mergeBuffers(buffers: Float32Array[]): Float32Array {
+  let totalLength = 0;
+  for (const b of buffers) totalLength += b.length;
+  const result = new Float32Array(totalLength);
+  let offset = 0;
+  for (const b of buffers) {
+    result.set(b, offset);
+    offset += b.length;
+  }
+  return result;
+}
+
 export const CallingSandboxPage: React.FC = () => {
   // Navigation View: 'sandbox' | 'recordings'
   const [activeView, setActiveView] = useState<'sandbox' | 'recordings'>('sandbox');
@@ -108,21 +153,22 @@ export const CallingSandboxPage: React.FC = () => {
   const [isTrainingAI, setIsTrainingAI] = useState(false);
   const [playingRecordingId, setPlayingRecordingId] = useState<string | null>(null);
 
-  // Audio Context & Speech Recognition & MediaRecorder Refs
+  // Audio Context, Speech Recognition & PCM Audio Buffer Refs
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const recordedAudioChunksRef = useRef<Blob[]>([]);
-  const fullCallAudioChunksRef = useRef<Blob[]>([]);
-  const fullCallRecorderRef = useRef<MediaRecorder | null>(null);
+  const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
+  const turnPcmSamplesRef = useRef<Float32Array[]>([]);
+  const fullCallPcmSamplesRef = useRef<Float32Array[]>([]);
   const animationFrameRef = useRef<number | null>(null);
   const smoothedBarsRef = useRef<number[]>(new Array(BARS_COUNT).fill(12));
   const recognitionRef = useRef<any>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isCallActiveRef = useRef(false);
   const isAISpeakingRef = useRef(false);
   const isAntiEchoBreatherRef = useRef(false);
   const isPatientSpeakingVADRef = useRef(false);
+  const hasSpokenInThisTurnRef = useRef(false);
   const transcriptBufferRef = useRef<string>('');
   const activeAudioPlayerRef = useRef<HTMLAudioElement | null>(null);
   const transcriptScrollRef = useRef<HTMLDivElement | null>(null);
@@ -200,7 +246,7 @@ export const CallingSandboxPage: React.FC = () => {
   /**
    * Plays audio with 250ms Anti-Echo Breather
    */
-  const playKokoroAudio = useCallback((audioBase64: string, fallbackText?: string, onComplete?: () => void) => {
+  const playKokoroAudio = (audioBase64: string, fallbackText?: string, onComplete?: () => void) => {
     if (activeAudioPlayerRef.current) {
       activeAudioPlayerRef.current.pause();
       activeAudioPlayerRef.current = null;
@@ -212,16 +258,18 @@ export const CallingSandboxPage: React.FC = () => {
     const audio = new Audio(audioBase64);
     activeAudioPlayerRef.current = audio;
 
-    audio.onended = () => {
+    const resumePatientListening = () => {
       isAISpeakingRef.current = false;
       isAntiEchoBreatherRef.current = true;
       setCallStatusText('Anti-Echo Breather');
 
       setTimeout(() => {
         isAntiEchoBreatherRef.current = false;
-        if (isCallActive) {
+        if (isCallActiveRef.current) {
           setCallStatusText('Listening to Patient...');
-          restartRecordingChunk();
+          turnPcmSamplesRef.current = [];
+          transcriptBufferRef.current = '';
+          hasSpokenInThisTurnRef.current = false;
           if (recognitionRef.current) {
             try {
               recognitionRef.current.start();
@@ -232,29 +280,23 @@ export const CallingSandboxPage: React.FC = () => {
       }, 250);
     };
 
+    audio.onended = resumePatientListening;
+
     audio.onerror = () => {
       if (fallbackText && 'speechSynthesis' in window) {
         const utt = new SpeechSynthesisUtterance(fallbackText);
         utt.rate = speechSpeed;
-        utt.onend = () => {
-          isAISpeakingRef.current = false;
-          setCallStatusText('Listening to Patient...');
-          restartRecordingChunk();
-        };
+        utt.onend = resumePatientListening;
         window.speechSynthesis.speak(utt);
       } else {
-        isAISpeakingRef.current = false;
-        setCallStatusText('Listening to Patient...');
-        restartRecordingChunk();
+        resumePatientListening();
       }
     };
 
     audio.play().catch(() => {
-      isAISpeakingRef.current = false;
-      setCallStatusText('Listening to Patient...');
-      restartRecordingChunk();
+      resumePatientListening();
     });
-  }, [isCallActive, speechSpeed]);
+  };
 
   /**
    * Converts an audio blob to base64 string
@@ -269,36 +311,16 @@ export const CallingSandboxPage: React.FC = () => {
   };
 
   /**
-   * Restarts the current audio chunk recorder for the next patient speech turn
-   */
-  const restartRecordingChunk = () => {
-    recordedAudioChunksRef.current = [];
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive' && micStreamRef.current) {
-      try {
-        mediaRecorderRef.current.start(100);
-      } catch {}
-    }
-  };
-
-  /**
    * Submit Patient Turn (Audio Blob + Speech Text)
    */
-  const handleSendTurn = useCallback(async (userSpeech?: string, audioBlob?: Blob) => {
+  const handleSendTurn = async (userSpeech?: string, audioBlob?: Blob) => {
     const textInput = (userSpeech || transcriptBufferRef.current || patientSpeechInput).trim();
-    
-    // Stop chunk recorder while processing turn
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      try {
-        mediaRecorderRef.current.stop();
-      } catch {}
-    }
-
     transcriptBufferRef.current = '';
     setPatientSpeechInput('');
     setCallStatusText('AI Thinking');
 
     let audioBase64: string | undefined;
-    if (audioBlob && audioBlob.size > 2000) {
+    if (audioBlob && audioBlob.size > 1000) {
       try {
         audioBase64 = await blobToBase64(audioBlob);
       } catch {}
@@ -306,7 +328,7 @@ export const CallingSandboxPage: React.FC = () => {
 
     // Temporary turn placeholder until server responds
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const tempPatientTurn = textInput || 'Spoken message (transcribing...)';
+    const tempPatientTurn = textInput || 'Voice audio (transcribing with AI...)';
 
     setTranscripts((prev) => [
       ...prev,
@@ -324,14 +346,14 @@ export const CallingSandboxPage: React.FC = () => {
         content: t.text,
       }));
 
-      // Call multimodal audio endpoint
+      // Call multimodal audio endpoint with Gemini 3.6 Flash
       const res = await fetch('/api/v1/voice/kokoro/sandbox-turn-audio', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           speech: textInput,
           audioBase64,
-          mimeType: audioBlob?.type || 'audio/webm',
+          mimeType: audioBlob?.type || 'audio/wav',
           conversationHistory: historyPayload,
           clinicName: 'St. James Dental Practice',
           voice: selectedVoice,
@@ -344,7 +366,7 @@ export const CallingSandboxPage: React.FC = () => {
       const aiReply = data.reply || "I'd be glad to help you reserve your appointment at St. James Dental.";
       const wordCount = data.word_count || aiReply.split(/\s+/).length;
 
-      // Update the patient's transcript with exact detected speech
+      // Update patient transcript with exact detected speech from Gemini
       setTranscripts((prev) => {
         const copy = [...prev];
         if (copy.length > 0 && copy[copy.length - 1].role === 'patient') {
@@ -379,56 +401,59 @@ export const CallingSandboxPage: React.FC = () => {
       if (data.audio_base64) {
         playKokoroAudio(data.audio_base64, aiReply);
       } else {
-        if ('speechSynthesis' in window) {
-          window.speechSynthesis.cancel();
-          isAISpeakingRef.current = true;
-          setCallStatusText('AI Speaking');
-          const utt = new SpeechSynthesisUtterance(aiReply);
-          utt.rate = speechSpeed;
-          utt.onend = () => {
-            isAISpeakingRef.current = false;
-            setCallStatusText('Listening to Patient...');
-            restartRecordingChunk();
-          };
-          window.speechSynthesis.speak(utt);
-        } else {
-          setCallStatusText('Listening to Patient...');
-          restartRecordingChunk();
-        }
+        setCallStatusText('Listening to Patient...');
+        turnPcmSamplesRef.current = [];
       }
     } catch (err) {
       console.error('Turn submission error:', err);
       setCallStatusText('Listening to Patient...');
-      restartRecordingChunk();
+      turnPcmSamplesRef.current = [];
     }
-  }, [transcripts, patientSpeechInput, selectedVoice, speechSpeed, playKokoroAudio]);
+  };
 
   /**
-   * Setup Web Audio Soundwave Analyser & MediaRecorder
+   * Harvests collected PCM samples and text, then submits turn
+   */
+  const harvestAndSubmitTurn = (overrideText?: string) => {
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+    isPatientSpeakingVADRef.current = false;
+    hasSpokenInThisTurnRef.current = false;
+
+    const capturedText = (overrideText || transcriptBufferRef.current || patientSpeechInput).trim();
+    transcriptBufferRef.current = '';
+    setPatientSpeechInput('');
+
+    let wavBlob: Blob | undefined;
+    if (turnPcmSamplesRef.current.length > 0 && audioContextRef.current) {
+      const merged = mergeBuffers(turnPcmSamplesRef.current);
+      turnPcmSamplesRef.current = [];
+      if (merged.length > 4000) { // at least 0.15s of audio
+        wavBlob = encodeWAV(merged, audioContextRef.current.sampleRate);
+      }
+    }
+
+    if (capturedText || (wavBlob && wavBlob.size > 1000)) {
+      handleSendTurn(capturedText, wavBlob);
+    }
+  };
+
+  /**
+   * Setup Web Audio Soundwave Analyser & PCM Audio Processor
    */
   const setupWebAudioLoop = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        }, 
+        video: false 
+      });
       micStreamRef.current = stream;
-
-      // Setup MediaRecorder for chunks
-      try {
-        const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-          ? 'audio/webm;codecs=opus'
-          : 'audio/webm';
-        
-        const recorder = new MediaRecorder(stream, { mimeType: mime });
-        recorder.ondataavailable = (e) => {
-          if (e.data.size > 0) {
-            recordedAudioChunksRef.current.push(e.data);
-            fullCallAudioChunksRef.current.push(e.data);
-          }
-        };
-        mediaRecorderRef.current = recorder;
-        recorder.start(100);
-      } catch (recErr) {
-        console.warn('MediaRecorder setup notice:', recErr);
-      }
 
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       const audioCtx = new AudioCtx();
@@ -441,6 +466,30 @@ export const CallingSandboxPage: React.FC = () => {
       source.connect(analyser);
       analyserRef.current = analyser;
 
+      // ScriptProcessor captures raw PCM samples continuously without restart glitches
+      const scriptProcessor = audioCtx.createScriptProcessor(4096, 1, 1);
+      scriptProcessorRef.current = scriptProcessor;
+
+      turnPcmSamplesRef.current = [];
+      fullCallPcmSamplesRef.current = [];
+
+      scriptProcessor.onaudioprocess = (e) => {
+        if (!isCallActiveRef.current || isAISpeakingRef.current || isAntiEchoBreatherRef.current || isMuted) {
+          return;
+        }
+        const input = e.inputBuffer.getChannelData(0);
+        const copy = new Float32Array(input.length);
+        copy.set(input);
+        turnPcmSamplesRef.current.push(copy);
+        fullCallPcmSamplesRef.current.push(copy);
+      };
+
+      source.connect(scriptProcessor);
+      const silencer = audioCtx.createGain();
+      silencer.gain.value = 0;
+      scriptProcessor.connect(silencer);
+      silencer.connect(audioCtx.destination);
+
       const bufferLength = analyser.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
 
@@ -452,34 +501,30 @@ export const CallingSandboxPage: React.FC = () => {
         for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
         const average = sum / bufferLength;
 
-        // VAD threshold detection: energy > 14
-        const isSpeakingNow = average > 14 && !isAISpeakingRef.current && !isAntiEchoBreatherRef.current && !isMuted;
+        // VAD threshold detection: energy > 11
+        const isSpeakingNow = average > 11 && !isAISpeakingRef.current && !isAntiEchoBreatherRef.current && !isMuted;
 
         if (isSpeakingNow) {
           isPatientSpeakingVADRef.current = true;
-          if (callStatusText !== 'Patient Speaking') {
-            setCallStatusText('Patient Speaking');
-          }
+          hasSpokenInThisTurnRef.current = true;
+          setCallStatusText('Patient Speaking');
 
-          // Clear silence timer while speech continues
           if (silenceTimerRef.current) {
             clearTimeout(silenceTimerRef.current);
             silenceTimerRef.current = null;
           }
-        } else if (isPatientSpeakingVADRef.current && !isAISpeakingRef.current && !isAntiEchoBreatherRef.current) {
-          // Patient was speaking and just went silent -> start 850ms silence timer
+        } else if (hasSpokenInThisTurnRef.current && !isAISpeakingRef.current && !isAntiEchoBreatherRef.current) {
+          // Patient finished speaking -> start 900ms silence timer
           if (!silenceTimerRef.current && handsFreeAutoMic) {
             silenceTimerRef.current = setTimeout(() => {
               isPatientSpeakingVADRef.current = false;
-              if (isCallActive && !isAISpeakingRef.current && !isAntiEchoBreatherRef.current) {
-                // Harvest recorded audio blob
-                const audioBlob = recordedAudioChunksRef.current.length > 0
-                  ? new Blob(recordedAudioChunksRef.current, { type: 'audio/webm' })
-                  : undefined;
-                
-                handleSendTurn(transcriptBufferRef.current, audioBlob);
+              hasSpokenInThisTurnRef.current = false;
+              silenceTimerRef.current = null;
+
+              if (isCallActiveRef.current && !isAISpeakingRef.current && !isAntiEchoBreatherRef.current) {
+                harvestAndSubmitTurn();
               }
-            }, 850);
+            }, 900);
           }
         }
 
@@ -488,7 +533,7 @@ export const CallingSandboxPage: React.FC = () => {
           const rawAmp = isAISpeakingRef.current
             ? (30 + Math.random() * 55) * weight
             : isSpeakingNow
-            ? Math.max(12, average * 1.5 * weight)
+            ? Math.max(12, average * 1.6 * weight)
             : 10 + Math.random() * 4;
 
           const smoothed = Math.round(prev * 0.55 + rawAmp * 0.45);
@@ -510,7 +555,7 @@ export const CallingSandboxPage: React.FC = () => {
   /**
    * Setup Web Speech STT in parallel
    */
-  const setupSpeechRecognition = useCallback(() => {
+  const setupSpeechRecognition = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
@@ -518,7 +563,7 @@ export const CallingSandboxPage: React.FC = () => {
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = 'en-GB';
+      recognition.lang = navigator.language || 'en-US';
 
       recognition.onresult = (event: any) => {
         if (isAISpeakingRef.current || isAntiEchoBreatherRef.current || isMuted) return;
@@ -537,12 +582,16 @@ export const CallingSandboxPage: React.FC = () => {
           transcriptBufferRef.current = activeText;
           setPatientSpeechInput(activeText);
           setCallStatusText('Patient Speaking');
+          hasSpokenInThisTurnRef.current = true;
         }
       };
 
-      recognition.onerror = () => {};
+      recognition.onerror = (err: any) => {
+        console.warn('[SpeechRecognition Notice]:', err?.error);
+      };
+
       recognition.onend = () => {
-        if (isCallActive && !isAISpeakingRef.current && !isAntiEchoBreatherRef.current) {
+        if (isCallActiveRef.current && !isAISpeakingRef.current && !isAntiEchoBreatherRef.current) {
           try {
             recognition.start();
           } catch {}
@@ -551,18 +600,22 @@ export const CallingSandboxPage: React.FC = () => {
 
       recognition.start();
       recognitionRef.current = recognition;
-    } catch {}
-  }, [isCallActive, isMuted]);
+    } catch (err) {
+      console.warn('[SpeechRecognition Start Notice]:', err);
+    }
+  };
 
   /**
    * Start Live Sandbox Call
    */
   const handleStartCall = async () => {
+    isCallActiveRef.current = true;
     setIsCallActive(true);
     setBookedMeeting(null);
     setTranscripts([]);
     setCallStatusText('Kokoro Synthesizing');
-    fullCallAudioChunksRef.current = [];
+    turnPcmSamplesRef.current = [];
+    fullCallPcmSamplesRef.current = [];
 
     await setupWebAudioLoop();
     setupSpeechRecognition();
@@ -617,6 +670,7 @@ export const CallingSandboxPage: React.FC = () => {
   const handleEndCall = async () => {
     const finalDuration = callDuration;
     const finalTranscripts = [...transcripts];
+    isCallActiveRef.current = false;
     setIsCallActive(false);
     setCallStatusText('Idle');
 
@@ -629,13 +683,19 @@ export const CallingSandboxPage: React.FC = () => {
     }
     isAISpeakingRef.current = false;
     isAntiEchoBreatherRef.current = false;
+    hasSpokenInThisTurnRef.current = false;
 
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
     if (recognitionRef.current) {
       try { recognitionRef.current.stop(); } catch {}
       recognitionRef.current = null;
     }
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      try { mediaRecorderRef.current.stop(); } catch {}
+    if (scriptProcessorRef.current) {
+      try { scriptProcessorRef.current.disconnect(); } catch {}
+      scriptProcessorRef.current = null;
     }
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
@@ -644,6 +704,19 @@ export const CallingSandboxPage: React.FC = () => {
       micStreamRef.current.getTracks().forEach((track) => track.stop());
       micStreamRef.current = null;
     }
+
+    // Harvest full call WAV recording
+    let fullAudioBase64: string | undefined;
+    if (fullCallPcmSamplesRef.current.length > 0 && audioContextRef.current) {
+      try {
+        const merged = mergeBuffers(fullCallPcmSamplesRef.current);
+        const fullWavBlob = encodeWAV(merged, audioContextRef.current.sampleRate);
+        fullAudioBase64 = await blobToBase64(fullWavBlob);
+      } catch (encErr) {
+        console.warn('WAV encoding notice on hangup:', encErr);
+      }
+    }
+
     if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
       audioContextRef.current.close();
       audioContextRef.current = null;
@@ -654,13 +727,6 @@ export const CallingSandboxPage: React.FC = () => {
     // Save Call to Database if there were conversational turns
     if (finalTranscripts.length > 1) {
       try {
-        let fullAudioBase64: string | undefined;
-        if (fullCallAudioChunksRef.current.length > 0) {
-          const fullBlob = new Blob(fullCallAudioChunksRef.current, { type: 'audio/webm' });
-          fullAudioBase64 = await blobToBase64(fullBlob);
-        }
-
-        // Determine sentiment and treatment from transcript
         const allText = finalTranscripts.map(t => t.text).join(' ').toLowerCase();
         let sentiment: 'positive' | 'neutral' | 'urgent' | 'anxious' = 'positive';
         let treatment = 'General Dental Care';
@@ -935,7 +1001,7 @@ export const CallingSandboxPage: React.FC = () => {
               </div>
 
               {/* Call Start / Hang Up Buttons */}
-              <div className="flex gap-3">
+              <div className="space-y-2">
                 {!isCallActive ? (
                   <button
                     onClick={handleStartCall}
@@ -945,13 +1011,40 @@ export const CallingSandboxPage: React.FC = () => {
                     <span>Call Doctor's Front Desk (Start Sandbox)</span>
                   </button>
                 ) : (
-                  <button
-                    onClick={handleEndCall}
-                    className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-2xl bg-rose-600 hover:bg-rose-500 active:scale-95 text-white font-bold text-sm shadow-lg shadow-rose-600/30 transition-all animate-pulse"
-                  >
-                    <PhoneOff className="w-4 h-4" />
-                    <span>Hang Up &amp; Save Call to Database</span>
-                  </button>
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => harvestAndSubmitTurn()}
+                      className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs shadow-md shadow-emerald-600/25 transition-all"
+                    >
+                      <Zap className="w-4 h-4" />
+                      <span>Done Speaking (Submit Turn to Doctor AI ➔)</span>
+                    </button>
+                    <button
+                      onClick={handleEndCall}
+                      className="w-full flex items-center justify-center gap-2.5 py-3 px-6 rounded-2xl bg-rose-600/90 hover:bg-rose-500 active:scale-95 text-white font-bold text-xs shadow-md transition-all"
+                    >
+                      <PhoneOff className="w-4 h-4" />
+                      <span>Hang Up &amp; Save Call to Database</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Live Speech Recognition Transcript Preview */}
+                {isCallActive && patientSpeechInput && (
+                  <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between gap-2 animate-fadeIn">
+                    <div className="text-xs text-amber-800 dark:text-amber-200 truncate">
+                      <span className="font-bold mr-1.5">Microphone Heard:</span>
+                      <span className="italic">"{patientSpeechInput}"</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => harvestAndSubmitTurn(patientSpeechInput)}
+                      className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[11px] font-bold flex-shrink-0"
+                    >
+                      Send ➔
+                    </button>
+                  </div>
                 )}
               </div>
 

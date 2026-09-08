@@ -236,7 +236,7 @@ Output ONLY a JSON object matching this schema:
         ];
 
         const response = await ai.models.generateContent({
-          model: config.gemini.model || 'gemini-1.5-flash',
+          model: config.gemini.model || 'gemini-3.6-flash',
           contents,
           config: {
             systemInstruction,
@@ -415,6 +415,20 @@ Output ONLY valid JSON:
   "booked_slot": "e.g. Thursday at 11:00 AM" or null,
   "treatment": "e.g. Emergency Pain Relief" or "Routine Exam" or null
 }`;
+        const parts: any[] = [
+          { text: fallbackSpeech 
+            ? `The patient spoke: "${fallbackSpeech}". Also verify against the attached audio if provided. Extract the accurate transcription (detected_speech) and reply:` 
+            : "Here is the patient's spoken voice audio from the live phone line. Transcribe what they said and reply:" }
+        ];
+
+        if (cleanBase64 && cleanBase64.length > 500) {
+          parts.push({
+            inlineData: {
+              mimeType: mimeType || 'audio/wav',
+              data: cleanBase64
+            }
+          });
+        }
 
         const contents: any[] = [
           ...conversationHistory.slice(-4).map(m => ({
@@ -423,20 +437,12 @@ Output ONLY valid JSON:
           })),
           {
             role: 'user',
-            parts: [
-              { text: "Here is the patient's spoken voice audio from the live phone line. Transcribe what they said and reply:" },
-              {
-                inlineData: {
-                  mimeType: mimeType || 'audio/webm',
-                  data: cleanBase64
-                }
-              }
-            ]
+            parts
           }
         ];
 
         const response = await ai.models.generateContent({
-          model: config.gemini.model || 'gemini-1.5-flash',
+          model: config.gemini.model || 'gemini-3.6-flash',
           contents,
           config: {
             systemInstruction,
