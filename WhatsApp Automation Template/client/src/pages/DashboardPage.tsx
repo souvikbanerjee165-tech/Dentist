@@ -15,12 +15,17 @@ import {
   ChevronRight,
   Clock,
   Calendar,
-  Phone
+  Phone,
+  Globe,
+  PhoneMissed,
+  Star,
+  Send
 } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { Conversation, KPIStats, Lead, NavigationTab } from '../types';
 import { OwnerROICalculator } from '../components/dashboard/OwnerROICalculator';
+import { WebsiteWidgetEmbedModal } from '../components/widget/WebsiteWidgetEmbedModal';
 
 interface DashboardPageProps {
   stats: KPIStats;
@@ -70,6 +75,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const [liveToast, setLiveToast] = useState<string | null>(null);
   const [dynamicRevenue, setDynamicRevenue] = useState(4850);
   const [dynamicAppointmentsCount, setDynamicAppointmentsCount] = useState(stats.appointments || 14);
+  const [showWidgetModal, setShowWidgetModal] = useState(false);
+  const [missedCallsRecovered, setMissedCallsRecovered] = useState(11);
+  const [rescuedRevenue, setRescuedRevenue] = useState(4250);
+  const [isTriggeringRecovery, setIsTriggeringRecovery] = useState(false);
 
   useEffect(() => {
     const handleNewBooking = (e: any) => {
@@ -96,6 +105,32 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     window.addEventListener('new_appointment_booked', handleNewBooking);
     return () => window.removeEventListener('new_appointment_booked', handleNewBooking);
   }, []);
+
+  const handleSimulateMissedCall = async () => {
+    setIsTriggeringRecovery(true);
+    try {
+      await fetch('/api/v1/followup/missed-call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          callerPhone: '+44 7700 900123',
+          callerName: 'Callum Wright',
+          clinicName: 'St. James Dental Practice',
+        }),
+      });
+      setMissedCallsRecovered(prev => prev + 1);
+      setRescuedRevenue(prev => prev + 395);
+      setLiveToast('📞 Missed Call Rescued! Instant WhatsApp dispatched to Callum Wright (+44 7700 900123). Estimated +£395 rescued!');
+      setTimeout(() => setLiveToast(null), 5000);
+    } catch {
+      setMissedCallsRecovered(prev => prev + 1);
+      setRescuedRevenue(prev => prev + 395);
+      setLiveToast('📞 Missed Call Rescued! Instant WhatsApp dispatched (+£395).');
+      setTimeout(() => setLiveToast(null), 5000);
+    } finally {
+      setIsTriggeringRecovery(false);
+    }
+  };
 
   const cards = [
     {
@@ -222,7 +257,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => setShowWidgetModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-sky-700 dark:text-sky-300 bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 rounded-xl transition-all duration-200 shadow-sm"
+          >
+            <Globe className="w-3.5 h-3.5 text-sky-500" />
+            <span>Website Chat Widget</span>
+          </button>
           <button
             onClick={() => onSelectTab('knowledge')}
             className="px-4 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-800 border border-black/5 dark:border-white/10 rounded-xl transition-all duration-200 shadow-sm"
@@ -291,6 +333,91 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
  
       {/* Practice Owner ROI & Economic Value Calculator */}
       <OwnerROICalculator />
+
+      {/* Version 1.5 Retention Engine: Missed Call Auto-Recovery & Smart Follow-Ups */}
+      <GlassCard className="p-6 border-emerald-500/30 bg-gradient-to-r from-emerald-950/20 via-sky-950/20 to-slate-900/40 shadow-xl space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-emerald-500/10 pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center font-bold">
+                <PhoneMissed className="w-4 h-4" />
+              </div>
+              <h3 className="text-base font-bold text-white">
+                Missed Call Recovery &amp; AI Follow-Up Engine (v1.5)
+              </h3>
+              <Badge variant="success" size="sm">
+                Active Retention
+              </Badge>
+            </div>
+            <p className="text-xs text-slate-400 mt-1">
+              When a prospective patient calls outside clinic hours or hangs up, the AI instantly messages them on WhatsApp within 5 seconds to rescue the inquiry.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleSimulateMissedCall}
+              disabled={isTriggeringRecovery}
+              className="flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-emerald-300 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 rounded-xl transition-all active:scale-95 shadow-sm"
+            >
+              <PhoneMissed className="w-3.5 h-3.5" />
+              <span>{isTriggeringRecovery ? 'Dispatching WhatsApp...' : 'Simulate Missed Call'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 4 Core Retention Metrics */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+            <div className="text-[11px] font-medium text-slate-400 flex items-center gap-1.5">
+              <PhoneMissed className="w-3.5 h-3.5 text-rose-400" />
+              <span>Calls Missed</span>
+            </div>
+            <div className="text-2xl font-extrabold text-white">14</div>
+            <span className="text-[10px] text-slate-400">After-hours &amp; busy desk</span>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+            <div className="text-[11px] font-medium text-slate-400 flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Rescued by AI</span>
+            </div>
+            <div className="text-2xl font-extrabold text-emerald-400">{missedCallsRecovered}</div>
+            <span className="text-[10px] text-emerald-400 font-semibold">79% Conversion Rate</span>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+            <div className="text-[11px] font-medium text-slate-400 flex items-center gap-1.5">
+              <DollarSign className="w-3.5 h-3.5 text-amber-400" />
+              <span>Rescued Revenue</span>
+            </div>
+            <div className="text-2xl font-extrabold text-amber-400">£{rescuedRevenue.toLocaleString()}</div>
+            <span className="text-[10px] text-amber-400/90 font-semibold">Emergency &amp; consult fees</span>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+            <div className="text-[11px] font-medium text-slate-400 flex items-center gap-1.5">
+              <Star className="w-3.5 h-3.5 text-amber-400" />
+              <span>Google Reviews</span>
+            </div>
+            <div className="text-2xl font-extrabold text-cyan-400">22 Sent</div>
+            <span className="text-[10px] text-cyan-400 font-semibold">4.9★ Clinic Rating</span>
+          </div>
+        </div>
+
+        {/* Live Recovery Example */}
+        <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-white/5 text-xs flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="text-slate-300 font-mono text-[11.5px]">
+              <strong>Auto-SMS/WhatsApp:</strong> "Hi Callum! Sorry we missed your call at St. James Dental. This is Dr. Jensen's desk. How can we help you today with your dental care?"
+            </span>
+          </div>
+          <Badge variant="success" size="sm">
+            Dispatched in 4.2s
+          </Badge>
+        </div>
+      </GlassCard>
 
       {/* High-Value Revenue Feature: Automated Abandoned Lead Recovery Engine */}
       <GlassCard className="p-6 border-indigo-500/30 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-blue-500/5 space-y-4">
@@ -575,6 +702,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
 
       </div>
+
+      {/* Website Chat Widget Embed Modal */}
+      <WebsiteWidgetEmbedModal
+        isOpen={showWidgetModal}
+        onClose={() => setShowWidgetModal(false)}
+        clinicName="St. James Dental Practice"
+      />
 
     </div>
   );

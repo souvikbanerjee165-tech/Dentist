@@ -21,6 +21,7 @@ import briefingRoutes from './routes/briefing.routes.js';
 import voiceRoutes from './routes/voice.routes.js';
 import onboardingRoutes from './routes/onboarding.routes.js';
 import auditRoutes from './routes/audit.routes.js';
+import { followupRouter } from './routes/followup.routes.js';
 
 export const createApp = (): Express => {
   const app = express();
@@ -65,6 +66,7 @@ export const createApp = (): Express => {
   app.use('/api/v1/voice', voiceRoutes);
   app.use('/api/v1/onboarding', onboardingRoutes);
   app.use('/api/v1/audit', auditRoutes);
+  app.use('/api/v1/followup', followupRouter);
   app.use('/api/v1/knowledge', knowledgeRoutes);
   app.use('/api/v1/calendar', calendarRoutes);
   app.use('/api/v1/crm', crmRoutes);
