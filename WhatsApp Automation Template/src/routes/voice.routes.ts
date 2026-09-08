@@ -188,5 +188,152 @@ router.post('/interactive/turn', async (req: Request, res: Response) => {
   }
 });
 
+// ==================== KOKORO LOCAL NEURAL VOICE SERVER ROUTES ====================
+
+const KOKORO_SERVER_URL = process.env.KOKORO_SERVER_URL || 'http://127.0.0.1:8880';
+
+/**
+ * GET /api/v1/voice/kokoro/status
+ * Queries the local Kokoro neural voice server health
+ */
+router.get('/kokoro/status', async (_req: Request, res: Response) => {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2000);
+    const response = await fetch(`${KOKORO_SERVER_URL}/health`, { signal: controller.signal });
+    clearTimeout(timeout);
+
+    if (response.ok) {
+      const data = await response.json();
+      return res.status(200).json({
+        online: true,
+        serverUrl: KOKORO_SERVER_URL,
+        ...data,
+      });
+    }
+    return res.status(502).json({ online: false, error: 'Kokoro server returned non-200' });
+  } catch (err: any) {
+    return res.status(200).json({
+      online: false,
+      serverUrl: KOKORO_SERVER_URL,
+      message: 'Local Kokoro server is warming up or offline',
+      error: err.message,
+    });
+  }
+});
+
+/**
+ * GET /api/v1/voice/kokoro/voices
+ * Lists the 54 Kokoro neural voices
+ */
+router.get('/kokoro/voices', async (_req: Request, res: Response) => {
+  try {
+    const response = await fetch(`${KOKORO_SERVER_URL}/voices`);
+    if (response.ok) {
+      const data = await response.json();
+      return res.status(200).json(data);
+    }
+    return res.status(502).json({ error: 'Failed to fetch voices' });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/v1/voice/kokoro/synthesize
+ * Synthesizes text to speech using the local Kokoro neural engine
+ */
+router.post('/kokoro/synthesize', async (req: Request, res: Response) => {
+  try {
+    const { text, voice, speed } = req.body;
+    const response = await fetch(`${KOKORO_SERVER_URL}/synthesize/base64`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text,
+        voice: voice || 'bf_emma',
+        speed: speed || 1.0,
+      }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return res.status(200).json(data);
+    }
+    return res.status(502).json({ success: false, error: 'Kokoro synthesis failed' });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/v1/voice/kokoro/sandbox-turn
+ * Full-Duplex Patient -> Doctor AI sandbox turn with local Kokoro audio synthesis
+ */
+router.post('/kokoro/sandbox-turn', async (req: Request, res: Response) => {
+  try {
+    const { speech, text, conversationHistory, clinicName, voice, speed } = req.body;
+    const userSpeech = speech || text || '';
+    const clinic = clinicName || 'St. James Dental Practice';
+    const chosenVoice = voice || 'bf_emma';
+
+    // 1. Process Doctor AI Turn with 12-15 word calibration and meeting extraction
+    const turnResult = await VoiceAIService.processInteractiveStudioTurn(
+      userSpeech,
+      conversationHistory || [],
+      clinic
+    );
+
+    // 2. Synthesize Doctor's response via local Kokoro Neural Server
+    let audioBase64: string | null = null;
+    let latencyMs: number = 0;
+    let ttsEngine: string = 'Browser SpeechSynthesis (Fallback)';
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 4000);
+      const kokoroRes = await fetch(`${KOKORO_SERVER_URL}/synthesize/base64`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: turnResult.reply,
+          voice: chosenVoice,
+          speed: speed || 1.0,
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      if (kokoroRes.ok) {
+        const kData = await kokoroRes.json();
+        audioBase64 = kData.audio_base64;
+        latencyMs = kData.latency_ms;
+        ttsEngine = `Kokoro-82M Local Server (${chosenVoice})`;
+      }
+    } catch (kErr) {
+      console.warn('[Kokoro Sandbox] Local synthesis notice, falling back to Web Speech:', kErr);
+    }
+
+    return res.status(200).json({
+      success: true,
+      ...turnResult,
+      audio_base64: audioBase64,
+      tts_engine: ttsEngine,
+      voice: chosenVoice,
+      latency_ms: latencyMs,
+    });
+  } catch (error: any) {
+    console.error('[Kokoro Sandbox] Error:', error);
+    res.status(500).json({
+      success: false,
+      reply: 'We have reserved your place with Dr. Sarah. How else may I assist you?',
+      intent: 'faq_inquiry',
+      is_meeting_booked: false,
+      word_count: 14,
+      error: error.message,
+    });
+  }
+});
+
 export default router;
 

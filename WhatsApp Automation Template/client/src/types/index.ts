@@ -1,6 +1,7 @@
 export type NavigationTab = 
   | 'dashboard' 
   | 'patients' 
+  | 'calling'
   | 'missed-revenue'
   | 'training'
   | 'playground'

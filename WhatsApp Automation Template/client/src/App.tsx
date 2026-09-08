@@ -10,6 +10,7 @@ import { PatientPortalPage } from './pages/PatientPortalPage';
 import { InteractiveSlotPicker, BookingDetails } from './components/booking/InteractiveSlotPicker';
 import { DashboardPage } from './pages/DashboardPage';
 import { PatientsPage } from './pages/PatientsPage';
+import { CallingSandboxPage } from './pages/CallingSandboxPage';
 import { MissedRevenueRadarPage } from './pages/MissedRevenueRadarPage';
 import { AITrainingCenterPage } from './pages/AITrainingCenterPage';
 import { AIPlaygroundPage } from './pages/AIPlaygroundPage';
@@ -247,6 +248,10 @@ export const AppContent: React.FC = () => {
                   onSendMessage={handleSendMessage}
                   onSelectTab={setActiveTab}
                 />
+              )}
+
+              {activeTab === 'calling' && (
+                <CallingSandboxPage />
               )}
 
               {activeTab === 'missed-revenue' && (

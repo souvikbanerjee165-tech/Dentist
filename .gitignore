@@ -17,6 +17,14 @@ client/dist/
 
 # Vercel & IDE
 .vercel
+
+# Kokoro Large Model Binaries (auto-downloaded by download_models.py)
+kokoro_server/models/*.onnx
+kokoro_server/models/*.bin
+kokoro_server/models/*.wav
+WhatsApp Automation Template/kokoro_server/models/*.onnx
+WhatsApp Automation Template/kokoro_server/models/*.bin
+WhatsApp Automation Template/kokoro_server/models/*.wav
 .vscode/
 .idea/
 *.log

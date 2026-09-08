@@ -12,7 +12,8 @@ import {
   ShieldCheck,
   Sparkles,
   Flame,
-  BrainCircuit
+  BrainCircuit,
+  PhoneCall
 } from 'lucide-react';
 import { NavigationTab } from '../../types';
 
@@ -29,7 +30,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   unreadMessagesCount,
   takeoversNeededCount,
 }) => {
-  const navItems: { id: NavigationTab; label: string; icon: React.FC<{ className?: string }>; badge?: number; alert?: boolean }[] = [
+  const navItems: { id: NavigationTab; label: string; icon: React.FC<{ className?: string }>; badge?: number; alert?: boolean; tag?: string }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { 
       id: 'patients', 
@@ -37,6 +38,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: Users, 
       badge: unreadMessagesCount,
       alert: takeoversNeededCount > 0 
+    },
+    { 
+      id: 'calling', 
+      label: 'Voice Calling (AI)', 
+      icon: PhoneCall, 
+      tag: 'KOKORO' 
     },
     { id: 'missed-revenue', label: 'Missed Revenue', icon: Flame },
     { id: 'training', label: 'AI Training', icon: BrainCircuit },
@@ -107,6 +114,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     }`}
                   >
                     {item.badge}
+                  </span>
+                ) : item.tag ? (
+                  <span
+                    className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold tracking-wider ${
+                      isActive
+                        ? 'bg-white/20 text-white'
+                        : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                    }`}
+                  >
+                    {item.tag}
                   </span>
                 ) : null}
               </button>
