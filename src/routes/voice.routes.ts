@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { VoiceAIService } from '../services/voice/voice.service.js';
 import { telnyxVoiceService } from '../services/voice/telnyx.service.js';
+import { callRecordingsService } from '../services/recordings/recordings.service.js';
 
 const router = Router();
 
@@ -335,5 +336,138 @@ router.post('/kokoro/sandbox-turn', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * POST /api/v1/voice/kokoro/sandbox-turn-audio
+ * Multimodal Audio Turn: Directly takes patient audio blob (base64) from mic stream,
+ * transcribes what was said via Gemini Audio, applies learned call rules,
+ * and synthesizes the doctor's reply with Kokoro!
+ */
+router.post('/kokoro/sandbox-turn-audio', async (req: Request, res: Response) => {
+  try {
+    const { audioBase64, mimeType, speech, conversationHistory, clinicName, voice, speed } = req.body;
+    const clinic = clinicName || 'St. James Dental Practice';
+    const chosenVoice = voice || 'bf_emma';
+
+    // 1. Retrieve dynamic learned rules from past patient recordings
+    const learnedInsights = callRecordingsService.getLearnedInsights();
+    const learnedRules = learnedInsights?.learnedRules || [];
+
+    // 2. Execute multimodal audio turn
+    const turnResult = await VoiceAIService.processInteractiveAudioTurn(
+      audioBase64,
+      mimeType || 'audio/webm',
+      speech || '',
+      conversationHistory || [],
+      clinic,
+      learnedRules
+    );
+
+    // 3. Synthesize Doctor's response via local Kokoro Neural Server
+    let kokoroAudioBase64: string | null = null;
+    let latencyMs: number = 0;
+    let ttsEngine: string = 'Browser SpeechSynthesis (Fallback)';
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 4000);
+      const kokoroRes = await fetch(`${KOKORO_SERVER_URL}/synthesize/base64`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: turnResult.reply,
+          voice: chosenVoice,
+          speed: speed || 1.1, // brisk natural human phone cadence
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      if (kokoroRes.ok) {
+        const kData = await kokoroRes.json();
+        kokoroAudioBase64 = kData.audio_base64;
+        latencyMs = kData.latency_ms;
+        ttsEngine = `Kokoro-82M Local Server (${chosenVoice})`;
+      }
+    } catch (kErr) {
+      console.warn('[Kokoro Sandbox Audio] Synthesis notice:', kErr);
+    }
+
+    return res.status(200).json({
+      success: true,
+      ...turnResult,
+      audio_base64: kokoroAudioBase64,
+      tts_engine: ttsEngine,
+      voice: chosenVoice,
+      latency_ms: latencyMs,
+    });
+  } catch (error: any) {
+    console.error('[Kokoro Sandbox Audio] Error:', error);
+    res.status(500).json({
+      success: false,
+      detected_speech: 'Patient speech received',
+      reply: 'We have reserved your place with Dr. Sarah. How else may I assist you?',
+      intent: 'faq_inquiry',
+      is_meeting_booked: false,
+      word_count: 14,
+      error: error.message,
+    });
+  }
+});
+
+// ==================== CALL RECORDINGS & AI LEARNING ROUTES ====================
+
+/**
+ * GET /api/v1/voice/recordings
+ * Lists all past call recordings with transcripts and AI takeaways
+ */
+router.get('/recordings', (_req: Request, res: Response) => {
+  try {
+    const recordings = callRecordingsService.getAllRecordings();
+    res.status(200).json({ success: true, count: recordings.length, recordings });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/v1/voice/recordings
+ * Saves a completed call recording session
+ */
+router.post('/recordings', async (req: Request, res: Response) => {
+  try {
+    const saved = await callRecordingsService.saveRecording(req.body);
+    res.status(201).json({ success: true, recording: saved });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/v1/voice/recordings/learn
+ * AI Learning Loop: Analyzes all past call recordings and extracts clinic rules & insights
+ */
+router.post('/recordings/learn', async (_req: Request, res: Response) => {
+  try {
+    const insights = await callRecordingsService.learnFromAllRecordings();
+    res.status(200).json({ success: true, insights });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/v1/voice/recordings/insights
+ * Returns current learned insights extracted from call recordings
+ */
+router.get('/recordings/insights', (_req: Request, res: Response) => {
+  try {
+    const insights = callRecordingsService.getLearnedInsights();
+    res.status(200).json({ success: true, insights });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 export default router;
+
 

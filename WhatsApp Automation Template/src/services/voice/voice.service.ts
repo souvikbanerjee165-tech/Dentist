@@ -375,4 +375,105 @@ Output ONLY a JSON object matching this schema:
       word_count: reply.split(/\s+/).length,
     };
   }
+
+  /**
+   * Multimodal Audio Turn: Directly listens to patient audio buffer,
+   * eliminating reliance on browser SpeechRecognition.
+   */
+  static async processInteractiveAudioTurn(
+    audioBase64?: string,
+    mimeType: string = 'audio/webm',
+    fallbackSpeech: string = '',
+    conversationHistory: { role: 'user' | 'assistant' | 'system'; content: string }[] = [],
+    clinicName: string = 'St. James Dental Practice',
+    learnedRules: string[] = []
+  ): Promise<InteractiveVoiceTurnResult & { detected_speech: string }> {
+    // 1. If audioBase64 is provided and Gemini is configured:
+    if (audioBase64 && config.gemini.apiKey && !config.gemini.apiKey.startsWith('your_gemini')) {
+      try {
+        const ai = new GoogleGenAI({ apiKey: config.gemini.apiKey });
+        const cleanBase64 = audioBase64.replace(/^data:audio\/\w+;base64,/, '');
+
+        const rulesText = learnedRules.length > 0 
+          ? `\nLEARNED CLINICAL RULES FROM PAST PATIENT RECORDINGS:\n${learnedRules.map(r => `- ${r}`).join('\n')}`
+          : '';
+
+        const systemInstruction = `You are Sarah, the elite AI voice receptionist for ${clinicName}, a premier dental practice in London.${rulesText}
+
+CRITICAL RULES:
+1. Listen carefully to the patient's voice audio and extract exactly what they said (detected_speech).
+2. Deliver EXACTLY 1 short, crisp sentence reply (MAXIMUM 12 TO 15 WORDS) spoken back to the patient.
+3. Pricing: Routine Exam £95, Emergency Exam £95, Laser Whitening £395, Dental Implants from £2,800.
+4. If the patient expresses interest in booking or confirms a time slot, confirm it warmly and set is_meeting_booked: true.
+
+Output ONLY valid JSON:
+{
+  "detected_speech": "Exact transcript of what the patient said in the audio",
+  "reply": "Single natural sentence under 15 words spoken to patient.",
+  "intent": "appointment_booking" | "emergency_triage" | "faq_inquiry" | "greeting",
+  "is_meeting_booked": boolean,
+  "booked_slot": "e.g. Thursday at 11:00 AM" or null,
+  "treatment": "e.g. Emergency Pain Relief" or "Routine Exam" or null
+}`;
+
+        const contents: any[] = [
+          ...conversationHistory.slice(-4).map(m => ({
+            role: m.role === 'user' ? 'user' : 'model',
+            parts: [{ text: m.content }]
+          })),
+          {
+            role: 'user',
+            parts: [
+              { text: "Here is the patient's spoken voice audio from the live phone line. Transcribe what they said and reply:" },
+              {
+                inlineData: {
+                  mimeType: mimeType || 'audio/webm',
+                  data: cleanBase64
+                }
+              }
+            ]
+          }
+        ];
+
+        const response = await ai.models.generateContent({
+          model: config.gemini.model || 'gemini-1.5-flash',
+          contents,
+          config: {
+            systemInstruction,
+            temperature: 0.2,
+            responseMimeType: 'application/json'
+          }
+        });
+
+        if (response.text) {
+          const parsed = JSON.parse(response.text);
+          const reply = parsed.reply?.trim() || "I'd be glad to help you reserve your visit with Dr. Sarah.";
+          const wordCount = reply.split(/\s+/).filter(Boolean).length;
+          return {
+            detected_speech: parsed.detected_speech || fallbackSpeech || 'I need dental assistance',
+            reply,
+            intent: parsed.intent || 'faq_inquiry',
+            is_meeting_booked: Boolean(parsed.is_meeting_booked),
+            booked_slot: parsed.booked_slot || null,
+            treatment: parsed.treatment || null,
+            word_count: wordCount
+          };
+        }
+      } catch (err: any) {
+        console.warn('[VoiceAIService] Gemini audio turn notice, falling back to text engine:', err.message);
+      }
+    }
+
+    // 2. Text-based turn fallback
+    const textTurn = await this.processInteractiveStudioTurn(
+      fallbackSpeech || 'I need an appointment',
+      conversationHistory,
+      clinicName
+    );
+
+    return {
+      ...textTurn,
+      detected_speech: fallbackSpeech || 'Patient inquiry received',
+    };
+  }
 }

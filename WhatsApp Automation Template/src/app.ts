@@ -1,3 +1,4 @@
+import path from 'path';
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -44,6 +45,9 @@ export const createApp = (): Express => {
     },
     credentials: true,
   }));
+
+  // Static files for call recordings
+  app.use('/recordings', express.static(path.join(process.cwd(), 'recordings')));
 
   // 3. Body Parsers with Raw Body preservation for HMAC verification
   app.use(express.json({

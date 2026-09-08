@@ -1,0 +1,135 @@
+[
+  {
+    "id": "rec-101",
+    "callDate": "2026-09-08T15:21:38.742Z",
+    "durationSeconds": 42,
+    "patientName": "Sophia Martinez",
+    "patientPhone": "+44 7700 900123",
+    "clinicName": "St. James Dental Practice",
+    "fullTranscript": [
+      {
+        "role": "doctor_ai",
+        "text": "Thank you for calling St. James Dental. I am Dr. Sarah's AI receptionist. How can I help you today?",
+        "time": "10:14 AM"
+      },
+      {
+        "role": "patient",
+        "text": "Hi, I have a sharp pain in my upper molar when biting down. Do you have any emergency openings today?",
+        "time": "10:14 AM"
+      },
+      {
+        "role": "doctor_ai",
+        "text": "We have a priority same-day emergency slot at 2:30 PM today. Shall I reserve that?",
+        "time": "10:15 AM"
+      },
+      {
+        "role": "patient",
+        "text": "Yes please, 2:30 PM works great.",
+        "time": "10:15 AM"
+      },
+      {
+        "role": "doctor_ai",
+        "text": "Wonderful, I have reserved your emergency consultation with Dr. Sarah for today at 2:30 PM!",
+        "time": "10:15 AM"
+      }
+    ],
+    "sentiment": "urgent",
+    "treatmentRequested": "Emergency Pain Relief (£95)",
+    "outcome": "booked",
+    "bookedSlot": "Today at 2:30 PM",
+    "aiKeyTakeaways": [
+      "Patient had acute bite pain in upper molar",
+      "Same-day priority triage converted in under 45 seconds",
+      "Patient responded positively to immediate booking confirmation"
+    ],
+    "learnedClinicRule": "When callers present acute bite pain, immediate same-day slot offer converts at 94% rate."
+  },
+  {
+    "id": "rec-102",
+    "callDate": "2026-09-08T01:21:38.742Z",
+    "durationSeconds": 38,
+    "patientName": "David Miller",
+    "patientPhone": "+44 7700 900456",
+    "clinicName": "St. James Dental Practice",
+    "fullTranscript": [
+      {
+        "role": "doctor_ai",
+        "text": "Thank you for calling St. James Dental. How may I assist your smile today?",
+        "time": "04:22 PM"
+      },
+      {
+        "role": "patient",
+        "text": "Hello, I'd like to ask how much laser teeth whitening costs and if it causes sensitivity.",
+        "time": "04:22 PM"
+      },
+      {
+        "role": "doctor_ai",
+        "text": "Our laser whitening is £395 with zero sensitivity. Would Thursday at 10 AM suit you?",
+        "time": "04:22 PM"
+      },
+      {
+        "role": "patient",
+        "text": "That sounds reasonable, Thursday at 10 works.",
+        "time": "04:23 PM"
+      },
+      {
+        "role": "doctor_ai",
+        "text": "I have reserved your laser whitening session with Dr. Sarah Jensen for Thursday at 10:00 AM!",
+        "time": "04:23 PM"
+      }
+    ],
+    "sentiment": "positive",
+    "treatmentRequested": "In-Clinic Laser Teeth Whitening (£395)",
+    "outcome": "booked",
+    "bookedSlot": "Thursday at 10:00 AM",
+    "aiKeyTakeaways": [
+      "Caller primary concern was sensitivity",
+      "Immediate reassurance of zero-sensitivity technology led directly to booking"
+    ],
+    "learnedClinicRule": "Proactively stating zero-sensitivity for whitening removes primary patient hesitation."
+  },
+  {
+    "id": "rec-103",
+    "callDate": "2026-09-07T15:21:38.742Z",
+    "durationSeconds": 52,
+    "patientName": "Elena Rostova",
+    "patientPhone": "+44 7700 900789",
+    "clinicName": "St. James Dental Practice",
+    "fullTranscript": [
+      {
+        "role": "doctor_ai",
+        "text": "Welcome to St. James Dental. How can I assist you with your dental care?",
+        "time": "11:05 AM"
+      },
+      {
+        "role": "patient",
+        "text": "I lost a tooth in the back and was wondering about dental implants and cost.",
+        "time": "11:05 AM"
+      },
+      {
+        "role": "doctor_ai",
+        "text": "Dr. Sarah offers complimentary 3D implant consultations with 0% finance. Can we book this Friday?",
+        "time": "11:06 AM"
+      },
+      {
+        "role": "patient",
+        "text": "Are the monthly payments easy to set up?",
+        "time": "11:06 AM"
+      },
+      {
+        "role": "doctor_ai",
+        "text": "Yes, monthly plans start from £120 with instant approval during your visit.",
+        "time": "11:06 AM"
+      }
+    ],
+    "sentiment": "neutral",
+    "treatmentRequested": "Single Dental Implant (£2,800)",
+    "outcome": "inquiry_answered",
+    "bookedSlot": null,
+    "aiKeyTakeaways": [
+      "Implant inquiries heavily depend on monthly finance transparency (£120/mo)",
+      "Complimentary 3D consultation is key lead magnet"
+    ],
+    "learnedClinicRule": "Quote monthly finance terms (£120/mo) alongside full fee for high-ticket implant leads."
+  }
+]

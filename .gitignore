@@ -32,6 +32,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Audio Call Recordings
+recordings/*.webm
+recordings/*.wav
+WhatsApp Automation Template/recordings/*.webm
+WhatsApp Automation Template/recordings/*.wav
+
 # OS Files
 .DS_Store
 Thumbs.db
