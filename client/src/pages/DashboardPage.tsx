@@ -23,7 +23,8 @@ import {
   Coffee,
   Zap,
   FileText,
-  ShieldCheck
+  ShieldCheck,
+  Activity
 } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
@@ -34,6 +35,7 @@ import { MorningBriefingModal } from '../components/briefing/MorningBriefingModa
 import { EmptyChairRecallModal } from '../components/recall/EmptyChairRecallModal';
 import { ClientProposalModal } from '../components/proposal/ClientProposalModal';
 import { TelnyxDialerModal } from '../components/voice/TelnyxDialerModal';
+import { InteractiveCallStudioModal } from '../components/voice/InteractiveCallStudioModal';
 
 interface DashboardPageProps {
   stats: KPIStats;
@@ -88,6 +90,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const [showRecallModal, setShowRecallModal] = useState(false);
   const [showProposalModal, setShowProposalModal] = useState(false);
   const [showDialerModal, setShowDialerModal] = useState(false);
+  const [showStudioModal, setShowStudioModal] = useState(false);
   const [missedCallsRecovered, setMissedCallsRecovered] = useState(11);
   const [rescuedRevenue, setRescuedRevenue] = useState(4250);
   const [isTriggeringRecovery, setIsTriggeringRecovery] = useState(false);
@@ -339,6 +342,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             )}
 
             {/* Core Actions (Visible in Both Modes) */}
+            <button
+              onClick={() => setShowStudioModal(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-teal-700 dark:text-teal-300 bg-teal-500/15 hover:bg-teal-500/25 border border-teal-500/30 rounded-xl transition-all shadow-sm"
+            >
+              <Activity className="w-3.5 h-3.5 text-teal-500" />
+              <span>AI Voice Studio</span>
+            </button>
             <button
               onClick={() => setShowDialerModal(true)}
               className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 rounded-xl transition-all shadow-sm"
@@ -834,6 +844,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       <TelnyxDialerModal
         isOpen={showDialerModal}
         onClose={() => setShowDialerModal(false)}
+        clinicName="St. James Dental Practice"
+        onOpenStudio={() => setShowStudioModal(true)}
+      />
+
+      {/* Interactive Hands-Free Full-Duplex AI Call Studio */}
+      <InteractiveCallStudioModal
+        isOpen={showStudioModal}
+        onClose={() => setShowStudioModal(false)}
         clinicName="St. James Dental Practice"
       />
 

@@ -14,7 +14,8 @@ import {
   DollarSign, 
   MessageSquare, 
   Check, 
-  Radio
+  Radio,
+  Activity
 } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 
@@ -23,6 +24,7 @@ interface TelnyxDialerModalProps {
   onClose: () => void;
   clinicName?: string;
   initialPhoneNumber?: string;
+  onOpenStudio?: () => void;
 }
 
 export const TelnyxDialerModal: React.FC<TelnyxDialerModalProps> = ({
@@ -30,6 +32,7 @@ export const TelnyxDialerModal: React.FC<TelnyxDialerModalProps> = ({
   onClose,
   clinicName = 'St. James Dental Practice',
   initialPhoneNumber = '+44 7700 900123',
+  onOpenStudio,
 }) => {
   const [phoneNumber, setPhoneNumber] = useState(initialPhoneNumber);
   const [callStatus, setCallStatus] = useState<'idle' | 'connecting' | 'ringing' | 'connected' | 'ended'>('idle');
@@ -137,15 +140,30 @@ export const TelnyxDialerModal: React.FC<TelnyxDialerModalProps> = ({
         <div className="p-6 overflow-y-auto space-y-5">
           
           {/* Caller ID Info Bar */}
-          <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+          <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2">
               <Radio className="w-4 h-4 text-emerald-500 animate-pulse" />
               <span className="text-slate-500 dark:text-slate-400">Caller ID:</span>
               <span className="font-mono font-bold text-slate-800 dark:text-slate-200">+44 20 7946 0912 ({clinicName})</span>
             </div>
-            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full">
-              Carrier: Telnyx SIP
-            </span>
+            <div className="flex items-center gap-2">
+              {onOpenStudio && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenStudio();
+                  }}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-[10.5px] font-bold transition-all shadow-sm"
+                >
+                  <Activity className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>Interactive Hands-Free Studio</span>
+                </button>
+              )}
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                Carrier: Telnyx SIP
+              </span>
+            </div>
           </div>
 
           {/* Active Call HUD Banner */}

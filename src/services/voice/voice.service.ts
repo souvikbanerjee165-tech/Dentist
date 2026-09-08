@@ -1,3 +1,5 @@
+import { GoogleGenAI } from '@google/genai';
+import { config } from '../../config/env.js';
 import { LLMFactory } from '../ai/providers/llm.factory.js';
 import { WhatsAppService } from '../whatsapp/whatsapp.service.js';
 import { supabase } from '../../config/supabase.js';
@@ -9,6 +11,15 @@ export interface VoiceCallSession {
   transcriptHistory: { role: 'user' | 'assistant' | 'system'; content: string }[];
   patientName?: string;
   intent?: string;
+}
+
+export interface InteractiveVoiceTurnResult {
+  reply: string;
+  intent: string;
+  is_meeting_booked: boolean;
+  booked_slot?: string | null;
+  treatment?: string | null;
+  word_count: number;
 }
 
 // In-memory active call session store (backed by Supabase for persistence)
@@ -167,5 +178,201 @@ export class VoiceAIService {
           default: return c;
         }
       });
+  }
+
+  /**
+   * Processes a turn in the Full-Duplex Interactive Call Studio Sandbox.
+   * Strictly calibrated for realistic telephone pacing:
+   * - Exactly 1 short, crisp sentence (maximum 12 to 15 words)
+   * - Autonomous meeting booking extraction
+   */
+  static async processInteractiveStudioTurn(
+    userSpeech: string,
+    conversationHistory: { role: 'user' | 'assistant' | 'system'; content: string }[] = [],
+    clinicName: string = 'St. James Dental Practice'
+  ): Promise<InteractiveVoiceTurnResult> {
+    const cleanSpeech = userSpeech?.trim() || '';
+    if (!cleanSpeech) {
+      return {
+        reply: `Hello! I'm Dr. Sarah's AI receptionist at ${clinicName}. How can I help?`,
+        intent: 'greeting',
+        is_meeting_booked: false,
+        booked_slot: null,
+        treatment: null,
+        word_count: 12,
+      };
+    }
+
+    // Try Gemini API with voice pacing calibration
+    if (config.gemini.apiKey && !config.gemini.apiKey.startsWith('your_gemini')) {
+      try {
+        const ai = new GoogleGenAI({ apiKey: config.gemini.apiKey });
+        const systemInstruction = `You are Sarah, the elite AI voice receptionist for ${clinicName}, a premier dental practice in London.
+CRITICAL VOICE PACING RULES:
+1. Deliver EXACTLY 1 short, crisp sentence (MAXIMUM 12 TO 15 WORDS).
+2. Absolutely no monologues or multi-sentence paragraphs. Phone calls require sub-second punchy turns.
+3. Pricing: Routine Exam & 3D Scan is £95. Emergency Toothache Exam is £95. Laser Whitening is £395. Dental Implants from £2,800. Invisalign from £3,100.
+4. If caller mentions pain or urgent issue, prioritize a same-day emergency slot.
+5. If caller agrees to a proposed time or requests a slot (e.g., "Thursday at 11am", "tomorrow afternoon", "yes that works", "book it"), confirm it and set is_meeting_booked to true.
+
+Output ONLY a JSON object matching this schema:
+{
+  "reply": "Single natural sentence under 15 words spoken to patient.",
+  "intent": "appointment_booking" | "emergency_triage" | "faq_inquiry" | "greeting",
+  "is_meeting_booked": boolean,
+  "booked_slot": "e.g. Thursday at 11:00 AM" or null,
+  "treatment": "e.g. Routine Exam" or "Emergency Pain Relief" or "Teeth Whitening" or "Dental Implants" or null
+}`;
+
+        const contents = [
+          ...conversationHistory.slice(-6).map((m) => ({
+            role: m.role === 'user' ? 'user' : 'model',
+            parts: [{ text: m.content }],
+          })),
+          {
+            role: 'user',
+            parts: [{ text: cleanSpeech }],
+          },
+        ];
+
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents,
+          config: {
+            systemInstruction,
+            temperature: 0.3,
+            responseMimeType: 'application/json',
+          },
+        });
+
+        const textOutput = response.text;
+        if (textOutput) {
+          const parsed = JSON.parse(textOutput);
+          const reply = parsed.reply?.trim() || "I'd love to book you in with Dr. Sarah this week.";
+          const wordCount = reply.split(/\s+/).filter(Boolean).length;
+          return {
+            reply,
+            intent: parsed.intent || 'faq_inquiry',
+            is_meeting_booked: Boolean(parsed.is_meeting_booked),
+            booked_slot: parsed.booked_slot || null,
+            treatment: parsed.treatment || null,
+            word_count: wordCount,
+          };
+        }
+      } catch (err: any) {
+        console.warn('[VoiceAIService] Gemini interactive turn notice, running voice heuristic fallback:', err.message);
+      }
+    }
+
+    // High-precision fallback engine calibrated strictly to 12-15 words
+    return this.fallbackInteractiveVoiceTurn(cleanSpeech, clinicName);
+  }
+
+  /**
+   * Deterministic conversational fallback calibrated strictly to 12-15 words
+   */
+  private static fallbackInteractiveVoiceTurn(
+    speech: string,
+    clinicName: string
+  ): InteractiveVoiceTurnResult {
+    const s = speech.toLowerCase();
+
+    // 1. Emergency pain triage
+    if (s.includes('pain') || s.includes('emergency') || s.includes('ache') || s.includes('broken') || s.includes('hurt')) {
+      const reply = "We have a priority same-day emergency slot at 2:30 PM today. Shall I reserve that?";
+      return {
+        reply,
+        intent: 'emergency_triage',
+        is_meeting_booked: false,
+        booked_slot: 'Today at 2:30 PM',
+        treatment: 'Emergency Pain Relief (£95)',
+        word_count: reply.split(/\s+/).length,
+      };
+    }
+
+    // 2. Patient confirms / agrees to appointment
+    if (
+      s.includes('yes') || 
+      s.includes('perfect') || 
+      s.includes('sounds good') || 
+      s.includes('book it') || 
+      s.includes('thursday') || 
+      s.includes('tomorrow') ||
+      s.includes('confirm') ||
+      s.includes('reserve')
+    ) {
+      const reply = "Wonderful, I have reserved your consultation with Dr. Sarah for Thursday at 11:00 AM!";
+      return {
+        reply,
+        intent: 'appointment_booking',
+        is_meeting_booked: true,
+        booked_slot: 'Thursday at 11:00 AM',
+        treatment: 'Dental Consultation',
+        word_count: reply.split(/\s+/).length,
+      };
+    }
+
+    // 3. Teeth Whitening
+    if (s.includes('whitening') || s.includes('white') || s.includes('bright')) {
+      const reply = "Our laser whitening is £395 with zero sensitivity. Would Thursday at 10 AM suit you?";
+      return {
+        reply,
+        intent: 'faq_inquiry',
+        is_meeting_booked: false,
+        booked_slot: 'Thursday at 10:00 AM',
+        treatment: 'Laser Teeth Whitening (£395)',
+        word_count: reply.split(/\s+/).length,
+      };
+    }
+
+    // 4. Implants or Veneers
+    if (s.includes('implant') || s.includes('veneer') || s.includes('missing')) {
+      const reply = "Dr. Sarah offers complimentary 3D implant consultations with 0% finance. Can we book this Friday?";
+      return {
+        reply,
+        intent: 'faq_inquiry',
+        is_meeting_booked: false,
+        booked_slot: 'Friday at 2:00 PM',
+        treatment: 'Dental Implant Consultation',
+        word_count: reply.split(/\s+/).length,
+      };
+    }
+
+    // 5. Pricing / Cost inquiries
+    if (s.includes('price') || s.includes('cost') || s.includes('how much') || s.includes('fee')) {
+      const reply = "Routine exams are £95, whitening is £395, and single implants start from £2,800.";
+      return {
+        reply,
+        intent: 'faq_inquiry',
+        is_meeting_booked: false,
+        booked_slot: null,
+        treatment: null,
+        word_count: reply.split(/\s+/).length,
+      };
+    }
+
+    // 6. Routine booking inquiry
+    if (s.includes('book') || s.includes('appointment') || s.includes('routine') || s.includes('checkup') || s.includes('exam')) {
+      const reply = "Our comprehensive £95 exam includes full digital imaging. Would tomorrow at 11 AM suit you?";
+      return {
+        reply,
+        intent: 'appointment_booking',
+        is_meeting_booked: false,
+        booked_slot: 'Tomorrow at 11:00 AM',
+        treatment: 'Routine Dental Examination (£95)',
+        word_count: reply.split(/\s+/).length,
+      };
+    }
+
+    // Default welcoming response (13 words)
+    const reply = `I can book your appointment or answer clinic pricing questions. How can I assist?`;
+    return {
+      reply,
+      intent: 'greeting',
+      is_meeting_booked: false,
+      booked_slot: null,
+      treatment: null,
+      word_count: reply.split(/\s+/).length,
+    };
   }
 }

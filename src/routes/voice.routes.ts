@@ -154,4 +154,39 @@ router.post('/simulate', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * POST /api/v1/voice/interactive/turn
+ * Hands-Free Interactive Voice Studio Conversational Loop
+ * Sub-second pacing with 12-15 word calibration and autonomous meeting booking
+ */
+router.post('/interactive/turn', async (req: Request, res: Response) => {
+  try {
+    const { speech, text, conversationHistory, clinicName } = req.body;
+    const userSpeech = speech || text || '';
+    const clinic = clinicName || 'St. James Dental Practice';
+
+    const result = await VoiceAIService.processInteractiveStudioTurn(
+      userSpeech,
+      conversationHistory || [],
+      clinic
+    );
+
+    res.status(200).json({
+      success: true,
+      ...result,
+    });
+  } catch (error: any) {
+    console.error('[Voice Routes] Interactive turn error:', error);
+    res.status(500).json({
+      success: false,
+      reply: 'I would be delighted to assist you with your appointment at St. James Dental.',
+      intent: 'faq_inquiry',
+      is_meeting_booked: false,
+      word_count: 14,
+      error: error.message,
+    });
+  }
+});
+
 export default router;
+
