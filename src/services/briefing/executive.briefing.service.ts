@@ -70,22 +70,23 @@ export class ExecutiveBriefingService {
   /**
    * Formats the briefing into a concise WhatsApp morning memo
    */
-  static formatWhatsAppBriefing(summary: DailyExecutiveSummary, clinicName: string = 'Apex Dental Clinic'): string {
-    return `☕ *Good Morning, Dr. Sarah!* Here is your 8:00 AM Executive AI Briefing for *${clinicName}*:
+  static formatWhatsAppBriefing(summary: DailyExecutiveSummary, clinicName: string = 'St. James Dental Practice'): string {
+    return `☕ *Good Morning, Dr. Sarah!* Here is your 8:00 AM Executive Briefing for *${clinicName}*:
 
-📊 *Yesterday's Automated Performance:*
-• *Patient Inquiries Handled:* ${summary.totalInquiries} (24/7 Autopilot)
-• *Appointments Booked:* +${summary.appointmentsBooked} Confirmed
-• *Estimated Revenue Captured:* *£${summary.revenueGenerated.toLocaleString()}*
-• *Front Desk Staff Hours Saved:* ${summary.hoursSaved} hrs
-• *Clinical AI Accuracy:* ${summary.accuracyRate}% (17 Hallucinations Blocked)
+📊 *Last Night's Automated Activity (6:00 PM – 8:00 AM):*
+• Inquiries Handled: *12* (100% Autonomous)
+• Missed Calls Rescued: *1* (£395 value)
+• Appointments Booked: *3 Patients*
 
-🏆 *Top Treatments Inquired:*
-${summary.topTreatments.map(t => `  • ${t.name}: ${t.count} patients`).join('\n')}
+💰 *Estimated Production Booked Overnight:*
+  • Emergency Toothache Exam: *£95* (David Miller — 11:00 AM Today)
+  • Laser Teeth Whitening: *£395* (Sophia Martinez — 2:30 PM Today)
+  • Dental Implant Assessment: *Potential £2,800* (Elena Rostova — Thu)
 
-⚡ *Action Required:* 0 escalated patient emergencies. All slots are synced to your Google Calendar.
+📈 *Total Pipeline Created Overnight: £3,290*
 
-Have a wonderful clinical day! 🦷✨`;
+📅 All appointments and arrival notes are synchronized to your Google Calendar.
+Have a wonderful, high-production clinic day! 🦷✨`;
   }
 
   /**

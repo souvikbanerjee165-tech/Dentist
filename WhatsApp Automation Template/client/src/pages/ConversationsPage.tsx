@@ -202,6 +202,10 @@ export const ConversationsPage: React.FC<ConversationsPageProps> = ({
                 <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
                   <span>WhatsApp Cloud API Direct</span>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10.5px] font-bold border border-emerald-500/20">
+                    98% Confidence (Autonomous)
+                  </span>
                 </div>
               </div>
             </div>

@@ -202,21 +202,22 @@ export const MorningBriefingModal: React.FC<MorningBriefingModalProps> = ({
                     </div>
 
                     <div className="p-2 rounded-xl bg-black/20 space-y-1 text-[10.5px]">
-                      <div>📊 <strong>Yesterday's Activity (Overnight):</strong></div>
-                      <div>• Inquiries Handled: <strong>12</strong> (24/7 Autopilot)</div>
-                      <div>• Confirmed Bookings: <strong className="text-emerald-300">+3 Patients</strong></div>
+                      <div>📊 <strong>Last Night's Activity (6 PM – 8 AM):</strong></div>
+                      <div>• Inquiries Handled: <strong>12</strong> (100% Autonomous)</div>
                       <div>• Missed Calls Rescued: <strong>1</strong> (£395)</div>
-                      <div>• Est. Treatment Value: <strong className="text-amber-300">£1,980</strong></div>
+                      <div>• Confirmed Bookings: <strong className="text-emerald-300">+3 Patients</strong></div>
                     </div>
 
-                    <div className="text-[10px] space-y-0.5 pt-1">
-                      <div>🗓️ <strong>Today's Next Bookings:</strong></div>
-                      <div>1. Sophia Martinez — Whitening (10:30 AM)</div>
-                      <div>2. David Miller — Emergency Exam (1:15 PM)</div>
+                    <div className="p-2 rounded-xl bg-black/20 space-y-1 text-[10px]">
+                      <div>💰 <strong>Estimated Production Booked:</strong></div>
+                      <div>• Emergency Exam: <strong>£95</strong> (David Miller - 11 AM)</div>
+                      <div>• Whitening: <strong>£395</strong> (Sophia Martinez - 2:30 PM)</div>
+                      <div>• Implant Consult: <strong className="text-amber-300">Potential £2,800</strong></div>
+                      <div className="pt-0.5 border-t border-white/10 text-emerald-300 font-bold">Total Pipeline Created: £3,290</div>
                     </div>
 
                     <div className="text-[9.5px] text-slate-300 italic pt-1 border-t border-white/10">
-                      All slots synced to your Google Calendar. Have a great clinic day! 🦷✨
+                      All slots synced to your Google Calendar. Have a high-production clinic day! 🦷✨
                     </div>
 
                     <div className="flex justify-end items-center gap-1 text-[9px] text-emerald-200/70 pt-0.5">
