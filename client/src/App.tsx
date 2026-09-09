@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { Navbar } from './components/layout/Navbar';
 import { Sidebar } from './components/layout/Sidebar';
@@ -7,6 +7,8 @@ import { defaultLocations, ClinicLocation } from './components/layout/LocationSw
 import { LandingPage } from './pages/LandingPage';
 import { SignUpPage } from './pages/SignUpPage';
 import { PatientPortalPage } from './pages/PatientPortalPage';
+import { PatientDashboardPage } from './pages/PatientDashboardPage';
+import { PatientAuthModal, PatientUser } from './components/patient/PatientAuthModal';
 import { InteractiveSlotPicker, BookingDetails } from './components/booking/InteractiveSlotPicker';
 import { DashboardPage } from './pages/DashboardPage';
 import { PatientsPage } from './pages/PatientsPage';
@@ -35,7 +37,7 @@ import {
 import { Bell, CheckCircle2, Globe, LayoutDashboard } from 'lucide-react';
 
 export const AppContent: React.FC = () => {
-  const [currentView, setCurrentView] = useState<'landing' | 'booking' | 'patient-portal' | 'signup' | 'admin'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'booking' | 'patient-portal' | 'signup' | 'admin' | 'patient-dashboard'>('landing');
   const [selectedInitialService, setSelectedInitialService] = useState<string>('Cosmetic Laser Teeth Whitening ($350)');
   const [currentBooking, setCurrentBooking] = useState<BookingDetails | null>({
     customerName: 'Sophia Martinez',
@@ -46,6 +48,56 @@ export const AppContent: React.FC = () => {
     selectedTime: '3:00 PM',
     insurance: 'Delta Dental PPO',
   });
+
+  // Patient Portal Authentication & Session State
+  const [patientUser, setPatientUser] = useState<PatientUser | null>(null);
+  const [patientToken, setPatientToken] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('patient_auth_token');
+    } catch {
+      return null;
+    }
+  });
+  const [isPatientAuthModalOpen, setIsPatientAuthModalOpen] = useState(false);
+
+  // Restore authenticated patient profile if session token exists
+  useEffect(() => {
+    if (patientToken && !patientUser) {
+      fetch('/api/v1/patient/me', {
+        headers: { Authorization: `Bearer ${patientToken}` },
+      })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.success && d.user) {
+            setPatientUser(d.user);
+          } else {
+            localStorage.removeItem('patient_auth_token');
+            setPatientToken(null);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [patientToken, patientUser]);
+
+  const handlePatientAuthSuccess = (user: PatientUser, token: string) => {
+    setPatientUser(user);
+    setPatientToken(token);
+    try {
+      localStorage.setItem('patient_auth_token', token);
+    } catch {}
+    setCurrentView('patient-dashboard');
+    showToast(`Welcome, ${user.fullName}!`, 'Logged into secure patient health records.', 'success');
+  };
+
+  const handlePatientLogout = () => {
+    setPatientUser(null);
+    setPatientToken(null);
+    try {
+      localStorage.removeItem('patient_auth_token');
+    } catch {}
+    setCurrentView('landing');
+    showToast('Signed Out', 'You have been safely signed out.', 'info');
+  };
 
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
   const [currentLocation, setCurrentLocation] = useState<ClinicLocation>(defaultLocations[0]);
@@ -125,6 +177,13 @@ export const AppContent: React.FC = () => {
           businessProfile={businessProfile}
           onOpenAdmin={() => setCurrentView('admin')}
           onOpenSignUp={() => setCurrentView('signup')}
+          onOpenPatientPortal={() => {
+            if (patientUser && patientToken) {
+              setCurrentView('patient-dashboard');
+            } else {
+              setIsPatientAuthModalOpen(true);
+            }
+          }}
           onOpenSlotPicker={(treatment?: string) => {
             if (treatment) setSelectedInitialService(treatment);
             setCurrentView('booking');
@@ -184,7 +243,29 @@ export const AppContent: React.FC = () => {
         />
       )}
 
-      {/* 5. Doctor Practice Administration Operating System */}
+      {/* 5. Authenticated Patient Dashboard & Visit History Trail */}
+      {currentView === 'patient-dashboard' && (
+        <PatientDashboardPage
+          user={patientUser || {
+            id: 'pat-sophia-01',
+            fullName: 'Sophia Martinez',
+            email: 'sophia@example.com',
+            phone: '+1 (555) 234-5678',
+            authProvider: 'email',
+            twoFactorEnabled: false,
+            emailVerified: true,
+            createdAt: new Date().toISOString(),
+            lastLoginAt: new Date().toISOString(),
+          }}
+          token={patientToken || ''}
+          businessProfile={businessProfile}
+          onLogout={handlePatientLogout}
+          onBookAnother={() => setCurrentView('booking')}
+          onNavigateHome={() => setCurrentView('landing')}
+        />
+      )}
+
+      {/* 6. Doctor Practice Administration Operating System */}
       {currentView === 'admin' && (
         <div className="min-h-screen flex flex-col">
           
@@ -358,6 +439,13 @@ export const AppContent: React.FC = () => {
         isOpen={isDailyBriefingOpen}
         onClose={() => setIsDailyBriefingOpen(false)}
         clinicName={businessProfile.name}
+      />
+
+      {/* Patient Authentication & Social SSO Modal */}
+      <PatientAuthModal
+        isOpen={isPatientAuthModalOpen}
+        onClose={() => setIsPatientAuthModalOpen(false)}
+        onAuthSuccess={handlePatientAuthSuccess}
       />
 
     </div>

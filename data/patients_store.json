@@ -1,0 +1,149 @@
+[
+  {
+    "id": "pat-sophia-01",
+    "fullName": "Sophia Martinez",
+    "email": "sophia@example.com",
+    "phone": "+1 (555) 234-5678",
+    "salt": "9f2b8c7e1a3d5e4f",
+    "passwordHash": "b701a0bfbf870ca91d0229cc6370b9b3539342e1c66d0f7a1bc034521e78c7aa00e07f95a78bf37939b02329fffaaa2a8d5f3a29634226fdc5c4d1821d7c0c11",
+    "authProvider": "email",
+    "avatarUrl": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
+    "insuranceProvider": "Delta Dental Premier PPO",
+    "insurancePolicyNumber": "DD-98234-NY",
+    "dateOfBirth": "1992-04-14",
+    "emergencyContact": {
+      "name": "Carlos Martinez",
+      "phone": "+1 (555) 345-6789",
+      "relationship": "Spouse"
+    },
+    "knownAllergies": [
+      "Penicillin",
+      "Latex"
+    ],
+    "twoFactorEnabled": true,
+    "emailVerified": true,
+    "createdAt": "2025-11-12T10:00:00.000Z",
+    "lastLoginAt": "2026-09-09T05:46:47.974Z",
+    "securityAuditLog": [
+      {
+        "timestamp": "2026-09-09T05:46:48.030Z",
+        "action": "Two-Factor Authentication enabled",
+        "status": "warning"
+      },
+      {
+        "timestamp": "2026-09-09T05:46:48.016Z",
+        "action": "Failed password attempt",
+        "ipAddress": "::1",
+        "status": "failed"
+      },
+      {
+        "timestamp": "2026-09-09T05:46:47.974Z",
+        "action": "Successful patient login",
+        "ipAddress": "::1",
+        "status": "success"
+      },
+      {
+        "timestamp": "2026-09-09T05:43:02.711Z",
+        "action": "Successful patient login",
+        "ipAddress": "::1",
+        "status": "success"
+      },
+      {
+        "timestamp": "2026-09-09T05:42:56.225Z",
+        "action": "Successful patient login",
+        "ipAddress": "::1",
+        "status": "success"
+      },
+      {
+        "timestamp": "2026-09-09T05:42:50.377Z",
+        "action": "Patient session authenticated (Demo Seed)",
+        "ipAddress": "127.0.0.1",
+        "status": "success"
+      }
+    ]
+  },
+  {
+    "id": "pat-liam-02",
+    "fullName": "Liam Vance",
+    "email": "liam@example.com",
+    "phone": "+44 7700 900551",
+    "salt": "4e6a8b2c1d3f5g7h",
+    "passwordHash": "dfa09c276669b1717421146df4054251f82c97dc7b86c5121595ebd73565197d907ec483cc660d4d3ced60a95f94f45a44fdc8103431f3c7d8d7b5c79ebbd7c2",
+    "authProvider": "google",
+    "avatarUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+    "insuranceProvider": "Bupa Global Dental",
+    "insurancePolicyNumber": "BUPA-UK-7721",
+    "dateOfBirth": "1987-09-22",
+    "emergencyContact": {
+      "name": "Rachel Vance",
+      "phone": "+44 7700 900552",
+      "relationship": "Partner"
+    },
+    "knownAllergies": [
+      "None Reported"
+    ],
+    "twoFactorEnabled": true,
+    "emailVerified": true,
+    "createdAt": "2025-12-05T14:30:00.000Z",
+    "lastLoginAt": "2026-09-09T05:46:48.020Z",
+    "securityAuditLog": [
+      {
+        "timestamp": "2026-09-09T05:46:48.020Z",
+        "action": "OAuth sign-in verified via GOOGLE",
+        "ipAddress": "::1",
+        "status": "success"
+      },
+      {
+        "timestamp": "2026-09-09T05:43:00.062Z",
+        "action": "OAuth sign-in verified via GOOGLE",
+        "ipAddress": "::1",
+        "status": "success"
+      },
+      {
+        "timestamp": "2026-09-09T05:42:50.404Z",
+        "action": "Google SSO Authentication verified",
+        "ipAddress": "127.0.0.1",
+        "status": "success"
+      }
+    ]
+  },
+  {
+    "id": "pat-chloe-03",
+    "fullName": "Chloe Bennett",
+    "email": "chloe@example.com",
+    "phone": "+44 7700 900882",
+    "salt": "8c1d3e5f7a9b2c4d",
+    "passwordHash": "58dbd7fe0900c36b481c8f9c6e91fe43a15162ad947c590719b96f2f89d8d63e43f9addb2f720616463a048554f6ba60a58ac637083bf5706a7aeb50ce8b3111",
+    "authProvider": "apple",
+    "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+    "insuranceProvider": "AXA Health Dental Core",
+    "insurancePolicyNumber": "AXA-DENT-4019",
+    "dateOfBirth": "1995-01-30",
+    "emergencyContact": {
+      "name": "Eleanor Bennett",
+      "phone": "+44 7700 900883",
+      "relationship": "Mother"
+    },
+    "knownAllergies": [
+      "Codeine"
+    ],
+    "twoFactorEnabled": false,
+    "emailVerified": true,
+    "createdAt": "2026-01-18T09:15:00.000Z",
+    "lastLoginAt": "2026-09-09T05:46:48.023Z",
+    "securityAuditLog": [
+      {
+        "timestamp": "2026-09-09T05:46:48.023Z",
+        "action": "OAuth sign-in verified via APPLE",
+        "ipAddress": "::1",
+        "status": "success"
+      },
+      {
+        "timestamp": "2026-09-09T05:42:50.430Z",
+        "action": "Apple ID OAuth sign-in completed",
+        "ipAddress": "127.0.0.1",
+        "status": "success"
+      }
+    ]
+  }
+]

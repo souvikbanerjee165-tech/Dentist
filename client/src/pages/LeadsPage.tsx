@@ -9,12 +9,14 @@ import {
   CheckCircle2, 
   UserPlus, 
   MessageSquare,
-  Users
+  Users,
+  Stethoscope
 } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Lead, LeadStatus, NavigationTab } from '../types';
+import { DoctorPatientHistoryModal } from '../components/patient/DoctorPatientHistoryModal';
 
 interface LeadsPageProps {
   leads: Lead[];
@@ -23,6 +25,8 @@ interface LeadsPageProps {
 
 export const LeadsPage: React.FC<LeadsPageProps> = ({ leads, onSelectTab }) => {
   const [search, setSearch] = useState('');
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const filteredLeads = leads.filter((lead) => {
@@ -191,13 +195,34 @@ export const LeadsPage: React.FC<LeadsPageProps> = ({ leads, onSelectTab }) => {
                     </td>
 
                     <td className="py-4 px-4 text-right">
-                      <button
-                        onClick={() => onSelectTab('patients')}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-xl transition-all active:scale-95"
-                      >
-                        <MessageSquare className="w-3.5 h-3.5" />
-                        <span>Chat</span>
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => onSelectTab('patients')}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-xl transition-all active:scale-95"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          <span>Chat</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            const pid = lead.fullName.includes('Sophia') || lead.id === 'lead-1' 
+                              ? 'pat-sophia-01' 
+                              : lead.fullName.includes('Liam') 
+                              ? 'pat-liam-02' 
+                              : lead.fullName.includes('Chloe') 
+                              ? 'pat-chloe-03' 
+                              : 'pat-sophia-01';
+                            setSelectedPatientId(pid);
+                            setIsHistoryModalOpen(true);
+                          }}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-xl transition-all active:scale-95"
+                          title="Inspect Clinical Trail, What to Bring checklist, and Security"
+                        >
+                          <Stethoscope className="w-3.5 h-3.5" />
+                          <span>Clinical Trail</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -217,6 +242,13 @@ export const LeadsPage: React.FC<LeadsPageProps> = ({ leads, onSelectTab }) => {
           }}
         />
       )}
+
+      {/* Doctor Inspection Modal for Patient Clinical Trail */}
+      <DoctorPatientHistoryModal
+        patientId={selectedPatientId}
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+      />
 
     </div>
   );

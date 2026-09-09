@@ -36,6 +36,7 @@ interface LandingPageProps {
   onOpenAdmin: () => void;
   onOpenSignUp: () => void;
   onOpenSlotPicker: (initialService?: string) => void;
+  onOpenPatientPortal?: () => void;
 }
 
 interface ChatMessage {
@@ -52,6 +53,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onOpenAdmin,
   onOpenSignUp,
   onOpenSlotPicker,
+  onOpenPatientPortal,
 }) => {
   const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -198,6 +200,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             >
               <CalendarCheck className="w-4 h-4 text-cyan-300" />
               <span>Book Slot Now</span>
+            </button>
+
+            <button
+              onClick={onOpenPatientPortal}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-cyan-300 hover:text-white bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 rounded-xl transition-all active:scale-95"
+              title="Secure Patient Dashboard & History Trail"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Patient Portal</span>
             </button>
 
             <button

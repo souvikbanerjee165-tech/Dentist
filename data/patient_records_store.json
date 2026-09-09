@@ -1,0 +1,271 @@
+{
+  "upcoming": {
+    "pat-sophia-01": {
+      "id": "appt-sophia-2026",
+      "patientId": "pat-sophia-01",
+      "treatment": "Cosmetic Laser Teeth Whitening (£395)",
+      "dateStr": "Friday, Sep 11, 2026",
+      "timeStr": "03:00 PM",
+      "startIso": "2026-09-11T15:00:00.000Z",
+      "endIso": "2026-09-11T15:45:00.000Z",
+      "doctorName": "Dr. Sarah Jensen, DDS",
+      "doctorRole": "Lead Cosmetic Dentist",
+      "clinicName": "St. James Dental Practice",
+      "clinicAddress": "450 Lexington Ave, Suite 800, New York",
+      "room": "Operatory 3 • Aesthetic Laser Suite",
+      "status": "confirmed",
+      "estimatedDuration": "45 Minutes",
+      "feeGbp": 395,
+      "checklist": [
+        {
+          "id": "chk-id-01",
+          "label": "Government-Issued Photo ID",
+          "category": "identity",
+          "description": "Driver’s license, national ID, or passport for identity verification.",
+          "isRequired": true,
+          "isCompleted": true
+        },
+        {
+          "id": "chk-ins-02",
+          "label": "Dental Insurance Card & Policy Info",
+          "category": "insurance",
+          "description": "Physical card or digital policy barcode for direct electronic claims.",
+          "isRequired": true,
+          "isCompleted": true
+        },
+        {
+          "id": "chk-med-03",
+          "label": "Current Medications & Allergy List",
+          "category": "medical",
+          "description": "List of any regular prescriptions, blood thinners, or heart medications.",
+          "isRequired": false,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-cos-04",
+          "label": "Existing Aligners or Night Guard (if any)",
+          "category": "dental_hardware",
+          "description": "Bring any retainers so Dr. Sarah can verify fit after shade enhancement.",
+          "isRequired": false,
+          "isCompleted": true
+        },
+        {
+          "id": "chk-cos-05",
+          "label": "Pre-Visit Preparation (White Diet & Clean Teeth)",
+          "category": "instructions",
+          "description": "Avoid black coffee or tea 2 hours before appointment; brush 30 mins prior.",
+          "isRequired": true,
+          "isCompleted": true
+        }
+      ],
+      "preVisitGuidelines": [
+        "Arrive 10 minutes prior for digital shade mapping and registration update.",
+        "Avoid consuming dark coffee, black tea, or colored berries 2 hours before the treatment.",
+        "A desensitizing protective gel will be applied prior to the laser activation cycle."
+      ]
+    },
+    "pat-liam-02": {
+      "id": "appt-liam-2026",
+      "patientId": "pat-liam-02",
+      "treatment": "Dental Implant Consultation & 3D CBCT Scan (£2,800)",
+      "dateStr": "Monday, Sep 14, 2026",
+      "timeStr": "11:00 AM",
+      "startIso": "2026-09-14T11:00:00.000Z",
+      "endIso": "2026-09-14T12:00:00.000Z",
+      "doctorName": "Dr. Sarah Jensen, DDS",
+      "doctorRole": "Lead Restorative & Implant Specialist",
+      "clinicName": "St. James Dental Practice",
+      "clinicAddress": "450 Lexington Ave, Suite 800, New York",
+      "room": "Operatory 4 • Surgical & 3D Imaging Suite",
+      "status": "confirmed",
+      "estimatedDuration": "60 Minutes",
+      "feeGbp": 150,
+      "checklist": [
+        {
+          "id": "chk-id-01",
+          "label": "Government-Issued Photo ID",
+          "category": "identity",
+          "description": "Driver’s license, national ID, or passport for identity verification.",
+          "isRequired": true,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-ins-02",
+          "label": "Dental Insurance Card & Policy Info",
+          "category": "insurance",
+          "description": "Physical card or digital policy barcode for direct electronic claims.",
+          "isRequired": true,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-med-03",
+          "label": "Current Medications & Allergy List",
+          "category": "medical",
+          "description": "List of any regular prescriptions, blood thinners, or heart medications.",
+          "isRequired": false,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-surg-04",
+          "label": "Designated Driver / Companion",
+          "category": "instructions",
+          "description": "Recommended if local sedation or relaxing medication is administered.",
+          "isRequired": true,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-surg-05",
+          "label": "Prior X-Rays or CBCT Scans (if available)",
+          "category": "medical",
+          "description": "Any digital dental scans taken at outside clinics within the last 12 months.",
+          "isRequired": false,
+          "isCompleted": false
+        }
+      ],
+      "preVisitGuidelines": [
+        "Bring any previous panoramic X-rays from your previous dentist.",
+        "Full 3D cone beam CT will map bone density for precise implant placement."
+      ]
+    },
+    "pat-chloe-03": {
+      "id": "appt-chloe-2026",
+      "patientId": "pat-chloe-03",
+      "treatment": "Invisalign & Clear Aligner Progress Review",
+      "dateStr": "Wednesday, Sep 16, 2026",
+      "timeStr": "02:30 PM",
+      "startIso": "2026-09-16T14:30:00.000Z",
+      "endIso": "2026-09-16T15:00:00.000Z",
+      "doctorName": "Dr. Sarah Jensen, DDS",
+      "doctorRole": "Lead Cosmetic Dentist",
+      "clinicName": "St. James Dental Practice",
+      "clinicAddress": "450 Lexington Ave, Suite 800, New York",
+      "room": "Operatory 2 • Ortho & Cosmetic Room",
+      "status": "confirmed",
+      "estimatedDuration": "30 Minutes",
+      "feeGbp": 0,
+      "checklist": [
+        {
+          "id": "chk-id-01",
+          "label": "Government-Issued Photo ID",
+          "category": "identity",
+          "description": "Driver’s license, national ID, or passport for identity verification.",
+          "isRequired": true,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-ins-02",
+          "label": "Dental Insurance Card & Policy Info",
+          "category": "insurance",
+          "description": "Physical card or digital policy barcode for direct electronic claims.",
+          "isRequired": true,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-med-03",
+          "label": "Current Medications & Allergy List",
+          "category": "medical",
+          "description": "List of any regular prescriptions, blood thinners, or heart medications.",
+          "isRequired": false,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-gen-04",
+          "label": "Oral Appliance / Retainers for Inspection",
+          "category": "dental_hardware",
+          "description": "Bring mouthguards or retainers for complimentary ultrasonic disinfection.",
+          "isRequired": false,
+          "isCompleted": false
+        }
+      ],
+      "preVisitGuidelines": [
+        "Please wear current tray set #12 to the clinic.",
+        "Bring tray set #13 and #14 for validation."
+      ]
+    }
+  },
+  "history": {
+    "pat-sophia-01": [
+      {
+        "id": "vis-1788932808034",
+        "patientId": "pat-sophia-01",
+        "date": "2026-09-09",
+        "treatment": "Fluoride Remineralization & Shade Mapping",
+        "doctorName": "Dr. Sarah Jensen, DDS",
+        "doctorRole": "Lead Cosmetic & Restorative Dentist",
+        "operatory": "Operatory 1",
+        "status": "completed",
+        "sharedSummary": "Tooth shade verified at B1. Enamel micro-pores sealed with amorphous calcium phosphate.",
+        "aftercareInstructions": [
+          "Continue normal oral hygiene regimen."
+        ],
+        "privateClinicalNotes": "Patient responded well to laser whitening. Recalled for routine check in 6 months.",
+        "feeGbp": 65,
+        "paymentStatus": "paid",
+        "receiptNumber": "INV-1788932808034"
+      },
+      {
+        "id": "vis-soph-01",
+        "patientId": "pat-sophia-01",
+        "date": "2026-04-18",
+        "treatment": "Comprehensive Oral Wellness Exam & Ultrasonic Hygiene Clean",
+        "doctorName": "Dr. Sarah Jensen, DDS",
+        "doctorRole": "Lead Cosmetic Dentist",
+        "operatory": "Operatory 1",
+        "status": "completed",
+        "sharedSummary": "Full mouth 3D digital imaging, periodontal screening (BPE score 0/1 across all quadrants). Calculus debridement completed with ultrasonic scaler. Enamel in excellent health.",
+        "aftercareInstructions": [
+          "Continue twice-daily electric brushing and daily water flossing.",
+          "Routine hygiene maintenance scheduled in 6 months."
+        ],
+        "privateClinicalNotes": "Patient expressed interest in brightening shades before summer. Recommended laser whitening.",
+        "feeGbp": 180,
+        "paymentStatus": "paid",
+        "receiptNumber": "INV-2026-0418-SPH",
+        "vitals": {
+          "bloodPressure": "118/76",
+          "pulse": 68
+        }
+      },
+      {
+        "id": "vis-soph-02",
+        "patientId": "pat-sophia-01",
+        "date": "2025-11-12",
+        "treatment": "New Patient Assessment & Digital Bitewing Radiographs",
+        "doctorName": "Dr. Sarah Jensen, DDS",
+        "doctorRole": "Lead Cosmetic Dentist",
+        "operatory": "Operatory 2",
+        "status": "completed",
+        "sharedSummary": "Initial comprehensive dental charting completed. No active caries detected. Mild enamel micro-abrasion noted on tooth #9, addressed with fluoride varnish.",
+        "aftercareInstructions": [
+          "Avoid chewing hard ice or non-food objects."
+        ],
+        "feeGbp": 95,
+        "paymentStatus": "paid",
+        "receiptNumber": "INV-2025-1112-SPH",
+        "vitals": {
+          "bloodPressure": "120/78",
+          "pulse": 72
+        }
+      }
+    ],
+    "pat-liam-02": [
+      {
+        "id": "vis-liam-01",
+        "patientId": "pat-liam-02",
+        "date": "2026-02-10",
+        "treatment": "Emergency Tooth Relief & Diagnostic X-Ray (Tooth #19)",
+        "doctorName": "Dr. Sarah Jensen, DDS",
+        "doctorRole": "Lead Restorative Dentist",
+        "operatory": "Operatory 1",
+        "status": "completed",
+        "sharedSummary": "Patient presented with localized sensitivity on lower left first molar. Diagnosed fractured cusp. Temporary stabilizing composite placed. Discussed titanium implant options.",
+        "aftercareInstructions": [
+          "Chew on the opposite side until definitive implant replacement is placed."
+        ],
+        "feeGbp": 95,
+        "paymentStatus": "paid",
+        "receiptNumber": "INV-2026-0210-LVM"
+      }
+    ]
+  }
+}
