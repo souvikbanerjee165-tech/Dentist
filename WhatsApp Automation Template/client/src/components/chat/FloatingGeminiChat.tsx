@@ -107,14 +107,38 @@ export const FloatingGeminiChat: React.FC<FloatingGeminiChatProps> = ({
     setInputValue('');
     setIsTyping(true);
 
-    setTimeout(() => {
+    try {
+      const historyPayload = messages.slice(-6).map((m) => ({
+        role: m.sender === 'user' ? 'user' : 'model',
+        content: m.text,
+      }));
+
+      const res = await fetch('/api/v1/chat/turn', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userMessage: userText,
+          conversationHistory: historyPayload,
+          businessName: 'St. James Dental Practice',
+          businessIndustry: 'Dental Care & Facial Aesthetics',
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const replyText = data.reply || "I'd be glad to help you reserve your visit with Dr. Sarah Jensen.";
+        streamReply(replyText, data.intent || 'general');
+      } else {
+        throw new Error('API non-200');
+      }
+    } catch {
+      // Local fallback if API is unreachable
       const humanResponse = GeminiHumanEngine.generateResponse(
         userText,
         messages.map((m) => ({ sender: m.sender, text: m.text }))
       );
-
       streamReply(humanResponse.reply, humanResponse.intent);
-    }, 400);
+    }
   };
 
   return (
@@ -140,7 +164,7 @@ export const FloatingGeminiChat: React.FC<FloatingGeminiChatProps> = ({
                   <span>Dr. Sarah's AI Assistant</span>
                 </h4>
                 <p className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
-                  <Sparkles className="w-2.5 h-2.5" /> Powered by Google Gemini 3.7
+                  <Sparkles className="w-2.5 h-2.5" /> Powered by Google Gemini 3.6 Flash (Live)
                 </p>
               </div>
             </div>

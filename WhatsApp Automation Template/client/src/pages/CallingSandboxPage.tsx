@@ -43,6 +43,8 @@ interface TranscriptItem {
   bookedSlot?: string | null;
   treatment?: string | null;
   latencyMs?: number;
+  ttsEngine?: string;
+  isFallback?: boolean;
 }
 
 interface CallRecordingItem {
@@ -130,8 +132,20 @@ export const CallingSandboxPage: React.FC = () => {
   const [callStatusText, setCallStatusText] = useState<'Idle' | 'Listening to Patient...' | 'Patient Speaking' | 'AI Thinking' | 'Kokoro Synthesizing' | 'AI Speaking' | 'Anti-Echo Breather'>('Idle');
   const [handsFreeAutoMic, setHandsFreeAutoMic] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
-  const [selectedVoice, setSelectedVoice] = useState('bf_emma');
+  const [voiceEngine, setVoiceEngine] = useState<'auto' | 'gemini' | 'kokoro'>('auto');
+  const [selectedVoice, setSelectedVoice] = useState('Kore');
   const [speechSpeed, setSpeechSpeed] = useState(1.1);
+  const [geminiQuota, setGeminiQuota] = useState<{
+    requestsToday: number;
+    dailyLimit: number;
+    remainingToday: number;
+    quotaExceeded: boolean;
+  }>({
+    requestsToday: 0,
+    dailyLimit: 1500,
+    remainingToday: 1500,
+    quotaExceeded: false,
+  });
 
   // Local Kokoro Server States
   const [serverStatus, setServerStatus] = useState<{
@@ -212,12 +226,34 @@ export const CallingSandboxPage: React.FC = () => {
     }
   }, []);
 
+  // Fetch Gemini Voice daily quota
+  const fetchGeminiQuota = useCallback(async () => {
+    try {
+      const res = await fetch('/api/v1/voice/gemini/quota');
+      if (res.ok) {
+        const data = await res.json();
+        setGeminiQuota({
+          requestsToday: data.requestsToday,
+          dailyLimit: data.dailyLimit,
+          remainingToday: data.remainingToday,
+          quotaExceeded: data.quotaExceeded,
+        });
+      }
+    } catch (err) {
+      console.warn('Quota fetch notice:', err);
+    }
+  }, []);
+
   useEffect(() => {
     checkKokoroServer();
     fetchRecordingsAndInsights();
-    const interval = setInterval(checkKokoroServer, 8000);
+    fetchGeminiQuota();
+    const interval = setInterval(() => {
+      checkKokoroServer();
+      fetchGeminiQuota();
+    }, 8000);
     return () => clearInterval(interval);
-  }, [checkKokoroServer, fetchRecordingsAndInsights]);
+  }, [checkKokoroServer, fetchRecordingsAndInsights, fetchGeminiQuota]);
 
   // Auto-scroll transcript
   useEffect(() => {
@@ -356,12 +392,14 @@ export const CallingSandboxPage: React.FC = () => {
           mimeType: audioBlob?.type || 'audio/wav',
           conversationHistory: historyPayload,
           clinicName: 'St. James Dental Practice',
+          engine: voiceEngine,
           voice: selectedVoice,
           speed: speechSpeed,
         }),
       });
 
       const data = await res.json();
+      fetchGeminiQuota();
       const detectedSpeech = data.detected_speech || textInput || 'I need dental help';
       const aiReply = data.reply || "I'd be glad to help you reserve your appointment at St. James Dental.";
       const wordCount = data.word_count || aiReply.split(/\s+/).length;
@@ -385,6 +423,8 @@ export const CallingSandboxPage: React.FC = () => {
             bookedSlot: data.booked_slot,
             treatment: data.treatment,
             latencyMs: data.latency_ms,
+            ttsEngine: data.tts_engine,
+            isFallback: Boolean(data.is_fallback),
           },
         ];
       });
@@ -629,12 +669,14 @@ export const CallingSandboxPage: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: initialText,
+          engine: voiceEngine,
           voice: selectedVoice,
           speed: speechSpeed,
         }),
       });
 
       const data = await res.json();
+      fetchGeminiQuota();
       setTranscripts([
         {
           role: 'doctor_ai',
@@ -643,6 +685,8 @@ export const CallingSandboxPage: React.FC = () => {
           wordCount: initialText.split(/\s+/).length,
           audioUrl: data.audio_base64 || null,
           latencyMs: data.latency_ms,
+          ttsEngine: data.tts_engine,
+          isFallback: Boolean(data.is_fallback),
         },
       ]);
 
@@ -921,6 +965,50 @@ export const CallingSandboxPage: React.FC = () => {
             </div>
           )}
 
+          {/* Gemini Live Voice Free Tier (1,500 requests/day) Quota HUD */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 border border-emerald-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                <Sparkles className="w-5 h-5 animate-pulse" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">
+                    Google Gemini Live Neural Voice
+                  </span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25">
+                    Free Tier • 1,500 Requests/Day
+                  </span>
+                  {geminiQuota.quotaExceeded && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-amber-500/15 text-amber-700 dark:text-amber-300">
+                      Kokoro Fallback Active
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {geminiQuota.requestsToday} of {geminiQuota.dailyLimit} requests used today ({geminiQuota.remainingToday} remaining). Automatic seamless Kokoro-82M fallback if quota is exhausted.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 self-end sm:self-center">
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                  {Math.round((geminiQuota.requestsToday / geminiQuota.dailyLimit) * 100)}% quota used
+                </span>
+                <div className="w-28 bg-slate-200 dark:bg-slate-800 rounded-full h-2 overflow-hidden mt-1">
+                  <div 
+                    className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, Math.max(4, (geminiQuota.requestsToday / geminiQuota.dailyLimit) * 100))}%` }}
+                  />
+                </div>
+              </div>
+              <Badge variant={geminiQuota.quotaExceeded ? "warning" : "success"}>
+                {geminiQuota.quotaExceeded ? "0 Left (Fallback Active)" : `${geminiQuota.remainingToday} Left`}
+              </Badge>
+            </div>
+          </div>
+
           {/* Workspace Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
@@ -1048,17 +1136,38 @@ export const CallingSandboxPage: React.FC = () => {
                 )}
               </div>
 
-              {/* Voice Tuning */}
+              {/* Voice Engine & Tuning */}
               <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
                 <div className="flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
                   <span className="flex items-center gap-1.5">
                     <Settings2 className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>Kokoro Neural Voice &amp; Speed</span>
+                    <span>Dual Voice Engine Configuration</span>
                   </span>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">24,000 Hz</span>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">1,500 RPD Quota</span>
                 </div>
 
-                <div className="space-y-2 text-xs">
+                <div className="space-y-2.5 text-xs">
+                  <div>
+                    <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block mb-1">
+                      Voice Engine Pipeline:
+                    </label>
+                    <select
+                      value={voiceEngine}
+                      onChange={(e) => {
+                        const val = e.target.value as 'auto' | 'gemini' | 'kokoro';
+                        setVoiceEngine(val);
+                        if (val === 'kokoro') setSelectedVoice('bf_emma');
+                        else setSelectedVoice('Kore');
+                      }}
+                      disabled={isCallActive}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="auto">✨ Gemini Voice (Primary 1,500/day) ➔ Kokoro Fallback</option>
+                      <option value="gemini">✨ Gemini Neural Voice (Only)</option>
+                      <option value="kokoro">⚡ Kokoro-82M Local Server (Only)</option>
+                    </select>
+                  </div>
+
                   <div>
                     <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block mb-1">
                       Receptionist Persona:
@@ -1069,11 +1178,24 @@ export const CallingSandboxPage: React.FC = () => {
                       disabled={isCallActive}
                       className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500"
                     >
-                      <option value="bf_emma">Emma (British Female - Crisp Receptionist)</option>
-                      <option value="bf_isabella">Isabella (British Female - Warm Clinical)</option>
-                      <option value="af_sarah">Sarah (American Female - Professional)</option>
-                      <option value="af_bella">Bella (American Female - Friendly)</option>
-                      <option value="am_adam">Adam (American Male - Authoritative)</option>
+                      {voiceEngine !== 'kokoro' ? (
+                        <>
+                          <option value="Kore">Kore (British/Neutral Calm & Crisp Receptionist - Default)</option>
+                          <option value="Aoede">Aoede (Warm & Reassuring Clinical Female)</option>
+                          <option value="Puck">Puck (Natural & Friendly)</option>
+                          <option value="Charon">Charon (Authoritative Deep Male)</option>
+                          <option value="Fenrir">Fenrir (Confident Male)</option>
+                          <option value="Leda">Leda (Clear & Empathetic Female)</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="bf_emma">Emma (British Female - Crisp Receptionist)</option>
+                          <option value="bf_isabella">Isabella (British Female - Warm Clinical)</option>
+                          <option value="af_sarah">Sarah (American Female - Professional)</option>
+                          <option value="af_bella">Bella (American Female - Friendly)</option>
+                          <option value="am_adam">Adam (American Male - Authoritative)</option>
+                        </>
+                      )}
                     </select>
                   </div>
 
@@ -1176,9 +1298,18 @@ export const CallingSandboxPage: React.FC = () => {
                             {item.wordCount} words
                           </span>
                         )}
+                        {item.ttsEngine && (
+                          <span className={`px-1.5 py-0.5 rounded font-mono text-[9px] ${
+                            item.isFallback 
+                              ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20' 
+                              : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                          }`}>
+                            {item.ttsEngine}
+                          </span>
+                        )}
                         {item.latencyMs && (
-                          <span className="text-emerald-600 dark:text-emerald-400 font-mono text-[9px]">
-                            Kokoro: {item.latencyMs}ms
+                          <span className="text-slate-500 dark:text-slate-400 font-mono text-[9px]">
+                            {item.latencyMs}ms
                           </span>
                         )}
                       </div>

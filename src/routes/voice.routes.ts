@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { VoiceAIService } from '../services/voice/voice.service.js';
 import { telnyxVoiceService } from '../services/voice/telnyx.service.js';
 import { callRecordingsService } from '../services/recordings/recordings.service.js';
+import { geminiVoiceService } from '../services/voice/gemini-voice.service.js';
 
 const router = Router();
 
@@ -241,27 +242,42 @@ router.get('/kokoro/voices', async (_req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/v1/voice/gemini/quota
+ * Returns current daily quota stats (1,500 requests/day limit on free tier)
+ */
+router.get('/gemini/quota', (_req: Request, res: Response) => {
+  try {
+    const stats = geminiVoiceService.getQuotaStats();
+    return res.status(200).json({ success: true, ...stats });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
  * POST /api/v1/voice/kokoro/synthesize
- * Synthesizes text to speech using the local Kokoro neural engine
+ * Synthesizes speech using Google Gemini Neural Voice (1,500 requests/day limit)
+ * with automatic fallback to local Kokoro-82M server
  */
 router.post('/kokoro/synthesize', async (req: Request, res: Response) => {
   try {
-    const { text, voice, speed } = req.body;
-    const response = await fetch(`${KOKORO_SERVER_URL}/synthesize/base64`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text,
-        voice: voice || 'bf_emma',
-        speed: speed || 1.0,
-      }),
+    const { text, voice, speed, engine } = req.body;
+    const synth = await geminiVoiceService.synthesize({
+      text,
+      voice: voice || 'Kore',
+      speed: speed || 1.1,
+      engine: engine || 'auto',
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      return res.status(200).json(data);
-    }
-    return res.status(502).json({ success: false, error: 'Kokoro synthesis failed' });
+    return res.status(200).json({
+      success: true,
+      audio_base64: synth.audioBase64,
+      latency_ms: synth.latencyMs,
+      tts_engine: synth.engine,
+      voice: synth.voice,
+      quota_remaining: synth.quotaRemaining,
+      is_fallback: synth.isFallback,
+    });
   } catch (err: any) {
     return res.status(500).json({ success: false, error: err.message });
   }
@@ -362,43 +378,24 @@ router.post('/kokoro/sandbox-turn-audio', async (req: Request, res: Response) =>
       learnedRules
     );
 
-    // 3. Synthesize Doctor's response via local Kokoro Neural Server
-    let kokoroAudioBase64: string | null = null;
-    let latencyMs: number = 0;
-    let ttsEngine: string = 'Browser SpeechSynthesis (Fallback)';
-
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 4000);
-      const kokoroRes = await fetch(`${KOKORO_SERVER_URL}/synthesize/base64`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: turnResult.reply,
-          voice: chosenVoice,
-          speed: speed || 1.1, // brisk natural human phone cadence
-        }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
-
-      if (kokoroRes.ok) {
-        const kData = await kokoroRes.json();
-        kokoroAudioBase64 = kData.audio_base64;
-        latencyMs = kData.latency_ms;
-        ttsEngine = `Kokoro-82M Local Server (${chosenVoice})`;
-      }
-    } catch (kErr) {
-      console.warn('[Kokoro Sandbox Audio] Synthesis notice:', kErr);
-    }
+    // 3. Synthesize Doctor's response via Primary Gemini Neural Voice (with Kokoro fallback)
+    const voiceEngine = (req.body?.engine as 'auto' | 'gemini' | 'kokoro') || 'auto';
+    const synthResult = await geminiVoiceService.synthesize({
+      text: turnResult.reply,
+      voice: chosenVoice,
+      speed: speed || 1.1,
+      engine: voiceEngine,
+    });
 
     return res.status(200).json({
       success: true,
       ...turnResult,
-      audio_base64: kokoroAudioBase64,
-      tts_engine: ttsEngine,
-      voice: chosenVoice,
-      latency_ms: latencyMs,
+      audio_base64: synthResult.audioBase64,
+      tts_engine: synthResult.engine,
+      voice: synthResult.voice,
+      latency_ms: synthResult.latencyMs,
+      quota_remaining: synthResult.quotaRemaining,
+      is_fallback: synthResult.isFallback,
     });
   } catch (error: any) {
     console.error('[Kokoro Sandbox Audio] Error:', error);
