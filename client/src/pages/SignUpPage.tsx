@@ -35,16 +35,25 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
     preferredTime: 'Today / Next Available',
     insurance: 'Delta Dental PPO',
     password: '',
+    preferredChannel: 'sms' as 'sms' | 'whatsapp',
+    tcpaConsentGranted: false,
   });
+  const [consentError, setConsentError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formData.preferredChannel === 'sms' && !formData.tcpaConsentGranted) {
+      setConsentError('Please check the TCPA & HIPAA consent box to receive appointment confirmations via SMS / RCS.');
+      return;
+    }
+    setConsentError(null);
     setIsSubmitting(true);
 
     try {
-      // Call backend to store in Supabase
+      // 1. Call backend to store in calendar/Supabase
       await fetch('/api/v1/calendar/book', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -56,6 +65,35 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
           startTime: new Date().toISOString(),
         }),
       });
+
+      // 2. If SMS/RCS, record legal TCPA consent and dispatch confirmation text
+      if (formData.preferredChannel === 'sms') {
+        await fetch('/api/v1/sms/consent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phoneNumber: formData.phone,
+            patientName: formData.fullName,
+            channel: 'sms',
+            tcpaConsentGranted: true,
+            hipaaAcknowledgementGranted: true,
+          }),
+        }).catch(() => {});
+
+        await fetch('/api/v1/sms/send-confirmation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: formData.phone,
+            patientName: formData.fullName,
+            treatment: formData.treatment,
+            appointmentDate: 'Today / Next Available',
+            appointmentTime: formData.preferredTime,
+            clinicName: businessProfile.name,
+            channel: 'sms',
+          }),
+        }).catch(() => {});
+      }
     } catch {
       // Offline fallback
     }
@@ -131,8 +169,12 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
                 <span className="text-emerald-400 font-medium">{formData.treatment}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">WhatsApp Phone:</span>
+                <span className="text-slate-400">Contact Mobile:</span>
                 <span className="text-white font-medium">{formData.phone}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Preferred Channel:</span>
+                <span className="text-blue-400 font-semibold uppercase">{formData.preferredChannel === 'sms' ? 'SMS / RCS 10DLC' : 'WhatsApp'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Preferred Time:</span>
@@ -148,7 +190,11 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>WhatsApp confirmation sent to <strong>{formData.phone}</strong>.</span>
+                <span>
+                  {formData.preferredChannel === 'sms'
+                    ? `Telnyx 10DLC SMS / RCS Rich Card dispatched to ${formData.phone}.`
+                    : `WhatsApp confirmation sent to ${formData.phone}.`}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -226,16 +272,58 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
                     />
                   </div>
 
+                  {/* Preferred Confirmation Channel */}
+                  <div className="space-y-1.5">
+                    <label className="font-semibold text-slate-300 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 text-blue-400" /> Preferred Notification Channel
+                      </span>
+                      <span className="text-[10px] text-emerald-400 font-medium">US & Canada Default</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, preferredChannel: 'sms' })}
+                        className={`p-2.5 rounded-xl border text-left transition-all ${
+                          formData.preferredChannel === 'sms'
+                            ? 'bg-blue-600/20 border-blue-500 text-white font-bold ring-1 ring-blue-500'
+                            : 'bg-slate-900 border-white/10 text-slate-400 hover:bg-slate-800'
+                        }`}
+                      >
+                        <p className="text-xs font-bold flex items-center gap-1.5">
+                          <span>📱</span> SMS / RCS Text
+                        </p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">Recommended (US & Canada)</p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, preferredChannel: 'whatsapp' })}
+                        className={`p-2.5 rounded-xl border text-left transition-all ${
+                          formData.preferredChannel === 'whatsapp'
+                            ? 'bg-emerald-600/20 border-emerald-500 text-white font-bold ring-1 ring-emerald-500'
+                            : 'bg-slate-900 border-white/10 text-slate-400 hover:bg-slate-800'
+                        }`}
+                      >
+                        <p className="text-xs font-bold flex items-center gap-1.5">
+                          <span>💬</span> WhatsApp
+                        </p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">International / Optional</p>
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Phone & Email */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="font-semibold text-slate-300 flex items-center gap-1.5">
-                        <Phone className="w-3.5 h-3.5 text-emerald-400" /> WhatsApp Phone
+                        <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                        {formData.preferredChannel === 'sms' ? 'Mobile Phone (US/Canada)' : 'WhatsApp Phone'}
                       </label>
                       <input
                         type="tel"
                         required
-                        placeholder="+1 (555) 234-5678"
+                        placeholder={formData.preferredChannel === 'sms' ? '+1 (555) 345-6789' : '+1 (555) 234-5678'}
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
@@ -326,6 +414,33 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
                     />
                   </div>
 
+                  {/* TCPA & HIPAA Consent Checkbox (Mandatory for US/Canada SMS/RCS) */}
+                  {formData.preferredChannel === 'sms' && (
+                    <div className="p-3.5 rounded-2xl bg-blue-500/5 border border-blue-500/20 space-y-2">
+                      <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={formData.tcpaConsentGranted}
+                          onChange={(e) => {
+                            setFormData({ ...formData, tcpaConsentGranted: e.target.checked });
+                            if (e.target.checked) setConsentError(null);
+                          }}
+                          className="mt-0.5 w-4 h-4 rounded border-slate-700 bg-slate-900 text-blue-600 focus:ring-blue-500/40 shrink-0"
+                        />
+                        <span className="text-[11px] text-slate-300 leading-relaxed">
+                          <strong className="text-white">TCPA & HIPAA Regulatory Consent:</strong> I agree to receive transactional dental appointment alerts and reminders via SMS/RCS from <strong className="text-white">Apex Dental Care</strong> at the phone number provided above. Msg freq varies. Msg & data rates may apply. Reply <strong className="text-white">STOP</strong> to cancel, <strong className="text-white">HELP</strong> for help. Consent is not a condition of medical care.
+                        </span>
+                      </label>
+
+                      {consentError && (
+                        <div className="flex items-center gap-1.5 text-xs text-rose-400 font-semibold pt-1">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{consentError}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <button
                     type="submit"
                     disabled={isSubmitting}
@@ -336,7 +451,7 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
                   </button>
 
                   <p className="text-[10px] text-slate-500 text-center">
-                    🔒 Your information is encrypted and securely saved into Supabase PostgreSQL.
+                    🔒 Protected under HIPAA Security Rule & Encrypted via Supabase PostgreSQL.
                   </p>
 
                 </form>

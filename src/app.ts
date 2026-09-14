@@ -23,6 +23,7 @@ import voiceRoutes from './routes/voice.routes.js';
 import onboardingRoutes from './routes/onboarding.routes.js';
 import auditRoutes from './routes/audit.routes.js';
 import patientRoutes from './routes/patient.routes.js';
+import smsRoutes from './routes/sms.routes.js';
 import { followupRouter } from './routes/followup.routes.js';
 
 export const createApp = (): Express => {
@@ -73,6 +74,7 @@ export const createApp = (): Express => {
   app.use('/api/v1/audit', auditRoutes);
   app.use('/api/v1/followup', followupRouter);
   app.use('/api/v1/patient', patientRoutes);
+  app.use('/api/v1/sms', smsRoutes);
   app.use('/api/v1/knowledge', knowledgeRoutes);
   app.use('/api/v1/calendar', calendarRoutes);
   app.use('/api/v1/crm', crmRoutes);
