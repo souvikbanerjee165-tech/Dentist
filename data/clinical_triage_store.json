@@ -1,0 +1,52 @@
+[
+  {
+    "threadId": "th-01",
+    "patientId": "pat-seed-01",
+    "patientName": "Sophia Martinez",
+    "patientPhone": "+1 (555) 234-5678",
+    "category": "Clinical / Urgent",
+    "urgency": "P2_Urgent",
+    "messages": [
+      {
+        "id": "m-01",
+        "sender": "patient",
+        "senderName": "Sophia Martinez",
+        "text": "Hi Dr. Sarah, I had a wisdom tooth pulled yesterday and my lower jaw is starting to throb a bit. Is it okay to take ibuprofen with my prescribed antibiotic?",
+        "timestampIso": "2026-09-02T14:10:00.000Z",
+        "isEncrypted": true
+      },
+      {
+        "id": "m-02",
+        "sender": "doctor",
+        "senderName": "Dr. Sarah Jensen, DDS",
+        "text": "Hello Sophia, yes! 400mg Ibuprofen is safe and recommended alongside your Amoxicillin. Make sure to take both with food or a glass of milk to protect your stomach.",
+        "timestampIso": "2026-09-02T14:18:00.000Z",
+        "isEncrypted": true
+      }
+    ],
+    "status": "resolved",
+    "assignedTo": "Dr. Sarah Jensen, DDS",
+    "lastActivityIso": "2026-09-02T14:18:00.000Z"
+  },
+  {
+    "threadId": "th-02",
+    "patientId": "pat-seed-02",
+    "patientName": "Liam Vance",
+    "patientPhone": "+1 (555) 345-6789",
+    "category": "Scheduling",
+    "urgency": "P3_Routine",
+    "messages": [
+      {
+        "id": "m-03",
+        "sender": "patient",
+        "senderName": "Liam Vance",
+        "text": "Can I reschedule my crown prep appointment from tomorrow to next Tuesday at 3pm?",
+        "timestampIso": "2026-09-03T10:00:00.000Z",
+        "isEncrypted": false
+      }
+    ],
+    "status": "new",
+    "assignedTo": "Front Desk Coordinator",
+    "lastActivityIso": "2026-09-03T10:00:00.000Z"
+  }
+]

@@ -25,6 +25,9 @@ import auditRoutes from './routes/audit.routes.js';
 import patientRoutes from './routes/patient.routes.js';
 import smsRoutes from './routes/sms.routes.js';
 import { followupRouter } from './routes/followup.routes.js';
+import clinicalWorkflowRoutes from './routes/clinical-workflow.routes.js';
+import financialWorkflowRoutes from './routes/financial-workflow.routes.js';
+import operationsWorkflowRoutes from './routes/operations-workflow.routes.js';
 
 export const createApp = (): Express => {
   const app = express();
@@ -75,6 +78,9 @@ export const createApp = (): Express => {
   app.use('/api/v1/followup', followupRouter);
   app.use('/api/v1/patient', patientRoutes);
   app.use('/api/v1/sms', smsRoutes);
+  app.use('/api/v1/clinical', clinicalWorkflowRoutes);
+  app.use('/api/v1/financial', financialWorkflowRoutes);
+  app.use('/api/v1/operations', operationsWorkflowRoutes);
   app.use('/api/v1/knowledge', knowledgeRoutes);
   app.use('/api/v1/calendar', calendarRoutes);
   app.use('/api/v1/crm', crmRoutes);

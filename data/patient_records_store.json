@@ -13,7 +13,7 @@
       "clinicName": "St. James Dental Practice",
       "clinicAddress": "450 Lexington Ave, Suite 800, New York",
       "room": "Operatory 3 • Aesthetic Laser Suite",
-      "status": "confirmed",
+      "status": "checked_in",
       "estimatedDuration": "45 Minutes",
       "feeGbp": 395,
       "checklist": [

@@ -25,12 +25,21 @@ import {
   User, 
   ArrowLeft,
   ChevronRight,
-  RefreshCw
+  RefreshCw,
+  Car,
+  Activity,
+  DollarSign,
+  Camera,
+  Layers
 } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { PatientUser } from '../components/patient/PatientAuthModal';
 import { BusinessProfile } from '../types/admin.types';
+import { DigitalIntakeTab } from '../components/patient/DigitalIntakeTab';
+import { PostOpRecoveryTab } from '../components/patient/PostOpRecoveryTab';
+import { TreatmentPlanTab } from '../components/patient/TreatmentPlanTab';
+import { DentalImagingTab } from '../components/patient/DentalImagingTab';
 
 interface ChecklistItem {
   id: string;
@@ -98,7 +107,8 @@ export const PatientDashboardPage: React.FC<PatientDashboardProps> = ({
   onBookAnother,
   onNavigateHome,
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'checklist' | 'history' | 'profile'>('overview');
+  type TabType = 'overview' | 'intake' | 'treatment_plan' | 'aftercare' | 'imaging' | 'checklist' | 'history' | 'profile';
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [upcoming, setUpcoming] = useState<UpcomingAppointment | null>(null);
   const [history, setHistory] = useState<ClinicalVisitRecord[]>([]);
   const [loyaltyStatus, setLoyaltyStatus] = useState<string>('Regular Patient');
@@ -107,9 +117,40 @@ export const PatientDashboardPage: React.FC<PatientDashboardProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [actionToast, setActionToast] = useState<string | null>(null);
 
+  // Curbside Check-in state
+  const [curbsideSpot, setCurbsideSpot] = useState('Parking Spot #3 / Main Entrance');
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [curbsideArrivalFeedback, setCurbsideArrivalFeedback] = useState<string | null>(null);
+
   const showToast = (msg: string) => {
     setActionToast(msg);
     setTimeout(() => setActionToast(null), 3500);
+  };
+
+  const handleCurbsideArrived = async () => {
+    setIsCheckingIn(true);
+    try {
+      const res = await fetch('/api/v1/clinical/checkin/arrive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientId: user.id || 'pat-guest',
+          parkingSpotOrLocation: curbsideSpot,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (upcoming) {
+          setUpcoming({ ...upcoming, status: 'checked_in' });
+        }
+        setCurbsideArrivalFeedback(data.message);
+        showToast('Arrival confirmed! Front desk notified 🚗');
+      }
+    } catch (err) {
+      console.error('Curbside checkin failed:', err);
+    } finally {
+      setIsCheckingIn(false);
+    }
   };
 
   const fetchDashboardData = useCallback(async () => {
@@ -313,6 +354,55 @@ export const PatientDashboardPage: React.FC<PatientDashboardProps> = ({
           </button>
 
           <button
+            onClick={() => setActiveTab('intake')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+              activeTab === 'intake'
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            <span>Digital Intake & RTE</span>
+            <Badge variant="outline" className="text-[10px] border-cyan-500/40 text-cyan-300">Fast-Track</Badge>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('treatment_plan')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+              activeTab === 'treatment_plan'
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <DollarSign className="w-4 h-4" />
+            <span>Treatment Plan & BNPL</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('aftercare')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+              activeTab === 'aftercare'
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Activity className="w-4 h-4" />
+            <span>Post-Op Recovery</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('imaging')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+              activeTab === 'imaging'
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Camera className="w-4 h-4" />
+            <span>Dental Imaging & 3D</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('checklist')}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
               activeTab === 'checklist'
@@ -321,7 +411,7 @@ export const PatientDashboardPage: React.FC<PatientDashboardProps> = ({
             }`}
           >
             <CheckSquare className="w-4 h-4" />
-            <span>What to Bring / Carry</span>
+            <span>What to Carry</span>
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/20 text-white font-mono">
               {completedChecklistCount}/{totalChecklistCount}
             </span>
@@ -351,7 +441,7 @@ export const PatientDashboardPage: React.FC<PatientDashboardProps> = ({
             }`}
           >
             <ShieldCheck className="w-4 h-4" />
-            <span>Medical Profile & Security</span>
+            <span>Profile & Security</span>
             {twoFactorActive && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
           </button>
         </div>
@@ -406,6 +496,68 @@ export const PatientDashboardPage: React.FC<PatientDashboardProps> = ({
                           {upcoming.estimatedDuration} • {upcoming.room}
                         </span>
                       </div>
+                    </div>
+
+                    {/* Curbside 1-Click Check-in Widget */}
+                    <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-950/50 via-cyan-950/40 to-slate-900 border border-cyan-500/40 shadow-lg shadow-cyan-500/5">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 flex items-center justify-center shrink-0 shadow-md">
+                            <Car className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-sm font-bold text-white">1-Click Curbside "I've Arrived"</h4>
+                              <Badge variant={upcoming.status === 'checked_in' ? 'success' : 'outline'} className="text-[10px]">
+                                {upcoming.status === 'checked_in' ? 'CHECKED IN' : 'READY FOR ARRIVAL'}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                              {upcoming.status === 'checked_in'
+                                ? 'Dr. Sarah Jensen and front desk have been alerted! Please proceed to the waiting lounge or operatory.'
+                                : 'Skip the clipboard queue! Notify staff immediately as soon as you arrive.'}
+                            </p>
+                          </div>
+                        </div>
+
+                        {upcoming.status === 'checked_in' ? (
+                          <div className="px-4 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2 shrink-0">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                            <span>Checked In & Operatory Ready</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                            <input
+                              type="text"
+                              value={curbsideSpot}
+                              onChange={(e) => setCurbsideSpot(e.target.value)}
+                              placeholder="Parking spot / lobby"
+                              className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 w-full sm:w-44"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleCurbsideArrived}
+                              disabled={isCheckingIn}
+                              className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-cyan-500/25 transition-all shrink-0 flex items-center gap-1.5 active:scale-95"
+                            >
+                              {isCheckingIn ? (
+                                <span>Notifying Desk...</span>
+                              ) : (
+                                <>
+                                  <Car className="w-3.5 h-3.5" />
+                                  <span>I've Arrived</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      {curbsideArrivalFeedback && (
+                        <div className="mt-2.5 p-2 rounded-lg bg-cyan-950/80 border border-cyan-500/40 text-[11px] text-cyan-200 flex items-center gap-2">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                          <span>{curbsideArrivalFeedback}</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Location and Directions */}
@@ -872,6 +1024,47 @@ export const PatientDashboardPage: React.FC<PatientDashboardProps> = ({
               </div>
 
             </div>
+          </div>
+        )}
+
+        {activeTab === 'intake' && (
+          <div className="animate-fadeIn">
+            <DigitalIntakeTab
+              patientId={user.id || 'pat-guest'}
+              patientName={user.fullName}
+              token={token}
+              onIntakeCompleted={() => {
+                showToast('Digital intake & legal e-signature saved! ✅');
+                fetchDashboardData();
+              }}
+            />
+          </div>
+        )}
+
+        {activeTab === 'treatment_plan' && (
+          <div className="animate-fadeIn">
+            <TreatmentPlanTab
+              patientId={user.id || 'pat-guest'}
+              patientName={user.fullName}
+            />
+          </div>
+        )}
+
+        {activeTab === 'aftercare' && (
+          <div className="animate-fadeIn">
+            <PostOpRecoveryTab
+              patientId={user.id || 'pat-guest'}
+              patientName={user.fullName}
+            />
+          </div>
+        )}
+
+        {activeTab === 'imaging' && (
+          <div className="animate-fadeIn">
+            <DentalImagingTab
+              patientId={user.id || 'pat-guest'}
+              patientName={user.fullName}
+            />
           </div>
         )}
 

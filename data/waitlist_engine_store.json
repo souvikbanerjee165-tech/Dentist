@@ -1,0 +1,77 @@
+{
+  "waitlist": [
+    {
+      "id": "wl-01",
+      "patientId": "pat-seed-02",
+      "patientName": "Liam Vance",
+      "patientPhone": "+1 (555) 345-6789",
+      "preferredDays": [
+        "Monday",
+        "Tuesday",
+        "Wednesday"
+      ],
+      "preferredTimeOfDay": "Afternoon (12pm-5pm)",
+      "requestedTreatment": "Crown Replacement & Examination",
+      "urgencyLevel": "High (In Pain)",
+      "addedAtIso": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "wl-02",
+      "patientId": "pat-seed-03",
+      "patientName": "Chloe Bennett",
+      "patientPhone": "+1 (555) 765-4321",
+      "preferredDays": [
+        "Thursday",
+        "Friday"
+      ],
+      "preferredTimeOfDay": "Any",
+      "requestedTreatment": "Cosmetic Laser Teeth Whitening",
+      "urgencyLevel": "Medium (Routine)",
+      "addedAtIso": "2026-09-02T12:00:00.000Z"
+    }
+  ],
+  "offers": {
+    "offer-1790084245357": {
+      "offerId": "offer-1790084245357",
+      "slotDate": "Today (3:00 PM)",
+      "slotTime": "15:00",
+      "doctorName": "Dr. Sarah Jensen",
+      "treatmentType": "Hygiene & Emergency Restorative",
+      "operatory": "Operatory 1",
+      "openedAtIso": "2026-09-22T13:37:25.357Z",
+      "status": "claimed",
+      "recipientsNotifiedCount": 2,
+      "claimedByPatientId": "pat_waitlist_001",
+      "claimedByPatientName": "David Chen",
+      "claimedAtIso": "2026-09-22T13:37:25.358Z"
+    },
+    "offer-1790084286442": {
+      "offerId": "offer-1790084286442",
+      "slotDate": "Today (3:00 PM)",
+      "slotTime": "15:00",
+      "doctorName": "Dr. Sarah Jensen",
+      "treatmentType": "Hygiene & Emergency Restorative",
+      "operatory": "Operatory 1",
+      "openedAtIso": "2026-09-22T13:38:06.442Z",
+      "status": "claimed",
+      "recipientsNotifiedCount": 2,
+      "claimedByPatientId": "pat_waitlist_001",
+      "claimedByPatientName": "David Chen",
+      "claimedAtIso": "2026-09-22T13:38:06.442Z"
+    },
+    "offer-1790084295973": {
+      "offerId": "offer-1790084295973",
+      "slotDate": "Today (3:00 PM)",
+      "slotTime": "15:00",
+      "doctorName": "Dr. Sarah Jensen",
+      "treatmentType": "Hygiene & Emergency Restorative",
+      "operatory": "Operatory 1",
+      "openedAtIso": "2026-09-22T13:38:15.973Z",
+      "status": "claimed",
+      "recipientsNotifiedCount": 2,
+      "claimedByPatientId": "pat_waitlist_001",
+      "claimedByPatientName": "David Chen",
+      "claimedAtIso": "2026-09-22T13:38:15.973Z"
+    }
+  }
+}

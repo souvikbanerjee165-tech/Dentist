@@ -399,6 +399,13 @@ export class PatientRecordsService {
   }
 
   /**
+   * Retrieves upcoming booking for patient
+   */
+  public getUpcomingAppointment(patientId: string): UpcomingAppointmentDetails | null {
+    return this.upcomingMap.get(patientId) || null;
+  }
+
+  /**
    * Adds or updates upcoming booking for patient
    */
   public setUpcomingAppointment(details: UpcomingAppointmentDetails): void {
