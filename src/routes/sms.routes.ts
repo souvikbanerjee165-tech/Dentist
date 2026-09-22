@@ -1,5 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { smsRcsService } from '../services/messaging/sms-rcs.service.js';
+import { requireStaffOrDoctorAuth, preventWebhookReplay } from '../middleware/auth.middleware.js';
+import { SafeLogger } from '../utils/safe-logger.js';
 
 const router = Router();
 
@@ -42,7 +44,7 @@ router.post('/consent', (req: Request, res: Response) => {
 
     res.status(200).json({ success: true, consent: record });
   } catch (err: any) {
-    console.error('[SMS Consent Route] Error:', err);
+    SafeLogger.error('[SMS Consent Route] Error:', err);
     res.status(500).json({ success: false, error: 'ServerError', message: err.message });
   }
 });
@@ -50,8 +52,9 @@ router.post('/consent', (req: Request, res: Response) => {
 /**
  * POST /api/v1/sms/send-confirmation
  * Dispatches 10DLC SMS / RCS Rich Card confirmation to patient
+ * Protected: Only authenticated staff/doctor can trigger confirmation dispatches
  */
-router.post('/send-confirmation', async (req: Request, res: Response) => {
+router.post('/send-confirmation', requireStaffOrDoctorAuth, async (req: Request, res: Response) => {
   try {
     const { to, patientName, treatment, appointmentDate, appointmentTime, channel, clinicName } = req.body;
 
@@ -75,7 +78,7 @@ router.post('/send-confirmation', async (req: Request, res: Response) => {
 
     res.status(200).json(result);
   } catch (err: any) {
-    console.error('[SMS Send Confirmation Error]:', err);
+    SafeLogger.error('[SMS Send Confirmation Error]:', err);
     res.status(500).json({ success: false, error: 'DispatchError', message: err.message });
   }
 });
@@ -84,8 +87,9 @@ router.post('/send-confirmation', async (req: Request, res: Response) => {
  * POST /api/v1/sms/inbound
  * Webhook for inbound 2-way patient SMS/RCS responses
  * Telnyx / Twilio / Carrier Webhook compatible
+ * Protected with replay prevention
  */
-router.post('/inbound', async (req: Request, res: Response) => {
+router.post('/inbound', preventWebhookReplay, async (req: Request, res: Response) => {
   try {
     // Extract from Telnyx webhook payload structure or direct body
     const from =
@@ -100,7 +104,7 @@ router.post('/inbound', async (req: Request, res: Response) => {
       req.body?.text ||
       '';
 
-    console.log(`[SMS Inbound Webhook] Received from ${from}: "${text}"`);
+    SafeLogger.info('SMS_INBOUND', `Received from ${SafeLogger.maskPhone(from)} (len=${text.length})`);
 
     const result = await smsRcsService.handleInboundText(from, text);
 
@@ -114,7 +118,7 @@ router.post('/inbound', async (req: Request, res: Response) => {
       status: result.status,
     });
   } catch (err: any) {
-    console.error('[SMS Inbound Webhook Error]:', err);
+    SafeLogger.error('[SMS Inbound Webhook Error]:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -122,8 +126,9 @@ router.post('/inbound', async (req: Request, res: Response) => {
 /**
  * GET /api/v1/sms/consent/audit
  * Doctor & Compliance Audit view of all consented North American phone numbers
+ * Protected: Staff/Doctor authentication required to prevent PII exposure
  */
-router.get('/consent/audit', (req: Request, res: Response) => {
+router.get('/consent/audit', requireStaffOrDoctorAuth, (req: Request, res: Response) => {
   const list = smsRcsService.getConsentAuditList();
   res.status(200).json({
     success: true,

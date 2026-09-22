@@ -11,6 +11,8 @@ import {
 export class GoogleCalendarService {
   // In-memory appointments store for local offline testing
   private localAppointments: AppointmentRecord[] = [];
+  // Atomic slot mutex to eliminate TOCTOU race conditions across concurrent booking requests
+  private activeSlotLocks: Set<string> = new Set();
 
   /**
    * Finds free available time slots and returns the top 3 suggested slots
@@ -112,83 +114,97 @@ export class GoogleCalendarService {
     const end = new Date(start);
     end.setMinutes(end.getMinutes() + durationMinutes);
 
-    // 1. Double Booking Prevention Check
-    const existing = await this.getAppointmentsForDate(start);
-    const conflict = existing.find((appt) => {
-      if (appt.status === 'cancelled') return false;
-      const apptStart = new Date(appt.startTime).getTime();
-      const apptEnd = new Date(appt.endTime).getTime();
-      return start.getTime() < apptEnd && end.getTime() > apptStart;
-    });
-
-    if (conflict) {
+    const slotLockKey = `${businessId}:${start.toISOString()}`;
+    if (this.activeSlotLocks.has(slotLockKey)) {
       return {
         success: false,
-        confirmationMessage: `⚠️ That time slot (${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}) is already booked. Please choose another available time.`,
-        error: 'DoubleBookingConflict',
+        confirmationMessage: `⚠️ That time slot is currently being locked by another booking request. Please select another slot.`,
+        error: 'SlotBookingConflict',
       };
     }
+    this.activeSlotLocks.add(slotLockKey);
 
-    // 2. Generate Google Calendar Event ID
-    const googleEventId = `gcal_evt_${Date.now()}`;
-    const appointmentId = `appt_${Date.now()}`;
+    try {
+      // 1. Double Booking Prevention Check
+      const existing = await this.getAppointmentsForDate(start);
+      const conflict = existing.find((appt) => {
+        if (appt.status === 'cancelled') return false;
+        const apptStart = new Date(appt.startTime).getTime();
+        const apptEnd = new Date(appt.endTime).getTime();
+        return start.getTime() < apptEnd && end.getTime() > apptStart;
+      });
 
-    const newAppointment: AppointmentRecord = {
-      id: appointmentId,
-      businessId,
-      leadId,
-      customerName,
-      customerPhone,
-      customerEmail,
-      googleEventId,
-      title: `${serviceType} - ${customerName}`,
-      serviceType,
-      startTime: start.toISOString(),
-      endTime: end.toISOString(),
-      status: 'confirmed',
-      notes,
-      createdAt: new Date().toISOString(),
-    };
-
-    // 3. Store in Supabase if configured
-    if (
-      config.supabase.url &&
-      !config.supabase.url.includes('your-project-ref') &&
-      config.supabase.serviceRoleKey &&
-      !config.supabase.serviceRoleKey.includes('your_supabase')
-    ) {
-      try {
-        await supabase.from('appointments').insert({
-          customer_name: newAppointment.customerName,
-          customer_phone: newAppointment.customerPhone,
-          customer_email: newAppointment.customerEmail,
-          treatment: newAppointment.serviceType,
-          appointment_time: newAppointment.startTime,
-          status: newAppointment.status,
-          notes: newAppointment.notes,
-        });
-      } catch (err: any) {
-        console.warn('Notice: Supabase insert fallback:', err.message);
+      if (conflict) {
+        return {
+          success: false,
+          confirmationMessage: `⚠️ That time slot (${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}) is already booked. Please choose another available time.`,
+          error: 'DoubleBookingConflict',
+        };
       }
+
+      // 2. Generate Google Calendar Event ID
+      const googleEventId = `gcal_evt_${Date.now()}`;
+      const appointmentId = `appt_${Date.now()}`;
+
+      const newAppointment: AppointmentRecord = {
+        id: appointmentId,
+        businessId,
+        leadId,
+        customerName,
+        customerPhone,
+        customerEmail,
+        googleEventId,
+        title: `${serviceType} - ${customerName}`,
+        serviceType,
+        startTime: start.toISOString(),
+        endTime: end.toISOString(),
+        status: 'confirmed',
+        notes,
+        createdAt: new Date().toISOString(),
+      };
+
+      // 3. Store in Supabase if configured
+      if (
+        config.supabase.url &&
+        !config.supabase.url.includes('your-project-ref') &&
+        config.supabase.serviceRoleKey &&
+        !config.supabase.serviceRoleKey.includes('your_supabase')
+      ) {
+        try {
+          await supabase.from('appointments').insert({
+            customer_name: newAppointment.customerName,
+            customer_phone: newAppointment.customerPhone,
+            customer_email: newAppointment.customerEmail,
+            treatment: newAppointment.serviceType,
+            appointment_time: newAppointment.startTime,
+            status: newAppointment.status,
+            notes: newAppointment.notes,
+          });
+        } catch (err: any) {
+          console.warn('Notice: Supabase insert fallback:', err.message);
+        }
+      }
+
+      // Store in local cache
+      this.localAppointments.push(newAppointment);
+
+      const formattedTime = start.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+
+      return {
+        success: true,
+        appointment: newAppointment,
+        confirmationMessage: `🎉 Appointment Confirmed!\n\n📋 Service: ${serviceType}\n👤 Name: ${customerName}\n🗓️ Time: ${formattedTime}\n📧 A calendar invitation has been sent to ${customerEmail}.`,
+      };
+    } finally {
+      this.activeSlotLocks.delete(slotLockKey);
     }
-
-    // Store in local cache
-    this.localAppointments.push(newAppointment);
-
-    const formattedTime = start.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
-
-    return {
-      success: true,
-      appointment: newAppointment,
-      confirmationMessage: `🎉 Appointment Confirmed!\n\n📋 Service: ${serviceType}\n👤 Name: ${customerName}\n🗓️ Time: ${formattedTime}\n📧 A calendar invitation has been sent to ${customerEmail}.`,
-    };
   }
 
   /**

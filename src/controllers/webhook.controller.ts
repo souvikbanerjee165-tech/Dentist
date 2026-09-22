@@ -5,6 +5,7 @@ import { whatsappService } from '../services/whatsapp/whatsapp.service.js';
 import { aiConversationService } from '../services/ai/ai.service.js';
 import { crmService } from '../services/crm/crm.service.js';
 import { calendarService } from '../services/calendar/calendar.service.js';
+import { SafeLogger } from '../utils/safe-logger.js';
 
 export class WebhookController {
   /**
@@ -41,7 +42,11 @@ export class WebhookController {
       const { from, senderName, text = '', type, messageId, location } = incoming;
       const businessId = 'default-business-id';
 
-      console.log(`📩 Incoming WhatsApp [${type.toUpperCase()}] from ${senderName} (${from}): "${text}"`);
+      SafeLogger.info(`Incoming WhatsApp [${type.toUpperCase()}]`, {
+        sender: SafeLogger.maskPatientName(senderName),
+        phone: SafeLogger.maskPhone(from),
+        messageLength: text.length,
+      });
 
       // 3. Mark message as read
       await whatsappService.markAsRead(messageId);

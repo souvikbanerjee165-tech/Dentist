@@ -1,8 +1,11 @@
 import { Router, Request, Response } from 'express';
+import path from 'path';
+import fs from 'fs';
 import { VoiceAIService } from '../services/voice/voice.service.js';
 import { telnyxVoiceService } from '../services/voice/telnyx.service.js';
 import { callRecordingsService } from '../services/recordings/recordings.service.js';
 import { geminiVoiceService } from '../services/voice/gemini-voice.service.js';
+import { requireStaffOrDoctorAuth } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
@@ -416,8 +419,9 @@ router.post('/kokoro/sandbox-turn-audio', async (req: Request, res: Response) =>
 /**
  * GET /api/v1/voice/recordings
  * Lists all past call recordings with transcripts and AI takeaways
+ * Protected: Staff/Doctor auth required (ePHI transcripts)
  */
-router.get('/recordings', (_req: Request, res: Response) => {
+router.get('/recordings', requireStaffOrDoctorAuth, (_req: Request, res: Response) => {
   try {
     const recordings = callRecordingsService.getAllRecordings();
     res.status(200).json({ success: true, count: recordings.length, recordings });
@@ -429,8 +433,9 @@ router.get('/recordings', (_req: Request, res: Response) => {
 /**
  * POST /api/v1/voice/recordings
  * Saves a completed call recording session
+ * Protected: Staff/Doctor auth required
  */
-router.post('/recordings', async (req: Request, res: Response) => {
+router.post('/recordings', requireStaffOrDoctorAuth, async (req: Request, res: Response) => {
   try {
     const saved = await callRecordingsService.saveRecording(req.body);
     res.status(201).json({ success: true, recording: saved });
@@ -442,8 +447,9 @@ router.post('/recordings', async (req: Request, res: Response) => {
 /**
  * POST /api/v1/voice/recordings/learn
  * AI Learning Loop: Analyzes all past call recordings and extracts clinic rules & insights
+ * Protected: Staff/Doctor auth required
  */
-router.post('/recordings/learn', async (_req: Request, res: Response) => {
+router.post('/recordings/learn', requireStaffOrDoctorAuth, async (_req: Request, res: Response) => {
   try {
     const insights = await callRecordingsService.learnFromAllRecordings();
     res.status(200).json({ success: true, insights });
@@ -455,11 +461,35 @@ router.post('/recordings/learn', async (_req: Request, res: Response) => {
 /**
  * GET /api/v1/voice/recordings/insights
  * Returns current learned insights extracted from call recordings
+ * Protected: Staff/Doctor auth required
  */
-router.get('/recordings/insights', (_req: Request, res: Response) => {
+router.get('/recordings/insights', requireStaffOrDoctorAuth, (_req: Request, res: Response) => {
   try {
     const insights = callRecordingsService.getLearnedInsights();
     res.status(200).json({ success: true, insights });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/v1/voice/recordings/audio/:filename
+ * Secure streaming of recording audio files
+ * Protected: Staff/Doctor auth required with path traversal protection
+ */
+router.get('/recordings/audio/:filename', requireStaffOrDoctorAuth, (req: Request, res: Response) => {
+  try {
+    const rawFilename = String(req.params.filename || '');
+    // Prevent directory traversal attacks
+    const safeFilename = path.basename(rawFilename);
+    const recordingsDir = path.resolve(process.cwd(), 'recordings');
+    const targetPath = path.resolve(recordingsDir, safeFilename);
+
+    if (!targetPath.startsWith(recordingsDir) || !fs.existsSync(targetPath)) {
+      return res.status(404).json({ success: false, error: 'RecordingNotFound' });
+    }
+
+    res.sendFile(targetPath);
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }

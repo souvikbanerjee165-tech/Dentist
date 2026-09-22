@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { patientAuthService, PatientSessionPayload } from '../services/patient/patient-auth.service.js';
 import { patientRecordsService, ClinicalVisitRecord } from '../services/patient/patient-records.service.js';
+import { requireStaffOrDoctorAuth } from '../middleware/auth.middleware.js';
 
 // Extend Express Request interface to carry authenticated patient session
 declare global {
@@ -139,7 +140,7 @@ router.post('/login', (req: Request, res: Response) => {
  */
 router.post('/oauth', (req: Request, res: Response) => {
   try {
-    const { provider, email, fullName, avatarUrl, providerId } = req.body;
+    const { provider, email, fullName, avatarUrl, providerId, idToken } = req.body;
     const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
 
     if (!provider || !['google', 'microsoft', 'apple'].includes(provider)) {
@@ -164,8 +165,13 @@ router.post('/oauth', (req: Request, res: Response) => {
       fullName,
       avatarUrl,
       providerId,
+      idToken,
       ipAddress: ip,
     });
+
+    if (!result.success) {
+      return res.status(401).json(result);
+    }
 
     res.status(200).json(result);
   } catch (err: any) {
@@ -263,7 +269,7 @@ router.get('/history', requirePatientAuth, (req: Request, res: Response) => {
  * GET /api/v1/patient/doctor/patient/:id
  * Retrieve patient profile, security audit log, checklist, and history for doctor
  */
-router.get('/doctor/patient/:id', (req: Request, res: Response) => {
+router.get('/doctor/patient/:id', requireStaffOrDoctorAuth, (req: Request, res: Response) => {
   try {
     const patientId = String(req.params.id);
     const patientView = patientAuthService.getDoctorPatientView(patientId);
@@ -288,7 +294,7 @@ router.get('/doctor/patient/:id', (req: Request, res: Response) => {
  * POST /api/v1/patient/doctor/patient/:id/notes
  * Doctor appends clinical note or new treatment record to patient's trail
  */
-router.post('/doctor/patient/:id/notes', (req: Request, res: Response) => {
+router.post('/doctor/patient/:id/notes', requireStaffOrDoctorAuth, (req: Request, res: Response) => {
   try {
     const patientId = String(req.params.id);
     const { treatment, sharedSummary, privateClinicalNotes, feeGbp, aftercareInstructions } = req.body;

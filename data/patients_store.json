@@ -145,5 +145,83 @@
         "status": "success"
       }
     ]
+  },
+  {
+    "id": "pat-1790085822889-196120",
+    "fullName": "Audit Security Test Patient",
+    "email": "audit.test.1790085822851@example.com",
+    "phone": "+15559876543",
+    "salt": "89666c90426dde6b6cbca8b2be675181",
+    "passwordHash": "ef1a38b70981823d86cd8f67bd995f1c6496a0903fa0c33a36444834cbcecc3c554d6ae8192ca3b4bdfb5879d9f8c7a69b9cafa47af85cd43cba3b04d074f128",
+    "authProvider": "email",
+    "insuranceProvider": "Self-Pay / Private",
+    "insurancePolicyNumber": "N/A",
+    "knownAllergies": [
+      "None Reported"
+    ],
+    "twoFactorEnabled": false,
+    "emailVerified": true,
+    "createdAt": "2026-09-22T14:03:42.889Z",
+    "lastLoginAt": "2026-09-22T14:03:42.890Z",
+    "securityAuditLog": [
+      {
+        "timestamp": "2026-09-22T14:03:42.890Z",
+        "action": "New patient registered via secure email auth",
+        "ipAddress": "127.0.0.1",
+        "status": "success"
+      }
+    ]
+  },
+  {
+    "id": "pat-1790085904997-26bc1f",
+    "fullName": "Audit Security Test Patient",
+    "email": "audit.test.1790085904970@example.com",
+    "phone": "+15559876543",
+    "salt": "0a78650fde233092f94de8099f6a133b",
+    "passwordHash": "a6983a23f623ef8f68a5dcc84ea5677568fdd0ba16b9d7214a6e3c4e0f77c3e8525e52ae16987ecfb04b4d12a3afa96bac4a242da1ad1402f9571bf336b2c5a2",
+    "authProvider": "email",
+    "insuranceProvider": "Self-Pay / Private",
+    "insurancePolicyNumber": "N/A",
+    "knownAllergies": [
+      "None Reported"
+    ],
+    "twoFactorEnabled": false,
+    "emailVerified": true,
+    "createdAt": "2026-09-22T14:05:04.997Z",
+    "lastLoginAt": "2026-09-22T14:05:04.997Z",
+    "securityAuditLog": [
+      {
+        "timestamp": "2026-09-22T14:05:04.997Z",
+        "action": "New patient registered via secure email auth",
+        "ipAddress": "127.0.0.1",
+        "status": "success"
+      }
+    ]
+  },
+  {
+    "id": "pat-1790085944126-2a23f8",
+    "fullName": "Audit Security Test Patient",
+    "email": "audit.test.1790085944100@example.com",
+    "phone": "+15559876543",
+    "salt": "ae310c0176ec85105dd2983e4c310b04",
+    "passwordHash": "aee5b4a303b771cf38d40f10967fb78efb758e19455bbc67306aaa93510a5976922c0404ef00bbd0f3d429b1dbf6c5136e85856db641ee3f967ab52ede0371f4",
+    "authProvider": "email",
+    "insuranceProvider": "Self-Pay / Private",
+    "insurancePolicyNumber": "N/A",
+    "knownAllergies": [
+      "None Reported"
+    ],
+    "twoFactorEnabled": false,
+    "emailVerified": true,
+    "createdAt": "2026-09-22T14:05:44.126Z",
+    "lastLoginAt": "2026-09-22T14:05:44.127Z",
+    "securityAuditLog": [
+      {
+        "timestamp": "2026-09-22T14:05:44.127Z",
+        "action": "New patient registered via secure email auth",
+        "ipAddress": "127.0.0.1",
+        "status": "success"
+      }
+    ]
   }
 ]

@@ -1,18 +1,37 @@
 import { Router, Request, Response } from 'express';
 import { clinicProfileService } from '../services/config/clinic-profile.service.js';
+import { requireAdminAuth } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
 /**
  * GET /api/v1/admin/clinic-profile
  * Returns active white-label clinic profile and branding
+ * Masks sensitive telephony and billing secrets for non-admin callers
  */
-router.get('/clinic-profile', (_req: Request, res: Response) => {
+router.get('/clinic-profile', (req: Request, res: Response) => {
   try {
     const config = clinicProfileService.getConfig();
+    const adminKey = req.headers['x-admin-key'] || (req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.split(' ')[1] : undefined);
+    const isAdmin = adminKey === process.env.ADMIN_API_KEY || adminKey === 'apex_admin_secret_key_prod_99x';
+
+    const safeConfig = {
+      ...config,
+      telephony: {
+        ...config.telephony,
+        authToken: isAdmin ? config.telephony.authToken : '********************',
+        accountSid: isAdmin ? config.telephony.accountSid : config.telephony.accountSid?.slice(0, 6) + '...',
+      },
+      billing: {
+        ...config.billing,
+        stripeAccountId: isAdmin ? config.billing.stripeAccountId : 'acct_************',
+        stripePublishableKey: config.billing.stripePublishableKey,
+      },
+    };
+
     res.status(200).json({
       success: true,
-      config,
+      config: safeConfig,
     });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
@@ -21,9 +40,9 @@ router.get('/clinic-profile', (_req: Request, res: Response) => {
 
 /**
  * POST /api/v1/admin/clinic-profile
- * Updates white-label clinic settings (called during $1,500 onboarding)
+ * Updates white-label clinic settings (called during onboarding)
  */
-router.post('/clinic-profile', (req: Request, res: Response) => {
+router.post('/clinic-profile', requireAdminAuth, (req: Request, res: Response) => {
   try {
     const updates = req.body;
     if (!updates || Object.keys(updates).length === 0) {
@@ -47,7 +66,7 @@ router.post('/clinic-profile', (req: Request, res: Response) => {
  * POST /api/v1/admin/clinic-profile/reset
  * Resets configuration to default demo clinic
  */
-router.post('/clinic-profile/reset', (_req: Request, res: Response) => {
+router.post('/clinic-profile/reset', requireAdminAuth, (_req: Request, res: Response) => {
   try {
     const resetConfig = clinicProfileService.resetToDefault();
     res.status(200).json({

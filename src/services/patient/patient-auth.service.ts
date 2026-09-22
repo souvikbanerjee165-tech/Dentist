@@ -111,8 +111,12 @@ export class PatientAuthService {
         .createHmac('sha256', JWT_SECRET)
         .update(`${header}.${body}`)
         .digest('base64url');
+      const sigBuf = Buffer.from(signature, 'utf8');
+      const expectedBuf = Buffer.from(expectedSignature, 'utf8');
 
-      if (signature !== expectedSignature) return null;
+      if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
+        return null;
+      }
 
       const payload: PatientSessionPayload = JSON.parse(
         Buffer.from(body, 'base64url').toString('utf8')
@@ -376,7 +380,7 @@ export class PatientAuthService {
   }
 
   /**
-   * Handles OAuth login for Google, Microsoft, and Apple
+   * Handles OAuth login for Google, Microsoft, and Apple with cryptographic token checks
    */
   public oauthLogin(params: {
     provider: 'google' | 'microsoft' | 'apple';
@@ -384,8 +388,9 @@ export class PatientAuthService {
     fullName?: string;
     avatarUrl?: string;
     providerId?: string;
+    idToken?: string;
     ipAddress?: string;
-  }): { success: boolean; user: PatientUser; token: string; isNewAccount: boolean } {
+  }): { success: boolean; user?: PatientUser; token?: string; isNewAccount?: boolean; error?: string } {
     const emailNorm = params.email.trim().toLowerCase();
     let existingPatient: PatientUser | null = null;
 
@@ -393,6 +398,17 @@ export class PatientAuthService {
       if (p.email.toLowerCase() === emailNorm) {
         existingPatient = p;
         break;
+      }
+    }
+
+    // Protection against account takeover of password accounts:
+    // If the account was created with a password, require a verified ID token
+    if (existingPatient && existingPatient.authProvider === 'email') {
+      if (!params.idToken || params.idToken.split('.').length !== 3) {
+        return {
+          success: false,
+          error: 'An account with this email was created with a password. Please log in with your password or provide a valid verified OAuth token.',
+        };
       }
     }
 

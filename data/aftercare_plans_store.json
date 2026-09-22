@@ -199,5 +199,82 @@
       }
     ],
     "status": "escalated_to_doctor"
+  },
+  {
+    "planId": "plan-1790085822890",
+    "patientId": "pat-audit-emergency-01",
+    "patientName": "Valued Patient",
+    "treatmentName": "General Dental Procedure",
+    "procedureDateIso": "2026-09-22T14:03:42.890Z",
+    "attendingDoctor": "Dr. Sarah Jensen, DDS",
+    "milestones": [
+      {
+        "dayNumber": 1,
+        "title": "Day 1: Rest & Ice",
+        "instructions": [
+          "Avoid hard chewing",
+          "Use ice compress as needed"
+        ],
+        "dietRecommendation": "Soft foods",
+        "warningSigns": [
+          "Severe unmanageable pain"
+        ],
+        "isCompleted": true
+      },
+      {
+        "dayNumber": 2,
+        "title": "Day 2: Saltwater Rinse",
+        "instructions": [
+          "Gentle rinse with warm salt water"
+        ],
+        "dietRecommendation": "Soft warm foods",
+        "warningSigns": [
+          "Heavy bleeding"
+        ],
+        "isCompleted": true
+      }
+    ],
+    "logs": [
+      {
+        "id": "log-1790085822890",
+        "patientId": "pat-audit-emergency-01",
+        "dayNumber": 2,
+        "timestampIso": "2026-09-22T14:03:42.890Z",
+        "painScale": 9,
+        "bleedingLevel": "heavy",
+        "swellingLevel": "moderate",
+        "tookPrescribedMedication": true,
+        "notes": "Severe throbbing pain not subsiding with ibuprofen.",
+        "isEmergencyEscalation": true,
+        "escalationReason": "High pain level reported (9/10) requiring urgent clinical triage."
+      },
+      {
+        "id": "log-1790085904998",
+        "patientId": "pat-audit-emergency-01",
+        "dayNumber": 2,
+        "timestampIso": "2026-09-22T14:05:04.998Z",
+        "painScale": 9,
+        "bleedingLevel": "heavy",
+        "swellingLevel": "moderate",
+        "tookPrescribedMedication": true,
+        "notes": "Severe throbbing pain not subsiding with ibuprofen.",
+        "isEmergencyEscalation": true,
+        "escalationReason": "High pain level reported (9/10) requiring urgent clinical triage."
+      },
+      {
+        "id": "log-1790085944128",
+        "patientId": "pat-audit-emergency-01",
+        "dayNumber": 2,
+        "timestampIso": "2026-09-22T14:05:44.128Z",
+        "painScale": 9,
+        "bleedingLevel": "heavy",
+        "swellingLevel": "moderate",
+        "tookPrescribedMedication": true,
+        "notes": "Severe throbbing pain not subsiding with ibuprofen.",
+        "isEmergencyEscalation": true,
+        "escalationReason": "High pain level reported (9/10) requiring urgent clinical triage."
+      }
+    ],
+    "status": "escalated_to_doctor"
   }
 ]

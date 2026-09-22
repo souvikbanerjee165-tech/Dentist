@@ -43,7 +43,32 @@ export class AIConversationService {
       turnResult.knowledge_sources_used = knowledgeSources;
     }
 
-    return turnResult;
+    // 3. Clinical Safety Boundary Verification & Sanitization
+    return this.sanitizeClinicalBoundaries(turnResult);
+  }
+
+  /**
+   * Enforces strict regulatory and clinical boundaries on AI generated outputs.
+   * Intercepts unauthorized drug prescribing/dosages and appends mandatory clinical disclaimer.
+   */
+  private sanitizeClinicalBoundaries(turnResult: AIConversationTurnResponse): AIConversationTurnResponse {
+    const rxPrescriptionRegex = /\b(take|prescribe|administer|dose|dosage)\s+(\d+\s*(?:mg|ml|mcg|tablets?|capsules?))\s+(?:of\s+)?(amoxicillin|metronidazole|erythromycin|azithromycin|codeine|tramadol|oxycodone|hydrocodone|clindamycin)\b/gi;
+    const definitiveDiagRegex = /\b(you definitely have|my diagnosis is|diagnosed with)\s+(irreversible pulpitis|periodontitis|abscess|cellulitis|periapical lesion|osteomyelitis)\b/gi;
+
+    let reply = turnResult.reply;
+
+    if (rxPrescriptionRegex.test(reply) || definitiveDiagRegex.test(reply)) {
+      reply = reply.replace(rxPrescriptionRegex, 'consult Dr. Jensen for an in-clinic evaluation and appropriate prescription');
+      reply = reply.replace(definitiveDiagRegex, 'you may be exhibiting symptoms suggestive of $2, which requires clinical evaluation');
+      if (!reply.includes('clinical disclaimer') && !reply.includes('cannot diagnose')) {
+        reply += '\n\n*(Clinical Note: As an automated AI assistant, I cannot diagnose medical conditions or prescribe pharmaceuticals. A formal diagnosis and prescription require examination by a licensed dentist.)*';
+      }
+    }
+
+    return {
+      ...turnResult,
+      reply,
+    };
   }
 }
 

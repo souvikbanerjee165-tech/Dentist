@@ -3,6 +3,7 @@ import { digitalIntakeService } from '../services/clinical/digital-intake.servic
 import { aftercareTrackerService } from '../services/clinical/aftercare-tracker.service.js';
 import { dentalMediaService } from '../services/clinical/dental-media.service.js';
 import { patientRecordsService } from '../services/patient/patient-records.service.js';
+import { requirePatientOwnerOrStaff, requireStaffOrDoctorAuth } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
@@ -10,7 +11,7 @@ const router = Router();
  * POST /api/v1/clinical/intake/submit
  * Saves patient digital medical history & legal e-signature
  */
-router.post('/intake/submit', (req: Request, res: Response) => {
+router.post('/intake/submit', requirePatientOwnerOrStaff, (req: Request, res: Response) => {
   try {
     const {
       patientId,
@@ -68,7 +69,7 @@ router.post('/intake/submit', (req: Request, res: Response) => {
  * GET /api/v1/clinical/intake/:patientId
  * Fetches digital intake & screening status
  */
-router.get('/intake/:patientId', (req: Request, res: Response) => {
+router.get('/intake/:patientId', requirePatientOwnerOrStaff, (req: Request, res: Response) => {
   const patientId = String(req.params.patientId);
   const intake = digitalIntakeService.getIntakeByPatientId(patientId);
   const sedation = digitalIntakeService.getSedationScreening(patientId);
@@ -122,7 +123,7 @@ router.post('/checkin/arrive', (req: Request, res: Response) => {
  * GET /api/v1/clinical/aftercare/:patientId
  * Retrieves procedure aftercare regimen & symptom log history
  */
-router.get('/aftercare/:patientId', (req: Request, res: Response) => {
+router.get('/aftercare/:patientId', requirePatientOwnerOrStaff, (req: Request, res: Response) => {
   const patientId = String(req.params.patientId);
   const plan = aftercareTrackerService.getPlanByPatientId(patientId);
 
@@ -136,7 +137,7 @@ router.get('/aftercare/:patientId', (req: Request, res: Response) => {
  * POST /api/v1/clinical/aftercare/log
  * Logs daily patient recovery metrics; triggers staff alert if pain >= 7
  */
-router.post('/aftercare/log', (req: Request, res: Response) => {
+router.post('/aftercare/log', requirePatientOwnerOrStaff, (req: Request, res: Response) => {
   try {
     const { patientId, dayNumber, painScale, bleedingLevel, swellingLevel, tookPrescribedMedication, notes } = req.body;
 
@@ -171,7 +172,7 @@ router.post('/aftercare/log', (req: Request, res: Response) => {
  * GET /api/v1/clinical/media/:patientId
  * Retrieves X-rays, 3D scans, and before/after comparisons
  */
-router.get('/media/:patientId', (req: Request, res: Response) => {
+router.get('/media/:patientId', requirePatientOwnerOrStaff, (req: Request, res: Response) => {
   const patientId = String(req.params.patientId);
   const media = dentalMediaService.getMediaForPatient(patientId);
 
@@ -186,11 +187,25 @@ router.get('/media/:patientId', (req: Request, res: Response) => {
  * GET /api/v1/clinical/alerts
  * Doctor CRM: Returns real-time critical aftercare alerts
  */
-router.get('/alerts', (_req: Request, res: Response) => {
+router.get('/alerts', requireStaffOrDoctorAuth, (_req: Request, res: Response) => {
   const alerts = aftercareTrackerService.getCriticalAlerts();
   res.status(200).json({
     success: true,
     alerts,
+  });
+});
+
+/**
+ * POST /api/v1/clinical/alerts/:alertId/acknowledge
+ * Doctor acknowledges urgent clinical aftercare alert
+ */
+router.post('/alerts/:alertId/acknowledge', requireStaffOrDoctorAuth, (req: Request, res: Response) => {
+  const alertId = String(req.params.alertId);
+  const doctorName = req.staff?.name || 'Attending Clinician';
+  const ok = aftercareTrackerService.acknowledgeAlert(alertId, doctorName);
+  res.status(ok ? 200 : 404).json({
+    success: ok,
+    message: ok ? `Alert ${alertId} acknowledged by ${doctorName}.` : 'Alert not found.',
   });
 });
 

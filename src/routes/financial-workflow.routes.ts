@@ -2,14 +2,16 @@ import { Router, Request, Response } from 'express';
 import { insuranceRteService } from '../services/billing/insurance-rte.service.js';
 import { treatmentPlanService } from '../services/billing/treatment-plan.service.js';
 import { copayPaymentService } from '../services/billing/copay-payment.service.js';
+import { requirePatientOwnerOrStaff } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
 /**
  * POST /api/v1/financial/insurance/scan-ocr
  * Ingests insurance card images and returns parsed Payer & Member data
+ * Protected: Patient owner or staff auth required
  */
-router.post('/insurance/scan-ocr', async (req: Request, res: Response) => {
+router.post('/insurance/scan-ocr', requirePatientOwnerOrStaff, async (req: Request, res: Response) => {
   try {
     const { frontImageBase64, backImageBase64, patientId, patientFullName } = req.body;
 
@@ -32,8 +34,9 @@ router.post('/insurance/scan-ocr', async (req: Request, res: Response) => {
 /**
  * POST /api/v1/financial/insurance/rte-verify
  * Executes 270/271 Real-Time Eligibility clearinghouse verification
+ * Protected: Patient owner or staff auth required
  */
-router.post('/insurance/rte-verify', async (req: Request, res: Response) => {
+router.post('/insurance/rte-verify', requirePatientOwnerOrStaff, async (req: Request, res: Response) => {
   try {
     const { patientId, card } = req.body;
 
@@ -59,7 +62,7 @@ router.post('/insurance/rte-verify', async (req: Request, res: Response) => {
  * GET /api/v1/financial/insurance/:patientId
  * Fetches verified insurance card & RTE report for patient
  */
-router.get('/insurance/:patientId', (req: Request, res: Response) => {
+router.get('/insurance/:patientId', requirePatientOwnerOrStaff, (req: Request, res: Response) => {
   const patientId = String(req.params.patientId);
   const data = insuranceRteService.getPatientInsurance(patientId);
 
@@ -73,7 +76,7 @@ router.get('/insurance/:patientId', (req: Request, res: Response) => {
  * GET /api/v1/financial/treatment-plan/:patientId
  * Retrieves phased treatment proposal with insurance coverage & patient responsibility
  */
-router.get('/treatment-plan/:patientId', (req: Request, res: Response) => {
+router.get('/treatment-plan/:patientId', requirePatientOwnerOrStaff, (req: Request, res: Response) => {
   const patientId = String(req.params.patientId);
   const plan = treatmentPlanService.getPlanByPatientId(patientId);
 
@@ -87,7 +90,7 @@ router.get('/treatment-plan/:patientId', (req: Request, res: Response) => {
  * POST /api/v1/financial/treatment-plan/accept
  * Patient digitally accepts specific phases of their treatment plan
  */
-router.post('/treatment-plan/accept', (req: Request, res: Response) => {
+router.post('/treatment-plan/accept', requirePatientOwnerOrStaff, (req: Request, res: Response) => {
   try {
     const { patientId, phaseNumbers, signedName } = req.body;
 
@@ -137,7 +140,7 @@ router.get('/bnpl/calculate', (req: Request, res: Response) => {
  * POST /api/v1/financial/copay/authorize
  * Pre-authorizes copay on card-on-file for 1-click check-out
  */
-router.post('/copay/authorize', (req: Request, res: Response) => {
+router.post('/copay/authorize', requirePatientOwnerOrStaff, (req: Request, res: Response) => {
   try {
     const { patientId, treatmentName, amount, cardId } = req.body;
 
@@ -166,7 +169,7 @@ router.post('/copay/authorize', (req: Request, res: Response) => {
  * GET /api/v1/financial/copay/cards/:patientId
  * Lists saved cards on file for patient
  */
-router.get('/copay/cards/:patientId', (req: Request, res: Response) => {
+router.get('/copay/cards/:patientId', requirePatientOwnerOrStaff, (req: Request, res: Response) => {
   const patientId = String(req.params.patientId);
   const cards = copayPaymentService.getCardsForPatient(patientId);
 

@@ -41,19 +41,26 @@ export interface ActiveAftercarePlan {
 const DATA_DIR = path.resolve(process.cwd(), 'data');
 const AFTERCARE_STORE_FILE = path.join(DATA_DIR, 'aftercare_plans_store.json');
 
+export interface ClinicalTriageAlert {
+  alertId: string;
+  patientId: string;
+  patientName: string;
+  treatment: string;
+  painScale: number;
+  bleeding: string;
+  timestampIso: string;
+  status: 'pending_doctor_ack' | 'acknowledged' | 'escalated_to_secondary_oncall';
+  acknowledgedByDoctor: boolean;
+  acknowledgedBy?: string;
+  acknowledgedAtIso?: string;
+  timeoutMinutes: number;
+  secondaryEscalationAtIso?: string;
+}
+
 export class AftercareTrackerService {
   private static instance: AftercareTrackerService;
   private plansMap: Map<string, ActiveAftercarePlan> = new Map();
-  private criticalAlerts: Array<{
-    alertId: string;
-    patientId: string;
-    patientName: string;
-    treatment: string;
-    painScale: number;
-    bleeding: string;
-    timestampIso: string;
-    acknowledgedByDoctor: boolean;
-  }> = [];
+  private criticalAlerts: ClinicalTriageAlert[] = [];
 
   private constructor() {
     this.ensureDataDir();
@@ -248,7 +255,7 @@ export class AftercareTrackerService {
 
     if (isEmergency) {
       plan.status = 'escalated_to_doctor';
-      const alert = {
+      const alert: ClinicalTriageAlert = {
         alertId: `alert-${Date.now()}`,
         patientId: params.patientId,
         patientName: plan.patientName,
@@ -256,7 +263,9 @@ export class AftercareTrackerService {
         painScale: params.painScale,
         bleeding: params.bleedingLevel,
         timestampIso: new Date().toISOString(),
+        status: 'pending_doctor_ack',
         acknowledgedByDoctor: false,
+        timeoutMinutes: 15,
       };
       this.criticalAlerts.unshift(alert);
 
@@ -276,14 +285,41 @@ export class AftercareTrackerService {
     };
   }
 
-  public getCriticalAlerts(): typeof this.criticalAlerts {
+  /**
+   * Checks and updates alerts that exceeded acknowledgment timeout
+   */
+  public checkEscalationTimeouts(): number {
+    const now = Date.now();
+    let escalatedCount = 0;
+    for (const alert of this.criticalAlerts) {
+      if (!alert.acknowledgedByDoctor && alert.status === 'pending_doctor_ack') {
+        const createdTime = new Date(alert.timestampIso).getTime();
+        const elapsedMinutes = (now - createdTime) / (60 * 1000);
+        if (elapsedMinutes >= alert.timeoutMinutes) {
+          alert.status = 'escalated_to_secondary_oncall';
+          alert.secondaryEscalationAtIso = new Date().toISOString();
+          escalatedCount++;
+          console.warn(
+            `🚨 [ESCALATION TIMEOUT] Alert ${alert.alertId} for ${alert.patientName} unacknowledged after ${alert.timeoutMinutes}m! Escalating to Secondary On-Call Surgeon.`
+          );
+        }
+      }
+    }
+    return escalatedCount;
+  }
+
+  public getCriticalAlerts(): ClinicalTriageAlert[] {
+    this.checkEscalationTimeouts();
     return this.criticalAlerts;
   }
 
-  public acknowledgeAlert(alertId: string): boolean {
+  public acknowledgeAlert(alertId: string, doctorName?: string): boolean {
     const alert = this.criticalAlerts.find((a) => a.alertId === alertId);
     if (alert) {
       alert.acknowledgedByDoctor = true;
+      alert.status = 'acknowledged';
+      alert.acknowledgedBy = doctorName || 'Dr. Sarah Jensen, DDS';
+      alert.acknowledgedAtIso = new Date().toISOString();
       return true;
     }
     return false;

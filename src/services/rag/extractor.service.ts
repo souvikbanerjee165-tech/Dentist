@@ -1,5 +1,6 @@
 import mammoth from 'mammoth';
 import * as cheerio from 'cheerio';
+import { SsrfGuard } from '../../utils/ssrf.guard.js';
 
 export class DocumentExtractorService {
   /**
@@ -43,9 +44,13 @@ export class DocumentExtractorService {
 
   /**
    * Scrapes clean readable text and page title from a website URL
+   * Hardened against SSRF attacks targeting cloud metadata and private networks
    */
   static async extractFromUrl(url: string): Promise<{ title: string; text: string }> {
     try {
+      // 1. SSRF Validation Guard
+      await SsrfGuard.validateUrl(url);
+
       const response = await fetch(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',

@@ -1,14 +1,17 @@
 import { Router, Request, Response } from 'express';
 import { pmsCsvImporterService } from '../services/pms/pms-csv-importer.service.js';
 import { openDentalAdapterService } from '../services/pms/opendental-adapter.service.js';
+import { requireStaffOrDoctorAuth, requireAdminAuth, preventWebhookReplay } from '../middleware/auth.middleware.js';
+import { SsrfGuard } from '../utils/ssrf.guard.js';
 
 const router = Router();
 
 /**
  * POST /api/v1/pms/import-schedule-csv
  * Ingests CSV export from Dentrix, Eaglesoft, or generic schedule
+ * Protected: Staff/Doctor auth required
  */
-router.post('/import-schedule-csv', (req: Request, res: Response) => {
+router.post('/import-schedule-csv', requireStaffOrDoctorAuth, (req: Request, res: Response) => {
   try {
     const csvContent = typeof req.body === 'string' ? req.body : req.body?.csvContent;
 
@@ -40,10 +43,17 @@ router.post('/import-schedule-csv', (req: Request, res: Response) => {
 /**
  * POST /api/v1/pms/opendental/test-connection
  * Tests authentication & reachability of Open Dental Direct API
+ * Protected: Admin auth required, apiBaseUrl validated against SSRF
  */
-router.post('/opendental/test-connection', async (req: Request, res: Response) => {
+router.post('/opendental/test-connection', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const { apiBaseUrl, customerApiKey, practiceTitle } = req.body || {};
+
+    // SSRF Validation for custom Open Dental endpoints
+    if (apiBaseUrl) {
+      await SsrfGuard.validateUrl(apiBaseUrl);
+    }
+
     const result = await openDentalAdapterService.testConnection({
       apiBaseUrl,
       customerApiKey,
@@ -55,15 +65,16 @@ router.post('/opendental/test-connection', async (req: Request, res: Response) =
       ...result,
     });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(400).json({ success: false, error: 'ConnectionError', message: err.message });
   }
 });
 
 /**
  * POST /api/v1/pms/opendental/sync
  * Syncs appointments for specified date from Open Dental
+ * Protected: Staff/Doctor auth required
  */
-router.post('/opendental/sync', async (req: Request, res: Response) => {
+router.post('/opendental/sync', requireStaffOrDoctorAuth, async (req: Request, res: Response) => {
   try {
     const dateStr = req.body?.dateStr || new Date().toISOString().split('T')[0];
     const syncResult = await openDentalAdapterService.syncAppointments(dateStr);
@@ -82,8 +93,9 @@ router.post('/opendental/sync', async (req: Request, res: Response) => {
 /**
  * POST /api/v1/pms/syncwave-webhook
  * Webhook receiver for dental aggregators (SyncWave / NexHealth Synchronizer)
+ * Protected with replay prevention
  */
-router.post('/syncwave-webhook', (req: Request, res: Response) => {
+router.post('/syncwave-webhook', preventWebhookReplay, (req: Request, res: Response) => {
   try {
     const event = req.body;
     console.log(`🔌 [PMS AGGREGATOR WEBHOOK] Received SyncWave event: ${event?.eventType || 'appointment.updated'}`);
