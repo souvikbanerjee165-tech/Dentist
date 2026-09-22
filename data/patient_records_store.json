@@ -181,6 +181,336 @@
         "Please wear current tray set #12 to the clinic.",
         "Bring tray set #13 and #14 for validation."
       ]
+    },
+    "pat-import-1790084903440-1": {
+      "id": "appt-import-1790084903440-1",
+      "patientId": "pat-import-1790084903440-1",
+      "treatment": "Comprehensive Periodic Exam",
+      "dateStr": "Today (2026-09-22)",
+      "timeStr": "2026-10-01",
+      "startIso": "2026-09-22T10:00:00.000Z",
+      "endIso": "2026-09-22T10:00:00.000Z",
+      "doctorName": "Dr. Sarah Jensen",
+      "doctorRole": "Lead Dentist",
+      "clinicName": "Apex Dental & Aesthetics",
+      "clinicAddress": "450 Lexington Ave, Suite 800, New York",
+      "room": "Operatory 1",
+      "status": "confirmed",
+      "estimatedDuration": "45 Minutes",
+      "feeGbp": 250,
+      "checklist": [
+        {
+          "id": "chk-id-01",
+          "label": "Government-Issued Photo ID",
+          "category": "identity",
+          "description": "Driver’s license, national ID, or passport for identity verification.",
+          "isRequired": true,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-ins-02",
+          "label": "Dental Insurance Card & Policy Info",
+          "category": "insurance",
+          "description": "Physical card or digital policy barcode for direct electronic claims.",
+          "isRequired": true,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-med-03",
+          "label": "Current Medications & Allergy List",
+          "category": "medical",
+          "description": "List of any regular prescriptions, blood thinners, or heart medications.",
+          "isRequired": false,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-gen-04",
+          "label": "Oral Appliance / Retainers for Inspection",
+          "category": "dental_hardware",
+          "description": "Bring mouthguards or retainers for complimentary ultrasonic disinfection.",
+          "isRequired": false,
+          "isCompleted": false
+        }
+      ],
+      "preVisitGuidelines": [
+        "Please complete digital health history and consent prior to arrival.",
+        "Bring dental insurance card or digital policy ID for automatic clearinghouse claims."
+      ]
+    },
+    "pat-import-1790084903440-2": {
+      "id": "appt-import-1790084903440-2",
+      "patientId": "pat-import-1790084903440-2",
+      "treatment": "Crown Preparation #30",
+      "dateStr": "Today (2026-09-22)",
+      "timeStr": "2026-10-01",
+      "startIso": "2026-09-22T10:00:00.000Z",
+      "endIso": "2026-09-22T10:00:00.000Z",
+      "doctorName": "Dr. Sarah Jensen",
+      "doctorRole": "Lead Dentist",
+      "clinicName": "Apex Dental & Aesthetics",
+      "clinicAddress": "450 Lexington Ave, Suite 800, New York",
+      "room": "Operatory 2",
+      "status": "confirmed",
+      "estimatedDuration": "45 Minutes",
+      "feeGbp": 250,
+      "checklist": [
+        {
+          "id": "chk-id-01",
+          "label": "Government-Issued Photo ID",
+          "category": "identity",
+          "description": "Driver’s license, national ID, or passport for identity verification.",
+          "isRequired": true,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-ins-02",
+          "label": "Dental Insurance Card & Policy Info",
+          "category": "insurance",
+          "description": "Physical card or digital policy barcode for direct electronic claims.",
+          "isRequired": true,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-med-03",
+          "label": "Current Medications & Allergy List",
+          "category": "medical",
+          "description": "List of any regular prescriptions, blood thinners, or heart medications.",
+          "isRequired": false,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-gen-04",
+          "label": "Oral Appliance / Retainers for Inspection",
+          "category": "dental_hardware",
+          "description": "Bring mouthguards or retainers for complimentary ultrasonic disinfection.",
+          "isRequired": false,
+          "isCompleted": false
+        }
+      ],
+      "preVisitGuidelines": [
+        "Please complete digital health history and consent prior to arrival.",
+        "Bring dental insurance card or digital policy ID for automatic clearinghouse claims."
+      ]
+    },
+    "pat-import-1790084903441-1": {
+      "id": "appt-import-1790084903441-1",
+      "patientId": "pat-import-1790084903441-1",
+      "treatment": "Laser Periodontal Scaling",
+      "dateStr": "Today (2026-09-22)",
+      "timeStr": "10/01/2026",
+      "startIso": "2026-09-22T10:00:00.000Z",
+      "endIso": "2026-09-22T10:00:00.000Z",
+      "doctorName": "Dr. Jensen",
+      "doctorRole": "Lead Dentist",
+      "clinicName": "Apex Dental & Aesthetics",
+      "clinicAddress": "450 Lexington Ave, Suite 800, New York",
+      "room": "Chair 3",
+      "status": "confirmed",
+      "estimatedDuration": "45 Minutes",
+      "feeGbp": 250,
+      "checklist": [
+        {
+          "id": "chk-id-01",
+          "label": "Government-Issued Photo ID",
+          "category": "identity",
+          "description": "Driver’s license, national ID, or passport for identity verification.",
+          "isRequired": true,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-ins-02",
+          "label": "Dental Insurance Card & Policy Info",
+          "category": "insurance",
+          "description": "Physical card or digital policy barcode for direct electronic claims.",
+          "isRequired": true,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-med-03",
+          "label": "Current Medications & Allergy List",
+          "category": "medical",
+          "description": "List of any regular prescriptions, blood thinners, or heart medications.",
+          "isRequired": false,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-gen-04",
+          "label": "Oral Appliance / Retainers for Inspection",
+          "category": "dental_hardware",
+          "description": "Bring mouthguards or retainers for complimentary ultrasonic disinfection.",
+          "isRequired": false,
+          "isCompleted": false
+        }
+      ],
+      "preVisitGuidelines": [
+        "Please complete digital health history and consent prior to arrival.",
+        "Bring dental insurance card or digital policy ID for automatic clearinghouse claims."
+      ]
+    },
+    "pat-import-1790084912019-1": {
+      "id": "appt-import-1790084912019-1",
+      "patientId": "pat-import-1790084912019-1",
+      "treatment": "Comprehensive Periodic Exam",
+      "dateStr": "Today (2026-09-22)",
+      "timeStr": "2026-10-01",
+      "startIso": "2026-09-22T10:00:00.000Z",
+      "endIso": "2026-09-22T10:00:00.000Z",
+      "doctorName": "Dr. Sarah Jensen",
+      "doctorRole": "Lead Dentist",
+      "clinicName": "Apex Dental & Aesthetics",
+      "clinicAddress": "450 Lexington Ave, Suite 800, New York",
+      "room": "Operatory 1",
+      "status": "confirmed",
+      "estimatedDuration": "45 Minutes",
+      "feeGbp": 250,
+      "checklist": [
+        {
+          "id": "chk-id-01",
+          "label": "Government-Issued Photo ID",
+          "category": "identity",
+          "description": "Driver’s license, national ID, or passport for identity verification.",
+          "isRequired": true,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-ins-02",
+          "label": "Dental Insurance Card & Policy Info",
+          "category": "insurance",
+          "description": "Physical card or digital policy barcode for direct electronic claims.",
+          "isRequired": true,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-med-03",
+          "label": "Current Medications & Allergy List",
+          "category": "medical",
+          "description": "List of any regular prescriptions, blood thinners, or heart medications.",
+          "isRequired": false,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-gen-04",
+          "label": "Oral Appliance / Retainers for Inspection",
+          "category": "dental_hardware",
+          "description": "Bring mouthguards or retainers for complimentary ultrasonic disinfection.",
+          "isRequired": false,
+          "isCompleted": false
+        }
+      ],
+      "preVisitGuidelines": [
+        "Please complete digital health history and consent prior to arrival.",
+        "Bring dental insurance card or digital policy ID for automatic clearinghouse claims."
+      ]
+    },
+    "pat-import-1790084912019-2": {
+      "id": "appt-import-1790084912019-2",
+      "patientId": "pat-import-1790084912019-2",
+      "treatment": "Crown Preparation #30",
+      "dateStr": "Today (2026-09-22)",
+      "timeStr": "2026-10-01",
+      "startIso": "2026-09-22T10:00:00.000Z",
+      "endIso": "2026-09-22T10:00:00.000Z",
+      "doctorName": "Dr. Sarah Jensen",
+      "doctorRole": "Lead Dentist",
+      "clinicName": "Apex Dental & Aesthetics",
+      "clinicAddress": "450 Lexington Ave, Suite 800, New York",
+      "room": "Operatory 2",
+      "status": "confirmed",
+      "estimatedDuration": "45 Minutes",
+      "feeGbp": 250,
+      "checklist": [
+        {
+          "id": "chk-id-01",
+          "label": "Government-Issued Photo ID",
+          "category": "identity",
+          "description": "Driver’s license, national ID, or passport for identity verification.",
+          "isRequired": true,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-ins-02",
+          "label": "Dental Insurance Card & Policy Info",
+          "category": "insurance",
+          "description": "Physical card or digital policy barcode for direct electronic claims.",
+          "isRequired": true,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-med-03",
+          "label": "Current Medications & Allergy List",
+          "category": "medical",
+          "description": "List of any regular prescriptions, blood thinners, or heart medications.",
+          "isRequired": false,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-gen-04",
+          "label": "Oral Appliance / Retainers for Inspection",
+          "category": "dental_hardware",
+          "description": "Bring mouthguards or retainers for complimentary ultrasonic disinfection.",
+          "isRequired": false,
+          "isCompleted": false
+        }
+      ],
+      "preVisitGuidelines": [
+        "Please complete digital health history and consent prior to arrival.",
+        "Bring dental insurance card or digital policy ID for automatic clearinghouse claims."
+      ]
+    },
+    "pat-import-1790084912020-1": {
+      "id": "appt-import-1790084912020-1",
+      "patientId": "pat-import-1790084912020-1",
+      "treatment": "Laser Periodontal Scaling",
+      "dateStr": "Today (2026-09-22)",
+      "timeStr": "10/01/2026",
+      "startIso": "2026-09-22T10:00:00.000Z",
+      "endIso": "2026-09-22T10:00:00.000Z",
+      "doctorName": "Dr. Jensen",
+      "doctorRole": "Lead Dentist",
+      "clinicName": "Apex Dental & Aesthetics",
+      "clinicAddress": "450 Lexington Ave, Suite 800, New York",
+      "room": "Chair 3",
+      "status": "confirmed",
+      "estimatedDuration": "45 Minutes",
+      "feeGbp": 250,
+      "checklist": [
+        {
+          "id": "chk-id-01",
+          "label": "Government-Issued Photo ID",
+          "category": "identity",
+          "description": "Driver’s license, national ID, or passport for identity verification.",
+          "isRequired": true,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-ins-02",
+          "label": "Dental Insurance Card & Policy Info",
+          "category": "insurance",
+          "description": "Physical card or digital policy barcode for direct electronic claims.",
+          "isRequired": true,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-med-03",
+          "label": "Current Medications & Allergy List",
+          "category": "medical",
+          "description": "List of any regular prescriptions, blood thinners, or heart medications.",
+          "isRequired": false,
+          "isCompleted": false
+        },
+        {
+          "id": "chk-gen-04",
+          "label": "Oral Appliance / Retainers for Inspection",
+          "category": "dental_hardware",
+          "description": "Bring mouthguards or retainers for complimentary ultrasonic disinfection.",
+          "isRequired": false,
+          "isCompleted": false
+        }
+      ],
+      "preVisitGuidelines": [
+        "Please complete digital health history and consent prior to arrival.",
+        "Bring dental insurance card or digital policy ID for automatic clearinghouse claims."
+      ]
     }
   },
   "history": {

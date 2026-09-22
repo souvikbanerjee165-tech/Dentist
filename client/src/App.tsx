@@ -20,6 +20,9 @@ import { KnowledgeBasePage } from './pages/KnowledgeBasePage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { SecurityCenterPage } from './pages/SecurityCenterPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { SuperAdminSetupPage } from './pages/SuperAdminSetupPage';
+import { PmsScheduleImporterModal } from './components/admin/PmsScheduleImporterModal';
+import { BaaAgreementModal } from './components/compliance/BaaAgreementModal';
 import { OnboardingWizardModal } from './components/onboarding/OnboardingWizardModal';
 import { ExecutiveDailyBriefingModal } from './components/dashboard/ExecutiveDailyBriefingModal';
 import { FloatingGeminiChat } from './components/chat/FloatingGeminiChat';
@@ -34,10 +37,12 @@ import {
   initialFAQs,
   initialBusinessProfile
 } from './data/mockData';
-import { Bell, CheckCircle2, Globe, LayoutDashboard } from 'lucide-react';
+import { Bell, CheckCircle2, Globe, LayoutDashboard, Sliders, ShieldCheck, Database } from 'lucide-react';
 
 export const AppContent: React.FC = () => {
-  const [currentView, setCurrentView] = useState<'landing' | 'booking' | 'patient-portal' | 'signup' | 'admin' | 'patient-dashboard'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'booking' | 'patient-portal' | 'signup' | 'admin' | 'patient-dashboard' | 'admin-setup'>('landing');
+  const [isPmsImporterOpen, setIsPmsImporterOpen] = useState(false);
+  const [isBaaModalOpen, setIsBaaModalOpen] = useState(false);
   const [selectedInitialService, setSelectedInitialService] = useState<string>('Cosmetic Laser Teeth Whitening ($350)');
   const [currentBooking, setCurrentBooking] = useState<BookingDetails | null>({
     customerName: 'Sophia Martinez',
@@ -269,8 +274,8 @@ export const AppContent: React.FC = () => {
       {currentView === 'admin' && (
         <div className="min-h-screen flex flex-col">
           
-          {/* Top Return to Patient Website Banner */}
-          <div className="bg-gradient-to-r from-blue-900/90 via-indigo-950/90 to-slate-950 px-6 py-2 border-b border-blue-500/20 text-xs flex items-center justify-between text-blue-200">
+          {/* Top Return to Patient Website & Operational Toolbar */}
+          <div className="bg-gradient-to-r from-blue-900/90 via-indigo-950/90 to-slate-950 px-6 py-2 border-b border-blue-500/20 text-xs flex flex-wrap items-center justify-between gap-2 text-blue-200">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="font-semibold text-white">
@@ -278,13 +283,45 @@ export const AppContent: React.FC = () => {
               </span>
             </div>
 
-            <button
-              onClick={() => setCurrentView('landing')}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-600/80 hover:bg-blue-600 font-semibold text-white transition-all shadow-sm active:scale-95"
-            >
-              <Globe className="w-3.5 h-3.5" />
-              <span>View Public Clinic Website</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setCurrentView('admin-setup')}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-600/60 hover:bg-indigo-600 font-semibold text-white transition-all shadow-sm active:scale-95 border border-indigo-400/30"
+                title="White-Label Clinic Onboarding Console ($1,500 Setup + $399/mo)"
+              >
+                <Sliders className="w-3.5 h-3.5 text-indigo-200" />
+                <span>White-Label Onboarding</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsPmsImporterOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-cyan-600/60 hover:bg-cyan-600 font-semibold text-white transition-all shadow-sm active:scale-95 border border-cyan-400/30"
+                title="Universal CSV Batch Schedule Importer (Dentrix / Eaglesoft / Open Dental)"
+              >
+                <Database className="w-3.5 h-3.5 text-cyan-200" />
+                <span>Import PMS Schedule</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsBaaModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-600/60 hover:bg-emerald-600 font-semibold text-white transition-all shadow-sm active:scale-95 border border-emerald-400/30"
+                title="HIPAA Business Associate Agreement & Compliance Audit Log"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-200" />
+                <span>HIPAA BAA & Audit</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentView('landing')}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-600/80 hover:bg-blue-600 font-semibold text-white transition-all shadow-sm active:scale-95"
+              >
+                <Globe className="w-3.5 h-3.5" />
+                <span>Public Website</span>
+              </button>
+            </div>
           </div>
 
           {/* Top Enterprise Navbar */}
@@ -398,6 +435,24 @@ export const AppContent: React.FC = () => {
         </div>
       )}
 
+      {/* 7. Super Admin White-Label Clinic Onboarding Console ($1,500 Setup + $399/mo) */}
+      {currentView === 'admin-setup' && (
+        <SuperAdminSetupPage
+          onNavigateBack={() => setCurrentView('admin')}
+          onProfileUpdated={(p) => {
+            if (p?.clinicName) {
+              setBusinessProfile(prev => ({
+                ...prev,
+                name: p.clinicName,
+                ownerNotificationPhone: p.phone || prev.ownerNotificationPhone,
+                ownerNotificationEmail: p.email || prev.ownerNotificationEmail,
+              }));
+            }
+            showToast('Clinic Profile Synchronized', 'White-label customizations live across patient portal and engine.', 'success');
+          }}
+        />
+      )}
+
       {/* Floating 24/7 AI Receptionist Chat Widget */}
       <FloatingGeminiChat
         businessName={businessProfile.name}
@@ -446,6 +501,21 @@ export const AppContent: React.FC = () => {
         isOpen={isPatientAuthModalOpen}
         onClose={() => setIsPatientAuthModalOpen(false)}
         onAuthSuccess={handlePatientAuthSuccess}
+      />
+
+      {/* Universal PMS Schedule CSV Batch Importer Modal */}
+      <PmsScheduleImporterModal
+        isOpen={isPmsImporterOpen}
+        onClose={() => setIsPmsImporterOpen(false)}
+        onImportComplete={(res) => {
+          showToast('PMS Schedule Ingested', `Imported ${res.importedAppointments} appointments and notified patients.`, 'success');
+        }}
+      />
+
+      {/* HIPAA Business Associate Agreement & Compliance Modal */}
+      <BaaAgreementModal
+        isOpen={isBaaModalOpen}
+        onClose={() => setIsBaaModalOpen(false)}
       />
 
     </div>

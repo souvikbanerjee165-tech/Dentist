@@ -20,13 +20,16 @@ import {
   Zap,
   CheckCircle2,
   PhoneCall,
-  AlertTriangle
+  AlertTriangle,
+  Volume2,
+  BellRing
 } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { Conversation, Lead, NavigationTab } from '../types';
 import { ConversationsPage } from './ConversationsPage';
 import { LeadsPage } from './LeadsPage';
+import { notificationSoundService } from '../services/notification-sound.service';
 
 interface PatientsPageProps {
   conversations: Conversation[];
@@ -130,6 +133,15 @@ export const PatientsPage: React.FC<PatientsPageProps> = ({
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => notificationSoundService.playEmergencyTriageAlarm()}
+                className="px-3 py-1.5 rounded-xl bg-rose-800 hover:bg-rose-700 text-rose-100 font-medium text-xs flex items-center gap-1.5 transition-colors"
+                title="Audible Triage Siren"
+              >
+                <Volume2 className="w-3.5 h-3.5 text-rose-300" />
+                <span>Test Alarm</span>
+              </button>
               <a
                 href={`tel:${criticalAlerts[0]?.patientPhone || '+15559876543'}`}
                 className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md"
@@ -160,9 +172,23 @@ export const PatientsPage: React.FC<PatientsPageProps> = ({
               </p>
             </div>
           </div>
-          <Badge variant="success" className="shrink-0 text-[10px]">
-            Checked In
-          </Badge>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                notificationSoundService.playCurbsideArrivalChime();
+                notificationSoundService.sendCurbsideArrivalNotification('Sophia Martinez', 'Spot #3');
+              }}
+              className="px-2.5 py-1 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 text-[11px] font-medium flex items-center gap-1 transition-colors"
+              title="Test Curbside Arrival Harmonic Chime"
+            >
+              <Volume2 className="w-3 h-3" />
+              <span>Chime</span>
+            </button>
+            <Badge variant="success" className="text-[10px]">
+              Checked In
+            </Badge>
+          </div>
         </div>
 
         {/* Priority Waitlist & Backfill Broadcast Trigger */}

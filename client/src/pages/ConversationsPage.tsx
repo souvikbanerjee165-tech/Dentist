@@ -54,9 +54,12 @@ export const ConversationsPage: React.FC<ConversationsPageProps> = ({
   };
 
   const quickReplies = [
+    '🚗 We see you have arrived! Please take a seat in the lobby, Dr. Jensen will call you in 3 minutes.',
+    '💊 Please take 400mg Ibuprofen and keep ice on the area. The doctor will call you shortly.',
+    '📋 We have resent your pre-visit intake link to your cell phone.',
+    '✅ Your appointment is confirmed. Please arrive 10 minutes early.',
+    '💳 Your insurance eligibility has been verified with Delta Dental PPO (zero co-pay estimate).',
     'Would you prefer Friday 3 PM or Saturday 11 AM?',
-    'Could you share your best email address for the calendar invite?',
-    'I have connected you directly with our clinic director.',
   ];
 
   return (

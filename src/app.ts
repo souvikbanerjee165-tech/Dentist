@@ -28,6 +28,9 @@ import { followupRouter } from './routes/followup.routes.js';
 import clinicalWorkflowRoutes from './routes/clinical-workflow.routes.js';
 import financialWorkflowRoutes from './routes/financial-workflow.routes.js';
 import operationsWorkflowRoutes from './routes/operations-workflow.routes.js';
+import clinicProfileRoutes from './routes/clinic-profile.routes.js';
+import pmsBridgeRoutes from './routes/pms-bridge.routes.js';
+import complianceRoutes from './routes/compliance.routes.js';
 
 export const createApp = (): Express => {
   const app = express();
@@ -81,6 +84,9 @@ export const createApp = (): Express => {
   app.use('/api/v1/clinical', clinicalWorkflowRoutes);
   app.use('/api/v1/financial', financialWorkflowRoutes);
   app.use('/api/v1/operations', operationsWorkflowRoutes);
+  app.use('/api/v1/admin', clinicProfileRoutes);
+  app.use('/api/v1/pms', pmsBridgeRoutes);
+  app.use('/api/v1/compliance', complianceRoutes);
   app.use('/api/v1/knowledge', knowledgeRoutes);
   app.use('/api/v1/calendar', calendarRoutes);
   app.use('/api/v1/crm', crmRoutes);

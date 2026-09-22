@@ -1,0 +1,128 @@
+{
+  "clinicId": "clinic_apex_01",
+  "name": "Apex Dental & Aesthetics",
+  "legalBusinessName": "Apex Dental Partners, LLC",
+  "tagline": "Precision Dentistry & Aesthetics Test Run",
+  "logoUrl": "/images/dentist_doctor.jpg",
+  "faviconUrl": "/favicon.ico",
+  "colors": {
+    "primary": "#2563eb",
+    "secondary": "#0891b2",
+    "accent": "#10b981",
+    "brandDark": "#0b1120"
+  },
+  "contact": {
+    "address": "450 Lexington Ave, Suite 800",
+    "city": "New York",
+    "state": "NY",
+    "zip": "10017",
+    "phone": "+1 (555) 234-5678",
+    "email": "appointments@apexdental.com",
+    "googlePlaceId": "ChIJ4zY1X-BZwokRFmycw8",
+    "googleReviewUrl": "https://g.page/r/apex-dental/review",
+    "emergencyPhone": "+1 (555) 234-9911"
+  },
+  "providers": [
+    {
+      "id": "prov-01",
+      "name": "Dr. Sarah Jensen",
+      "title": "Lead Cosmetic & Restorative Dentist",
+      "credentials": "DDS, FAGD",
+      "photoUrl": "/images/dentist_doctor.jpg",
+      "bio": "Columbia University School of Dental Medicine graduate with 12+ years specializing in aesthetic smile design and pain-free restorative care.",
+      "npiNumber": "1982736450",
+      "active": true
+    },
+    {
+      "id": "prov-02",
+      "name": "Dr. Marcus Vance",
+      "title": "Oral & Maxillofacial Surgeon",
+      "credentials": "DMD, MD",
+      "photoUrl": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&auto=format&fit=crop&q=80",
+      "bio": "Dual-degree surgeon with fellowship training in complex implants, bone grafting, and gentle sedation procedures.",
+      "npiNumber": "1249876531",
+      "active": true
+    }
+  ],
+  "operatories": [
+    {
+      "id": "op-01",
+      "name": "Operatory 1",
+      "roomNumber": "Room 101",
+      "specialty": "Hygiene & Cleanings",
+      "active": true
+    },
+    {
+      "id": "op-02",
+      "name": "Operatory 2",
+      "roomNumber": "Room 102",
+      "specialty": "Restorative & Endodontics",
+      "active": true
+    },
+    {
+      "id": "op-03",
+      "name": "Operatory 3",
+      "roomNumber": "Room 103",
+      "specialty": "Aesthetic Laser & Surgical Suite",
+      "active": true
+    },
+    {
+      "id": "op-04",
+      "name": "Operatory 4",
+      "roomNumber": "Room 104",
+      "specialty": "Emergency & Consultation",
+      "active": true
+    }
+  ],
+  "telephony": {
+    "provider": "telnyx",
+    "accountSid": "KEY0184A918B744_DEMO",
+    "authToken": "c8f041b3d76e4811a221f7e",
+    "fromPhoneNumber": "+18005550199",
+    "messagingProfileId": "msg_prof_4981a"
+  },
+  "billing": {
+    "stripeAccountId": "acct_1NvDentalApexDemo",
+    "stripePublishableKey": "pk_live_51NvDentalDemoKey99",
+    "currency": "USD"
+  },
+  "businessHours": {
+    "monday": {
+      "open": "08:00",
+      "close": "18:00",
+      "isClosed": false
+    },
+    "tuesday": {
+      "open": "08:00",
+      "close": "18:00",
+      "isClosed": false
+    },
+    "wednesday": {
+      "open": "08:00",
+      "close": "18:00",
+      "isClosed": false
+    },
+    "thursday": {
+      "open": "08:00",
+      "close": "19:00",
+      "isClosed": false
+    },
+    "friday": {
+      "open": "08:00",
+      "close": "16:00",
+      "isClosed": false
+    },
+    "saturday": {
+      "open": "09:00",
+      "close": "14:00",
+      "isClosed": false
+    },
+    "sunday": {
+      "open": "00:00",
+      "close": "00:00",
+      "isClosed": true
+    }
+  },
+  "onboardingStatus": "configured",
+  "lastUpdatedIso": "2026-09-22T13:48:32.018Z"
+}

@@ -1,0 +1,78 @@
+[
+  {
+    "id": "aud-1790084912021-518",
+    "timestampIso": "2026-09-22T13:48:32.020Z",
+    "action": "PATIENT_INTAKE_SUBMITTED",
+    "actorId": "pat-sophia-01",
+    "actorRole": "patient",
+    "patientId": "pat-sophia-01",
+    "patientName": "Sophia Martinez",
+    "ipAddress": "192.168.1.45",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+    "details": "Patient Sophia Martinez submitted online medical history and consent",
+    "sha256Checksum": "ab8f692e7013c21f7c0205c3b98c0ed23bb7d99d1c3cedeb75b414fed504df96"
+  },
+  {
+    "id": "aud-1790084903442-694",
+    "timestampIso": "2026-09-22T13:48:23.441Z",
+    "action": "PATIENT_INTAKE_SUBMITTED",
+    "actorId": "pat-sophia-01",
+    "actorRole": "patient",
+    "patientId": "pat-sophia-01",
+    "patientName": "Sophia Martinez",
+    "ipAddress": "192.168.1.45",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+    "details": "Patient Sophia Martinez submitted online medical history and consent",
+    "sha256Checksum": "f9e8e419e61f7bb6a9ca25b15e7573e24ddcb83582e3a2cf4263e492b912b835"
+  },
+  {
+    "id": "aud-1790084819694-905",
+    "timestampIso": "2026-09-20T13:46:59.694Z",
+    "action": "TCPA_CONSENT_OPT_IN",
+    "actorId": "pat-seed-01",
+    "actorRole": "patient",
+    "patientId": "pat-seed-01",
+    "patientName": "Sophia Martinez",
+    "ipAddress": "172.56.21.89",
+    "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5)",
+    "details": "Explicit 10DLC SMS/RCS consent granted via booking widget with HIPAA disclosure acknowledgment.",
+    "sha256Checksum": "b236f8d8540c776efa2f6160eb778bc34be3ac26790f50ff2e1daf387d941e18"
+  },
+  {
+    "id": "aud-1790084819694-383",
+    "timestampIso": "2026-09-21T13:46:59.694Z",
+    "action": "INTAKE_SUBMITTED",
+    "actorId": "pat-seed-01",
+    "actorRole": "patient",
+    "patientId": "pat-seed-01",
+    "patientName": "Sophia Martinez",
+    "ipAddress": "172.56.21.89",
+    "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5)",
+    "details": "Medical history, medications, allergies, and ESIGN Act signature submitted.",
+    "sha256Checksum": "4343b6f469470c97e0d5cf3c9addf884939363cca1dd06bad1c654c344845df0"
+  },
+  {
+    "id": "aud-1790084819694-137",
+    "timestampIso": "2026-09-22T01:46:59.694Z",
+    "action": "RTE_INSURANCE_QUERY",
+    "actorId": "system_cron",
+    "actorRole": "system",
+    "patientId": "pat-seed-01",
+    "patientName": "Sophia Martinez",
+    "ipAddress": "127.0.0.1",
+    "details": "270 EDI eligibility inquiry sent to Delta Dental via clearinghouse. 271 active coverage response verified.",
+    "sha256Checksum": "5d36f9e7be80556fb0175958acade8cdb1c93f079c25e83fada7b401c03f78cc"
+  },
+  {
+    "id": "aud-1790084819694-372",
+    "timestampIso": "2026-09-22T12:46:59.694Z",
+    "action": "COPAY_PRE_AUTHORIZED",
+    "actorId": "pat-seed-01",
+    "actorRole": "patient",
+    "patientId": "pat-seed-01",
+    "patientName": "Sophia Martinez",
+    "ipAddress": "172.56.21.89",
+    "details": "Pre-authorized $150 copay hold on Visa ending in 4242 for 1-click frictionless departure.",
+    "sha256Checksum": "94be69dbe11ca52a4a6a045d050c07744f60d0ea3677f76160843957339b8072"
+  }
+]
