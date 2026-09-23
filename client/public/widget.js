@@ -3,24 +3,49 @@
   if (window.__DENTAL_DESK_WIDGET_INITIALIZED__) return;
   window.__DENTAL_DESK_WIDGET_INITIALIZED__ = true;
 
-  // 1. Parse configuration from script tag
+  // 1. Helpers for DOM XSS prevention
+  function escapeHtml(str) {
+    if (typeof str !== 'string') return '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function sanitizeUrl(url) {
+    if (!url || typeof url !== 'string') return '/images/dentist_doctor.jpg';
+    var trimmed = url.trim();
+    if (trimmed.startsWith('/') || trimmed.startsWith('https://') || trimmed.startsWith('http://')) {
+      return escapeHtml(trimmed);
+    }
+    return '/images/dentist_doctor.jpg';
+  }
+
+  // 2. Parse configuration from script tag
   var currentScript = document.currentScript || (function() {
     var scripts = document.getElementsByTagName('script');
     return scripts[scripts.length - 1];
   })();
 
+  var rawClinicName = currentScript?.getAttribute('data-clinic') || 'St. James Dental Practice';
+  var rawPrimaryColor = currentScript?.getAttribute('data-color') || '#0284c7';
+  var rawApiUrl = currentScript?.getAttribute('data-api') || window.location.origin;
+
   var config = {
-    clinicName: currentScript?.getAttribute('data-clinic') || 'St. James Dental Practice',
-    apiUrl: currentScript?.getAttribute('data-api') || window.location.origin,
-    primaryColor: currentScript?.getAttribute('data-color') || '#0284c7', // Sky-600
-    doctorName: currentScript?.getAttribute('data-doctor') || 'Dr. Sarah Jensen',
-    avatarUrl: currentScript?.getAttribute('data-avatar') || '/images/dentist_doctor.jpg',
+    clinicName: escapeHtml(rawClinicName),
+    rawClinicName: rawClinicName,
+    apiUrl: sanitizeUrl(rawApiUrl),
+    primaryColor: /^#[0-9a-fA-F]{3,8}$/.test(rawPrimaryColor) ? rawPrimaryColor : '#0284c7',
+    doctorName: escapeHtml(currentScript?.getAttribute('data-doctor') || 'Dr. Sarah Jensen'),
+    avatarUrl: sanitizeUrl(currentScript?.getAttribute('data-avatar') || '/images/dentist_doctor.jpg'),
   };
 
-  // 2. Inject Widget Styles
+  // 3. Inject Widget Styles
   var style = document.createElement('style');
   style.id = 'dental-desk-widget-styles';
-  style.innerHTML = `
+  style.textContent = `
     #dd-widget-launcher {
       position: fixed;
       bottom: 24px;
@@ -352,8 +377,14 @@
 
   function appendMessage(text, sender) {
     var msgDiv = document.createElement('div');
-    msgDiv.className = 'dd-msg dd-msg-' + sender;
-    msgDiv.innerHTML = text.replace(/\n/g, '<br/>');
+    msgDiv.className = 'dd-msg dd-msg-' + (sender === 'user' ? 'user' : 'ai');
+    var lines = String(text || '').split('\n');
+    for (var i = 0; i < lines.length; i++) {
+      if (i > 0) {
+        msgDiv.appendChild(document.createElement('br'));
+      }
+      msgDiv.appendChild(document.createTextNode(lines[i]));
+    }
     messagesBox.appendChild(msgDiv);
     scrollToBottom();
   }

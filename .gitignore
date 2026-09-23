@@ -38,8 +38,12 @@ recordings/*.wav
 WhatsApp Automation Template/recordings/*.webm
 WhatsApp Automation Template/recordings/*.wav
 
+# Patient, Clinical & Financial Local JSON Stores (PHI/ePHI Protection)
+data/*.json
+data/**/*.json
+WhatsApp Automation Template/data/*.json
+WhatsApp Automation Template/data/**/*.json
+
 # OS Files
 .DS_Store
 Thumbs.db
-
-.vercel

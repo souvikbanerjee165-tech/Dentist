@@ -44,18 +44,42 @@ export class DocumentExtractorService {
 
   /**
    * Scrapes clean readable text and page title from a website URL
-   * Hardened against SSRF attacks targeting cloud metadata and private networks
+   * Hardened against SSRF attacks targeting cloud metadata and private networks,
+   * including DNS rebinding and open redirect bypasses.
    */
   static async extractFromUrl(url: string): Promise<{ title: string; text: string }> {
     try {
-      // 1. SSRF Validation Guard
-      await SsrfGuard.validateUrl(url);
+      let currentUrl = url;
+      let redirectsRemaining = 3;
+      let response: any;
 
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        },
-      });
+      while (true) {
+        // 1. SSRF Validation Guard on every hop (resolves DNS & checks IP)
+        await SsrfGuard.validateUrl(currentUrl);
+
+        response = await fetch(currentUrl, {
+          redirect: 'manual',
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          },
+        });
+
+        // 2. Intercept and validate redirect hops
+        if ([301, 302, 303, 307, 308].includes(response.status)) {
+          const location = response.headers.get('location');
+          if (!location) {
+            throw new Error(`Redirect HTTP ${response.status} missing Location header.`);
+          }
+          if (redirectsRemaining <= 0) {
+            throw new Error('Too many redirects encountered while scraping URL.');
+          }
+          redirectsRemaining--;
+          currentUrl = new URL(location, currentUrl).href;
+          continue;
+        }
+
+        break;
+      }
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

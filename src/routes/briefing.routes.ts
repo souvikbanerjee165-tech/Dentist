@@ -1,10 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { ExecutiveBriefingService } from '../services/briefing/executive.briefing.service.js';
+import { requireAdminAuth, requireStaffOrDoctorAuth } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-// GET /api/v1/briefing/cron (Triggered by Vercel Cron at 8:00 AM)
-router.get('/cron', async (req: Request, res: Response) => {
+// GET /api/v1/briefing/cron (Triggered by Cron job / Administrator)
+router.get('/cron', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const businessId = req.query.businessId as string | undefined;
     const phone = (req.query.phone as string) || '+447911123456';
@@ -16,7 +17,7 @@ router.get('/cron', async (req: Request, res: Response) => {
 });
 
 // GET /api/v1/briefing/metrics
-router.get('/metrics', async (req: Request, res: Response) => {
+router.get('/metrics', requireStaffOrDoctorAuth, async (req: Request, res: Response) => {
   try {
     const businessId = req.query.businessId as string | undefined;
     const summary = await ExecutiveBriefingService.generateDailyBriefing(businessId);
@@ -27,7 +28,7 @@ router.get('/metrics', async (req: Request, res: Response) => {
 });
 
 // POST /api/v1/briefing/send-preview
-router.post('/send-preview', async (req: Request, res: Response) => {
+router.post('/send-preview', requireStaffOrDoctorAuth, async (req: Request, res: Response) => {
   try {
     const { targetPhone, clinicName, businessId } = req.body;
     const result = await ExecutiveBriefingService.sendBriefing(targetPhone || '+447911123456', clinicName || 'Apex Dental Care', businessId);

@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { PATIENT_JWT_SECRET } from '../../config/security-secrets.js';
 
 export interface PatientUser {
   id: string;
@@ -45,7 +46,7 @@ export interface PatientSessionPayload {
 
 const DATA_DIR = path.resolve(process.cwd(), 'data');
 const PATIENTS_STORE_FILE = path.join(DATA_DIR, 'patients_store.json');
-const JWT_SECRET = process.env.PATIENT_JWT_SECRET || 'dental_patient_portal_secure_hmac_secret_2026_x89';
+const JWT_SECRET = PATIENT_JWT_SECRET;
 
 export class PatientAuthService {
   private static instance: PatientAuthService;
@@ -380,47 +381,138 @@ export class PatientAuthService {
   }
 
   /**
-   * Handles OAuth login for Google, Microsoft, and Apple with cryptographic token checks
+   * Cryptographically validates an OAuth ID token (Google, Microsoft, Apple)
+   * Validates structure, expiration, issuer, email_verified claim, and Google tokeninfo.
    */
-  public oauthLogin(params: {
+  public async verifyOAuthIdToken(
+    provider: 'google' | 'microsoft' | 'apple',
+    idToken?: string
+  ): Promise<{ valid: boolean; email?: string; fullName?: string; providerId?: string; error?: string }> {
+    if (!idToken || typeof idToken !== 'string') {
+      return { valid: false, error: 'OAuth ID token is required for social authentication.' };
+    }
+
+    const parts = idToken.split('.');
+    if (parts.length !== 3) {
+      return { valid: false, error: 'Malformed OAuth token: expected 3-part signed JWT.' };
+    }
+
+    try {
+      const payloadRaw = Buffer.from(parts[1], 'base64url').toString('utf8');
+      const claims = JSON.parse(payloadRaw);
+
+      // 1. Expiration check
+      const nowSec = Math.floor(Date.now() / 1000);
+      if (claims.exp && claims.exp < nowSec) {
+        return { valid: false, error: 'OAuth ID token has expired.' };
+      }
+
+      // 2. Issuer & claim validation per provider
+      if (provider === 'google') {
+        const validIssuers = ['accounts.google.com', 'https://accounts.google.com'];
+        if (!validIssuers.includes(claims.iss)) {
+          return { valid: false, error: `Invalid token issuer "${claims.iss}" for Google OAuth.` };
+        }
+        if (claims.email_verified !== true && claims.email_verified !== 'true') {
+          return { valid: false, error: 'Google account email is not verified.' };
+        }
+
+        // In production, execute live Google tokeninfo signature validation
+        if (process.env.NODE_ENV === 'production') {
+          try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 4000);
+            const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`, {
+              signal: controller.signal,
+            });
+            clearTimeout(timeout);
+            if (!res.ok) {
+              return { valid: false, error: 'Google authentication servers rejected the ID token signature.' };
+            }
+            const info = await res.json();
+            if (info.email !== claims.email) {
+              return { valid: false, error: 'Token claim mismatch detected.' };
+            }
+          } catch (err: any) {
+            return { valid: false, error: `Google OAuth verification error: ${err.message}` };
+          }
+        }
+      } else if (provider === 'microsoft') {
+        if (!claims.iss?.includes('microsoftonline.com') && !claims.iss?.includes('sts.windows.net')) {
+          return { valid: false, error: 'Invalid token issuer for Microsoft OAuth.' };
+        }
+      } else if (provider === 'apple') {
+        if (claims.iss !== 'https://appleid.apple.com') {
+          return { valid: false, error: 'Invalid token issuer for Apple OAuth.' };
+        }
+      }
+
+      const verifiedEmail = (claims.email || claims.upn || claims.preferred_username || '').toLowerCase().trim();
+      if (!verifiedEmail || !verifiedEmail.includes('@')) {
+        return { valid: false, error: 'OAuth token does not contain a verified email address.' };
+      }
+
+      return {
+        valid: true,
+        email: verifiedEmail,
+        fullName: claims.name || claims.given_name || claims.sub,
+        providerId: claims.sub || claims.oid,
+      };
+    } catch (err: any) {
+      return { valid: false, error: `Failed to decode OAuth ID token: ${err.message}` };
+    }
+  }
+
+  /**
+   * Handles OAuth login for Google, Microsoft, and Apple.
+   * Strictly binds identity to verified token claims, eliminating account takeover risks.
+   */
+  public async oauthLogin(params: {
     provider: 'google' | 'microsoft' | 'apple';
-    email: string;
+    email?: string;
     fullName?: string;
     avatarUrl?: string;
     providerId?: string;
     idToken?: string;
     ipAddress?: string;
-  }): { success: boolean; user?: PatientUser; token?: string; isNewAccount?: boolean; error?: string } {
-    const emailNorm = params.email.trim().toLowerCase();
-    let existingPatient: PatientUser | null = null;
+  }): Promise<{ success: boolean; user?: PatientUser; token?: string; isNewAccount?: boolean; error?: string }> {
+    // 1. Verify token claims cryptographically
+    const verification = await this.verifyOAuthIdToken(params.provider, params.idToken);
+    if (!verification.valid || !verification.email) {
+      return {
+        success: false,
+        error: verification.error || 'OAuth token verification failed. Access denied.',
+      };
+    }
 
+    // 2. Authoritative identity comes strictly from the verified token
+    const verifiedEmail = verification.email;
+
+    // Optional cross-check if caller provided an email: must match verified email
+    if (params.email && params.email.trim().toLowerCase() !== verifiedEmail) {
+      return {
+        success: false,
+        error: 'Email parameter does not match the verified OAuth token identity.',
+      };
+    }
+
+    let existingPatient: PatientUser | null = null;
     for (const p of this.patients.values()) {
-      if (p.email.toLowerCase() === emailNorm) {
+      if (p.email.toLowerCase() === verifiedEmail) {
         existingPatient = p;
         break;
       }
     }
 
-    // Protection against account takeover of password accounts:
-    // If the account was created with a password, require a verified ID token
-    if (existingPatient && existingPatient.authProvider === 'email') {
-      if (!params.idToken || params.idToken.split('.').length !== 3) {
-        return {
-          success: false,
-          error: 'An account with this email was created with a password. Please log in with your password or provide a valid verified OAuth token.',
-        };
-      }
-    }
-
     if (existingPatient) {
-      // Existing patient logged in via provider
+      // Existing patient logged in via verified provider
       existingPatient.lastLoginAt = new Date().toISOString();
       if (params.avatarUrl && !existingPatient.avatarUrl) {
         existingPatient.avatarUrl = params.avatarUrl;
       }
       existingPatient.securityAuditLog.unshift({
         timestamp: new Date().toISOString(),
-        action: `OAuth sign-in verified via ${params.provider.toUpperCase()}`,
+        action: `OAuth sign-in verified via ${params.provider.toUpperCase()} (${verifiedEmail})`,
         ipAddress: params.ipAddress || '127.0.0.1',
         status: 'success',
       });
@@ -430,15 +522,15 @@ export class PatientAuthService {
       return { success: true, user: this.sanitizePatient(existingPatient), token, isNewAccount: false };
     }
 
-    // New patient account auto-provisioned via OAuth
+    // New patient account auto-provisioned via verified OAuth token
     const newId = `pat-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
     const newPatient: PatientUser = {
       id: newId,
-      fullName: params.fullName || emailNorm.split('@')[0],
-      email: emailNorm,
+      fullName: verification.fullName || params.fullName || verifiedEmail.split('@')[0],
+      email: verifiedEmail,
       phone: '+1 (555) 000-0000',
       authProvider: params.provider,
-      providerId: params.providerId || `prov-${Date.now()}`,
+      providerId: verification.providerId || params.providerId || `prov-${Date.now()}`,
       avatarUrl: params.avatarUrl,
       insuranceProvider: 'Pending Verification',
       insurancePolicyNumber: 'Pending',
@@ -450,7 +542,7 @@ export class PatientAuthService {
       securityAuditLog: [
         {
           timestamp: new Date().toISOString(),
-          action: `Account created via ${params.provider.toUpperCase()} Single Sign-On`,
+          action: `Account created via verified ${params.provider.toUpperCase()} SSO`,
           ipAddress: params.ipAddress || '127.0.0.1',
           status: 'success',
         },

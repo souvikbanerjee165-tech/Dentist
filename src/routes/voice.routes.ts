@@ -55,8 +55,9 @@ router.post('/telnyx/respond', async (req: Request, res: Response) => {
 /**
  * POST /api/v1/voice/telnyx/outbound
  * Initiates an outbound PSTN call via Telnyx wholesale gateway
+ * Protected: Staff/Doctor auth required (prevents toll fraud and spam abuse)
  */
-router.post('/telnyx/outbound', async (req: Request, res: Response) => {
+router.post('/telnyx/outbound', requireStaffOrDoctorAuth, async (req: Request, res: Response) => {
   try {
     const { to, from, clinicName, patientName, purpose } = req.body;
 
@@ -82,8 +83,9 @@ router.post('/telnyx/outbound', async (req: Request, res: Response) => {
 /**
  * GET /api/v1/voice/telnyx/webrtc-token
  * Generates WebRTC credentials for In-Browser Click-to-Call
+ * Protected: Staff/Doctor auth required
  */
-router.get('/telnyx/webrtc-token', (req: Request, res: Response) => {
+router.get('/telnyx/webrtc-token', requireStaffOrDoctorAuth, (req: Request, res: Response) => {
   try {
     const clientName = (req.query?.clientName as string) || 'dental-front-desk';
     const credentials = telnyxVoiceService.generateWebRTCLogin(clientName);

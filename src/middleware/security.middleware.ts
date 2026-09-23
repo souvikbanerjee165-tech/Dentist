@@ -49,17 +49,28 @@ export const validateWhatsAppSignature = (
   const signature = req.headers['x-hub-signature-256'] as string;
   const appSecret = config.whatsapp.appSecret;
 
-  // If app secret is not configured or in development mode, allow
-  if (!appSecret || appSecret.startsWith('your_app_secret') || config.nodeEnv === 'development') {
-    return next();
-  }
-
-  if (!signature) {
-    res.status(401).json({
-      success: false,
-      error: { code: 'MissingSignature', message: 'Missing X-Hub-Signature-256 header.' },
-    });
-    return;
+  // In production, appSecret and signature are strictly mandatory (fail closed)
+  if (config.nodeEnv === 'production') {
+    if (!appSecret || appSecret.startsWith('your_app_secret')) {
+      console.error('❌ FATAL: WHATSAPP_APP_SECRET is not configured in production.');
+      res.status(500).json({
+        success: false,
+        error: { code: 'ServerMisconfigured', message: 'Webhook security secret not configured.' },
+      });
+      return;
+    }
+    if (!signature) {
+      res.status(401).json({
+        success: false,
+        error: { code: 'MissingSignature', message: 'Missing X-Hub-Signature-256 header.' },
+      });
+      return;
+    }
+  } else {
+    // In dev: if no secret or signature provided, allow development simulation
+    if (!appSecret || appSecret.startsWith('your_app_secret') || !signature) {
+      return next();
+    }
   }
 
   try {
@@ -69,7 +80,10 @@ export const validateWhatsAppSignature = (
       .update(rawBody)
       .digest('hex')}`;
 
-    if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
+    const sigBuf = Buffer.from(signature);
+    const expectedBuf = Buffer.from(expectedSignature);
+
+    if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
       console.warn('❌ Webhook signature verification failed.');
       res.status(403).json({
         success: false,

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { WebhookController } from '../controllers/webhook.controller.js';
+import { validateWhatsAppSignature } from '../middleware/security.middleware.js';
 
 const router = Router();
 
@@ -7,8 +8,8 @@ const router = Router();
 router.get('/', WebhookController.verifyWebhook);
 router.get('/whatsapp', WebhookController.verifyWebhook);
 
-// Meta Inbound Webhook Events
-router.post('/', WebhookController.handleIncomingWebhook);
-router.post('/whatsapp', WebhookController.handleIncomingWebhook);
+// Meta Inbound Webhook Events (Secured with HMAC-SHA256 validation)
+router.post('/', validateWhatsAppSignature, WebhookController.handleIncomingWebhook);
+router.post('/whatsapp', validateWhatsAppSignature, WebhookController.handleIncomingWebhook);
 
 export default router;

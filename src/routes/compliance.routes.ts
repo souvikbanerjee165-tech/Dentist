@@ -1,13 +1,15 @@
 import { Router, Request, Response } from 'express';
 import { complianceAuditService } from '../services/compliance/compliance-audit.service.js';
+import { requireStaffOrDoctorAuth } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
 /**
  * GET /api/v1/compliance/export-audit-log
  * 1-Click CSV Download of all HIPAA/TCPA Compliance Audit Records
+ * Protected: Staff/Doctor auth required
  */
-router.get('/export-audit-log', (_req: Request, res: Response) => {
+router.get('/export-audit-log', requireStaffOrDoctorAuth, (_req: Request, res: Response) => {
   try {
     const csvData = complianceAuditService.exportAuditLogCsv();
     const filename = `hipaa_compliance_audit_log_${new Date().toISOString().split('T')[0]}.csv`;
@@ -23,8 +25,9 @@ router.get('/export-audit-log', (_req: Request, res: Response) => {
 /**
  * GET /api/v1/compliance/audit-events
  * Lists recent security and compliance events
+ * Protected: Staff/Doctor auth required
  */
-router.get('/audit-events', (req: Request, res: Response) => {
+router.get('/audit-events', requireStaffOrDoctorAuth, (req: Request, res: Response) => {
   try {
     const limit = Number(req.query.limit) || 100;
     const events = complianceAuditService.getEvents(limit);

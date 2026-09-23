@@ -1,7 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { followupService } from '../services/followup/followup.service.js';
+import { requireStaffOrDoctorAuth } from '../middleware/auth.middleware.js';
 
 export const followupRouter = Router();
+
+// Enforce staff/clinician authorization on all clinical followup actions
+followupRouter.use(requireStaffOrDoctorAuth);
 
 /**
  * POST /api/v1/followup/missed-call

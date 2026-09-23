@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { clinicProfileService } from '../services/config/clinic-profile.service.js';
-import { requireAdminAuth } from '../middleware/auth.middleware.js';
+import { requireAdminAuth, ADMIN_SECRET } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
@@ -13,7 +13,7 @@ router.get('/clinic-profile', (req: Request, res: Response) => {
   try {
     const config = clinicProfileService.getConfig();
     const adminKey = req.headers['x-admin-key'] || (req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.split(' ')[1] : undefined);
-    const isAdmin = adminKey === process.env.ADMIN_API_KEY || adminKey === 'apex_admin_secret_key_prod_99x';
+    const isAdmin = adminKey === ADMIN_SECRET;
 
     const safeConfig = {
       ...config,

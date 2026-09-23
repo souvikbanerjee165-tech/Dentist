@@ -127,7 +127,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     try {
       await fetch('/api/v1/followup/missed-call', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-staff-key': localStorage.getItem('apex_staff_key') || 'apex_staff_secret_key_prod_44y',
+        },
         body: JSON.stringify({
           callerPhone: '+44 7700 900123',
           callerName: 'Callum Wright',

@@ -1,8 +1,10 @@
 import net from 'node:net';
+import dns from 'node:dns';
 
 /**
  * Validates URLs to prevent Server-Side Request Forgery (SSRF).
  * Blocks loopback, private IPv4/IPv6 networks, cloud metadata services, and non-HTTP protocols.
+ * Hardened with real-time DNS resolution to prevent DNS rebinding attacks.
  */
 export class SsrfGuard {
   // Cloud metadata and loopback IP ranges to block
@@ -55,9 +57,9 @@ export class SsrfGuard {
 
   /**
    * Validates a URL string before fetching.
-   * Throws Error if URL is invalid, non-http(s), or points to restricted infrastructure.
+   * Throws Error if URL is invalid, non-http(s), or resolves to restricted infrastructure.
    */
-  public static validateUrl(urlString: string): URL {
+  public static async validateUrl(urlString: string): Promise<URL> {
     let parsed: URL;
     try {
       parsed = new URL(urlString);
@@ -80,6 +82,22 @@ export class SsrfGuard {
     // Check if hostname is direct IP and if it is private
     if (this.isPrivateIp(hostname)) {
       throw new Error(`Access to private/local network IP "${hostname}" is blocked.`);
+    }
+
+    // Resolve DNS and validate every resolved IP against private CIDRs (prevents DNS rebinding)
+    try {
+      const records = await dns.promises.lookup(hostname, { all: true });
+      for (const record of records) {
+        if (this.isPrivateIp(record.address)) {
+          throw new Error(`DNS resolution for "${hostname}" resolved to restricted IP "${record.address}".`);
+        }
+      }
+    } catch (dnsErr: any) {
+      if (dnsErr.message.includes('restricted IP')) {
+        throw dnsErr;
+      }
+      // If DNS resolution fails, reject to fail closed
+      throw new Error(`Failed to resolve DNS for host "${hostname}": ${dnsErr.message}`);
     }
 
     return parsed;

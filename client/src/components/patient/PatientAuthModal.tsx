@@ -108,6 +108,17 @@ export const PatientAuthModal: React.FC<PatientAuthModalProps> = ({
     }
 
     try {
+      const mockClaims = {
+        iss: provider === 'google' ? 'https://accounts.google.com' : provider === 'apple' ? 'https://appleid.apple.com' : 'https://login.microsoftonline.com/v2.0',
+        sub: `sub-${provider}-${Date.now()}`,
+        email: mockEmail,
+        email_verified: true,
+        name: mockName,
+        picture: avatar,
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      };
+      const mockIdToken = `${btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' }))}.${btoa(JSON.stringify(mockClaims))}.dev_mock_signature`;
+
       const res = await fetch('/api/v1/patient/oauth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -116,6 +127,7 @@ export const PatientAuthModal: React.FC<PatientAuthModalProps> = ({
           email: mockEmail,
           fullName: mockName,
           avatarUrl: avatar,
+          idToken: mockIdToken,
         }),
       });
 

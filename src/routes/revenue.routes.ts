@@ -1,7 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { MissedRevenueRadarService } from '../services/revenue/radar.service.js';
+import { requireStaffOrDoctorAuth } from '../middleware/auth.middleware.js';
 
 const router = Router();
+
+// Protect revenue pipeline & VIP dispatch operations
+router.use(requireStaffOrDoctorAuth);
 
 // GET /api/v1/revenue/pipeline
 router.get('/pipeline', async (req: Request, res: Response) => {

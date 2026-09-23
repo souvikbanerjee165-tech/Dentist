@@ -1,14 +1,16 @@
 import { Router, Request, Response } from 'express';
 import { waitlistEngineService } from '../services/operations/waitlist-engine.service.js';
 import { clinicalTriageService, TriageCategory } from '../services/operations/clinical-triage.service.js';
+import { requireStaffOrDoctorAuth, requirePatientOwnerOrStaff } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
 /**
  * GET /api/v1/operations/waitlist
  * Lists current waitlist patients
+ * Protected: Staff/Doctor auth required
  */
-router.get('/waitlist', (_req: Request, res: Response) => {
+router.get('/waitlist', requireStaffOrDoctorAuth, (_req: Request, res: Response) => {
   const waitlist = waitlistEngineService.getWaitlist();
   const activeOffers = waitlistEngineService.getActiveOffers();
 
@@ -23,8 +25,9 @@ router.get('/waitlist', (_req: Request, res: Response) => {
 /**
  * POST /api/v1/operations/waitlist/join
  * Adds a patient to the priority cancellation waitlist
+ * Protected: Patient owner or staff auth required
  */
-router.post('/waitlist/join', (req: Request, res: Response) => {
+router.post('/waitlist/join', requirePatientOwnerOrStaff, (req: Request, res: Response) => {
   try {
     const { patientId, patientName, patientPhone, preferredDays, preferredTimeOfDay, requestedTreatment, urgencyLevel } =
       req.body;
@@ -56,8 +59,9 @@ router.post('/waitlist/join', (req: Request, res: Response) => {
 /**
  * POST /api/v1/operations/waitlist/trigger-backfill
  * Staff triggers automated cancellation broadcast to fill an empty chair
+ * Protected: Staff/Doctor auth required
  */
-router.post('/waitlist/trigger-backfill', async (req: Request, res: Response) => {
+router.post('/waitlist/trigger-backfill', requireStaffOrDoctorAuth, async (req: Request, res: Response) => {
   try {
     const { slotDate, slotTime, doctorName, treatmentType, operatory } = req.body;
 
@@ -86,8 +90,9 @@ router.post('/waitlist/trigger-backfill', async (req: Request, res: Response) =>
 /**
  * POST /api/v1/operations/waitlist/claim
  * Patient claims an opened slot via 1-click action chip
+ * Protected: Patient owner or staff auth required
  */
-router.post('/waitlist/claim', (req: Request, res: Response) => {
+router.post('/waitlist/claim', requirePatientOwnerOrStaff, (req: Request, res: Response) => {
   try {
     const { offerId, patientId, patientName } = req.body;
 
@@ -110,8 +115,9 @@ router.post('/waitlist/claim', (req: Request, res: Response) => {
 /**
  * GET /api/v1/operations/triage/inbox
  * Staff Inbox: returns threads categorized by Clinical/Urgent, Scheduling, Billing, General
+ * Protected: Staff/Doctor auth required
  */
-router.get('/triage/inbox', (req: Request, res: Response) => {
+router.get('/triage/inbox', requireStaffOrDoctorAuth, (req: Request, res: Response) => {
   const category = req.query.category as TriageCategory | undefined;
   const threads = clinicalTriageService.getStaffInbox(category);
 
@@ -125,8 +131,9 @@ router.get('/triage/inbox', (req: Request, res: Response) => {
 /**
  * POST /api/v1/operations/triage/message
  * Ingests inbound patient message and performs automatic triage
+ * Protected: Patient owner or staff auth required
  */
-router.post('/triage/message', (req: Request, res: Response) => {
+router.post('/triage/message', requirePatientOwnerOrStaff, (req: Request, res: Response) => {
   try {
     const { patientId, patientName, patientPhone, text } = req.body;
 
@@ -155,8 +162,9 @@ router.post('/triage/message', (req: Request, res: Response) => {
 /**
  * POST /api/v1/operations/triage/reply
  * Clinician / Front-desk sends encrypted reply to patient thread
+ * Protected: Staff/Doctor auth required
  */
-router.post('/triage/reply', (req: Request, res: Response) => {
+router.post('/triage/reply', requireStaffOrDoctorAuth, (req: Request, res: Response) => {
   try {
     const { threadId, senderName, role, text } = req.body;
 

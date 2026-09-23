@@ -8,10 +8,14 @@ import { AIConversationTurnResponse } from '../src/services/ai/ai.types.js';
 import { LLMFactory } from '../src/services/ai/providers/llm.factory.js';
 import { aiConversationService } from '../src/services/ai/ai.service.js';
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://buoxpxnrtlakvrihauai.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1b3hweG5ydGxha3ZyaWhhdWFpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODE1MzExNCwiZXhwIjoyMTAzNzI5MTE0fQ.cL_9nOJvWM4VIBX_obOcIQaM-Tg6PxmU3w4kaQ1qUxA';
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  console.warn('⚠️ [LIVE TEST NOTICE] SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables are required for live tests.');
+}
+
+const supabase = createClient(SUPABASE_URL || 'https://placeholder.supabase.co', SUPABASE_KEY || 'placeholder_key', {
   auth: { persistSession: false },
 });
 

@@ -1,9 +1,9 @@
 import crypto from 'node:crypto';
 import { Request, Response, NextFunction } from 'express';
 import { patientAuthService, PatientSessionPayload } from '../services/patient/patient-auth.service.js';
+import { ADMIN_SECRET, STAFF_SECRET } from '../config/security-secrets.js';
 
-const ADMIN_SECRET = process.env.ADMIN_API_KEY || 'apex_admin_secret_key_prod_99x';
-const STAFF_SECRET = process.env.STAFF_API_KEY || 'apex_staff_doctor_secret_key_88y';
+export { ADMIN_SECRET, STAFF_SECRET };
 
 // In-memory cache for webhook replay prevention (5-minute TTL)
 const processedWebhookIds = new Map<string, number>();

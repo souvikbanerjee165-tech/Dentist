@@ -138,7 +138,7 @@ router.post('/login', (req: Request, res: Response) => {
  * POST /api/v1/patient/oauth
  * Social Login: Google, Microsoft, Apple
  */
-router.post('/oauth', (req: Request, res: Response) => {
+router.post('/oauth', async (req: Request, res: Response) => {
   try {
     const { provider, email, fullName, avatarUrl, providerId, idToken } = req.body;
     const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
@@ -151,15 +151,15 @@ router.post('/oauth', (req: Request, res: Response) => {
       });
     }
 
-    if (!email) {
+    if (!idToken || typeof idToken !== 'string') {
       return res.status(400).json({
         success: false,
         error: 'ValidationError',
-        message: 'Account email is required for OAuth verification.',
+        message: 'Cryptographic OAuth idToken is required for social authentication.',
       });
     }
 
-    const result = patientAuthService.oauthLogin({
+    const result = await patientAuthService.oauthLogin({
       provider,
       email,
       fullName,

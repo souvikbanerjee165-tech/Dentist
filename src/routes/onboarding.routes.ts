@@ -1,10 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { ClinicProvisioningService } from '../services/onboarding/provisioning.service.js';
+import { requireAdminAuth } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-// POST /api/v1/onboarding/provision
-router.post('/provision', async (req: Request, res: Response) => {
+// POST /api/v1/onboarding/provision (Requires SuperAdmin Auth)
+router.post('/provision', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const {
       clinicName,

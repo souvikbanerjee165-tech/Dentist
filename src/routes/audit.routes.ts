@@ -1,10 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { ClinicAuditService } from '../services/audit/clinic.audit.service.js';
+import { requireStaffOrDoctorAuth } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-// POST /api/v1/audit/analyze
-router.post('/analyze', (req: Request, res: Response) => {
+// POST /api/v1/audit/analyze (Restricted to clinic staff and doctors)
+router.post('/analyze', requireStaffOrDoctorAuth, (req: Request, res: Response) => {
   try {
     const { clinicName, websiteUrl, city } = req.body;
     const auditReport = ClinicAuditService.generateAudit(

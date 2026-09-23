@@ -1,7 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { AITrainingService } from '../services/training/training.service.js';
+import { requireStaffOrDoctorAuth } from '../middleware/auth.middleware.js';
 
 const router = Router();
+
+// Protect all AI training operations
+router.use(requireStaffOrDoctorAuth);
 
 // GET /api/v1/training/queue
 router.get('/queue', async (req: Request, res: Response) => {

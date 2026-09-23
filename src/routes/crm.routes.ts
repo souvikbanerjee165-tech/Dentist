@@ -1,8 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { crmService } from '../services/crm/crm.service.js';
 import { AppointmentStatus } from '../services/crm/crm.types.js';
+import { requireStaffOrDoctorAuth } from '../middleware/auth.middleware.js';
 
 const router = Router();
+
+// Enforce staff/doctor authorization on all CRM endpoints
+router.use(requireStaffOrDoctorAuth);
 
 /**
  * GET /api/v1/crm/leads

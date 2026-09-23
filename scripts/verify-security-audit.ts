@@ -1,10 +1,19 @@
+import crypto from 'node:crypto';
 import { SsrfGuard } from '../src/utils/ssrf.guard.js';
 import { SafeLogger } from '../src/utils/safe-logger.js';
 import { patientAuthService } from '../src/services/patient/patient-auth.service.js';
 import { aftercareTrackerService } from '../src/services/clinical/aftercare-tracker.service.js';
 import { GoogleCalendarService } from '../src/services/calendar/calendar.service.js';
 import { aiConversationService } from '../src/services/ai/ai.service.js';
-import { preventWebhookReplay } from '../src/middleware/auth.middleware.js';
+import { 
+  preventWebhookReplay, 
+  requireStaffOrDoctorAuth, 
+  requireAdminAuth, 
+  ADMIN_SECRET, 
+  STAFF_SECRET 
+} from '../src/middleware/auth.middleware.js';
+import { validateWhatsAppSignature } from '../src/middleware/security.middleware.js';
+import { config } from '../src/config/env.js';
 
 let passed = 0;
 let failed = 0;
@@ -268,6 +277,174 @@ async function runSecurityAuditSuite() {
     req2Status === 200 && testWebhookPayload?.status === 'duplicate_ignored',
     'Replay of same webhook ID within TTL window safely ignored with duplicate_ignored (prevents retry storms)'
   );
+
+  // -------------------------------------------------------------
+  // 8. ADVANCED SSRF & DNS REBINDING DEFENSE
+  // -------------------------------------------------------------
+  console.log('\n--- TEST GROUP 8: SSRF DNS Rebinding & Protocol Validation ---');
+
+  // Loopback and private IP SSRF attempts
+  const rebindingAttempts = [
+    'http://localhost/admin',
+    'http://127.0.0.1:80/secret',
+    'http://0.0.0.0:8000',
+    'http://169.254.169.254/latest/user-data',
+    'gopher://127.0.0.1:6379/_flushall',
+    'javascript:alert(document.cookie)',
+  ];
+
+  for (const target of rebindingAttempts) {
+    let rejected = false;
+    try {
+      await SsrfGuard.validateUrl(target);
+    } catch {
+      rejected = true;
+    }
+    assert(rejected, `SSRF Guard rejects dangerous target: ${target}`);
+  }
+
+  // -------------------------------------------------------------
+  // 9. OAUTH IDENTITY SPOOFING & ACCOUNT TAKEOVER DEFENSE
+  // -------------------------------------------------------------
+  console.log('\n--- TEST GROUP 9: OAuth Account Takeover & Token Validation ---');
+
+  // Rejects invalid token formats
+  const invalidOAuthTokens = [
+    'single-string-token',
+    'two.parts',
+    'header.invalid_base64_json.sig',
+  ];
+  for (const badToken of invalidOAuthTokens) {
+    const verified = await patientAuthService.verifyOAuthIdToken('google', badToken);
+    assert(verified.valid === false, `Invalid token format correctly rejected: ${badToken.slice(0, 20)}...`);
+  }
+
+  // Valid simulation token with claims
+  const simHeader = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
+  const simPayload = Buffer.from(
+    JSON.stringify({
+      iss: 'accounts.google.com',
+      aud: 'apex-dental-portal',
+      sub: 'google-oauth2|987654321',
+      email: 'verified_patient@example.com',
+      email_verified: true,
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    })
+  ).toString('base64url');
+  const validSimToken = `${simHeader}.${simPayload}.simulatedSignature`;
+
+  const verifiedClaims = await patientAuthService.verifyOAuthIdToken('google', validSimToken);
+  assert(
+    Boolean(verifiedClaims.valid && verifiedClaims.email === 'verified_patient@example.com'),
+    'OAuth token claims verified and authenticated email correctly extracted'
+  );
+
+  // Critical Defense: Attacker supplies victim's email in request body to attempt takeover
+  const oauthTakeoverAttempt = await patientAuthService.oauthLogin({
+    provider: 'google',
+    idToken: validSimToken,
+    fullName: 'Verified Patient',
+    email: 'victim_hijack_target@example.com', // Adversary attempts account takeover
+  });
+  assert(
+    oauthTakeoverAttempt.success === false,
+    'Account takeover prevented: Mismatched caller email is rejected when attempting to spoof identity'
+  );
+
+  // Successful verified OAuth login
+  const oauthValidLogin = await patientAuthService.oauthLogin({
+    provider: 'google',
+    idToken: validSimToken,
+    fullName: 'Verified Patient',
+  });
+  assert(
+    oauthValidLogin.success === true && oauthValidLogin.user?.email === 'verified_patient@example.com',
+    'OAuth login succeeds and binds strictly to verified token claims email'
+  );
+
+  // -------------------------------------------------------------
+  // 10. FAIL-CLOSED PRIVILEGE ACCESS CONTROL
+  // -------------------------------------------------------------
+  console.log('\n--- TEST GROUP 10: Fail-Closed Role-Based Access Control ---');
+
+  // Staff endpoint protection
+  let staff403 = false;
+  const unauthStaffReq: any = { headers: {} };
+  const unauthStaffRes: any = {
+    status: (code: number) => {
+      if (code === 403) staff403 = true;
+      return { json: () => {} };
+    },
+  };
+  requireStaffOrDoctorAuth(unauthStaffReq, unauthStaffRes, () => {});
+  assert(staff403, 'Unauthenticated request to staff endpoint returns 403 Forbidden');
+
+  let staffAuthed = false;
+  const authStaffReq: any = { headers: { 'x-staff-key': STAFF_SECRET } };
+  const authStaffRes: any = {};
+  requireStaffOrDoctorAuth(authStaffReq, authStaffRes, () => { staffAuthed = true; });
+  assert(staffAuthed, 'Valid staff secret grants authorized access');
+
+  // Admin endpoint protection
+  let admin403 = false;
+  const unauthAdminReq: any = { headers: {} };
+  const unauthAdminRes: any = {
+    status: (code: number) => {
+      if (code === 403) admin403 = true;
+      return { json: () => {} };
+    },
+  };
+  requireAdminAuth(unauthAdminReq, unauthAdminRes, () => {});
+  assert(admin403, 'Unauthenticated request to admin endpoint returns 403 Forbidden');
+
+  let adminAuthed = false;
+  const authAdminReq: any = { headers: { 'x-admin-key': ADMIN_SECRET } };
+  const authAdminRes: any = {};
+  requireAdminAuth(authAdminReq, authAdminRes, () => { adminAuthed = true; });
+  assert(adminAuthed, 'Valid admin secret grants super-admin privileges');
+
+  // -------------------------------------------------------------
+  // 11. WEBHOOK HMAC-SHA256 SIGNATURE VERIFICATION
+  // -------------------------------------------------------------
+  console.log('\n--- TEST GROUP 11: Webhook HMAC-SHA256 Signature Verification ---');
+
+  const testWebhookSecret = 'test_meta_webhook_secret_key_2026';
+  (config.whatsapp as any).appSecret = testWebhookSecret;
+  const testPayload = JSON.stringify({ object: 'whatsapp_business_account', entry: [] });
+
+  // Valid signature
+  const validSignature = `sha256=${crypto
+    .createHmac('sha256', testWebhookSecret)
+    .update(testPayload)
+    .digest('hex')}`;
+
+  let validSigNextCalled = false;
+  const validSigReq: any = {
+    method: 'POST',
+    headers: { 'x-hub-signature-256': validSignature },
+    body: JSON.parse(testPayload),
+    rawBody: testPayload,
+  };
+  const validSigRes: any = {};
+  validateWhatsAppSignature(validSigReq, validSigRes, () => { validSigNextCalled = true; });
+  assert(validSigNextCalled, 'Valid HMAC-SHA256 signature passes verification');
+
+  // Forged signature
+  let forgedSig403 = false;
+  const forgedSigReq: any = {
+    method: 'POST',
+    headers: { 'x-hub-signature-256': 'sha256=bad1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef' },
+    body: JSON.parse(testPayload),
+    rawBody: testPayload,
+  };
+  const forgedSigRes: any = {
+    status: (code: number) => {
+      if (code === 403) forgedSig403 = true;
+      return { json: () => {} };
+    },
+  };
+  validateWhatsAppSignature(forgedSigReq, forgedSigRes, () => {});
+  assert(forgedSig403, 'Tampered/forged HMAC signature is rejected with 403 Forbidden');
 
   // Summary
   console.log('\n============================================================');
